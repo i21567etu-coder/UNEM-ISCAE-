@@ -149,29 +149,6 @@
         .wa-btn { background: #25D366; }
         .social-btn i { margin-left: 8px; font-size: 1.2rem; }
 
-        .dev-credit { font-size: 0.9rem; color: #a5d6a7; margin-bottom: 8px; }
-        
-        /* اسم المطور المضيء والاحترافي */
-        .pro-dev-link {
-            font-size: 1.3rem;
-            font-weight: 900;
-            color: #ffffff;
-            text-decoration: none;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            padding: 5px 10px;
-            transition: all 0.3s ease;
-            display: inline-block;
-            text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 20px #00e676, 0 0 30px #00e676;
-            animation: neon-pulse 1.5s infinite alternate;
-        }
-
-        @keyframes neon-pulse {
-            from { text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 20px #00e676; }
-            to { text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #00e676, 0 0 40px #00e676; }
-        }
-
-        .pro-dev-link:hover { transform: scale(1.1); color: #e8f5e9; }
         .copyright { margin-top: 25px; font-size: 0.8rem; opacity: 0.7; }
         
         /* الشريط العلوي الجديد */
@@ -216,12 +193,6 @@
                     <div class="icon-box"><i class="fas fa-book-reader"></i></div>
                     <h3>الملخصات والأرشيف</h3>
                     <p>جميع التخصصات (L1, L2, L3)</p>
-                </div>
-
-                <div class="semester-card" onclick="openInternalBrowser('https://resultat-iscae.vercel.app/', 'نتائج المعهد')">
-                    <div class="icon-box" style="color:#fbc02d"><i class="fas fa-trophy"></i></div>
-                    <h3>نتائج المعهد</h3>
-                    <p>Résultats ISCAE</p>
                 </div>
 
                 <div class="semester-card" onclick="openUnionModal()">
@@ -305,6 +276,27 @@
             <div id="tcm-s4-list" class="buttons-grid hidden">
                 <button onclick="loadFiles('Marketing II')">Marketing II</button><button onclick="loadFiles('Commerce international II')">Commerce international II</button><button onclick="loadFiles('Commerce électronique')">Commerce électronique</button><button onclick="loadFiles('Finance Internationale')">Finance Internationale</button><button onclick="loadFiles('Techniques Douanières et Transit')">Techniques Douanières et Transit</button><button onclick="loadFiles('Analyse financière')">Analyse financière</button><button onclick="loadFiles('Stratégie d’entreprise')">Stratégie d’entreprise</button><button onclick="loadFiles('Techniques de sondage')">Techniques de sondage</button><button onclick="loadFiles('Droit des assurances')">Droit des assurances</button><button onclick="loadFiles('Recherche opérationnelle')">Recherche opérationnelle</button><button onclick="loadFiles('Archive S4')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S4</button>
             </div>
+            <!-- TCM S5 -->
+            <div id="tcm-s5-list" class="buttons-grid hidden">
+                <button onclick="loadFiles('Communication Marketing et commerciale')">Communication Marketing et commerciale</button>
+                <button onclick="loadFiles('Planification Marketing')">Planification Marketing</button>
+                <button onclick="loadFiles('Techniques de Négociations Commerciales')">Techniques de Négociations Commerciales</button>
+                <button onclick="loadFiles('Fiscalité')">Fiscalité</button>
+                <button onclick="loadFiles('E-Marketing')">E-Marketing</button>
+                <button onclick="loadFiles('Finance des Marchés')">Finance des Marchés</button>
+                <button onclick="loadFiles('Etude des marchés')">Etude des marchés</button>
+                <button onclick="loadFiles('Logistique du commerce international')">Logistique du commerce international</button>
+                <button onclick="loadFiles('Management des projets')">Management des projets</button>
+                <button onclick="loadFiles('Rapport de stage de la 2ème année')">Rapport de stage</button>
+                <button onclick="loadFiles('Archive S5')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S5</button>
+            </div>
+            <!-- TCM S6 -->
+            <div id="tcm-s6-list" class="buttons-grid hidden">
+                <button onclick="loadFiles('Méthodologie de recherche')">Méthodologie de recherche</button>
+                <button onclick="loadFiles('Séminaire sur l\'entrepreneuriat')">Séminaire sur l'entrepreneuriat</button>
+                <button onclick="loadFiles('Mémoire de fin d\'études')">Mémoire de fin d'études</button>
+                <button onclick="loadFiles('Archive S6')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S6</button>
+            </div>
 
             <!-- ======================= GRH ======================= -->
             <div id="grh-s1-list" class="buttons-grid hidden"><button onclick="loadFiles('Initiation à la gestion des RH')">Initiation Gestion RH</button><button onclick="loadFiles('Principes de gestion')">Principes de gestion</button><button onclick="loadFiles('Comptabilité financière I')">Comptabilité financière I</button><button onclick="loadFiles('Introduction à l’économie')">Introduction à l'économie</button><button onclick="loadFiles('Anglais I')">Anglais I</button><button onclick="loadFiles('MS Office')">MS Office</button><button onclick="loadFiles('Techniques de Communication')">Techniques de Communication</button><button onclick="loadFiles('Statistique descriptive I')">Statistique descriptive I</button><button onclick="loadFiles('Mathématiques')">Mathématiques</button><button onclick="loadFiles('Introduction au droit')">Introduction au droit</button><button onclick="loadFiles('Archive S1')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S1</button></div>
@@ -330,19 +322,9 @@
             <div id="sae-s1-list" class="buttons-grid hidden"><button onclick="loadFiles('Introduction à l’économie')">Introduction à l'économie</button><button onclick="loadFiles('Principe de gestion')">Principe de gestion</button><button onclick="loadFiles('Calcul intégral I')">Calcul intégral I</button><button onclick="loadFiles('Calcul matricielle I')">Calcul matricielle I</button><button onclick="loadFiles('Probabilité I')">Probabilité I</button><button onclick="loadFiles('Statistique descriptive')">Statistique descriptive</button><button onclick="loadFiles('Anglais technique')">Anglais technique</button><button onclick="loadFiles('Méthodologie de travail universitaire')">Méthodologie</button><button onclick="loadFiles('Introduction au droit')">Introduction au droit</button><button onclick="loadFiles('MS office I')">MS office I</button><button onclick="loadFiles('Archive S1')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S1</button></div>
             <div id="sae-s2-list" class="buttons-grid hidden"><button onclick="loadFiles('Macro-économie')">Macro-économie</button><button onclick="loadFiles('Microéconomie')">Microéconomie</button><button onclick="loadFiles('Calcul intégral II')">Calcul intégral II</button><button onclick="loadFiles('Calcul matricielle II')">Calcul matricielle II</button><button onclick="loadFiles('Probabilité II')">Probabilité II</button><button onclick="loadFiles('Statistique descriptive II')">Statistique descriptive II</button><button onclick="loadFiles('Anglais technique II')">Anglais technique II</button><button onclick="loadFiles('MS office II')">MS office II</button><button onclick="loadFiles('Comptabilité générale')">Comptabilité générale</button><button onclick="loadFiles('Technique de communication')">Technique de communication</button><button onclick="loadFiles('Archive S2')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S2</button></div>
             <div id="sae-s3-list" class="buttons-grid hidden"><button onclick="loadFiles('Statistique inferential')">Statistique inferential</button><button onclick="loadFiles('Technique de sondage')">Technique de sondage</button><button onclick="loadFiles('Programmation linéaire')">Programmation linéaire</button><button onclick="loadFiles('Comptabilité nationale')">Comptabilité nationale</button><button onclick="loadFiles('Microeconomie 2')">Microeconomie 2</button><button onclick="loadFiles('Macro-économie 2')">Macro-économie 2</button><button onclick="loadFiles('Marketing')">Marketing</button><button onclick="loadFiles('Mangement')">Mangement</button><button onclick="loadFiles('Monnaies et crédit')">Monnaies et crédit</button><button onclick="loadFiles('Logiciel (spss ou R)')">Logiciel (spss ou R)</button><button onclick="loadFiles('Archive S3')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S3</button></div>
-            <!-- SAE S4 (الجديد) -->
+            <!-- SAE S4 -->
             <div id="sae-s4-list" class="buttons-grid hidden">
-                <button onclick="loadFiles('Finance public')">Finance public</button>
-                <button onclick="loadFiles('GRH')">GRH</button>
-                <button onclick="loadFiles('Econometrie')">Econometrie</button>
-                <button onclick="loadFiles('Commerce extérieur')">Commerce extérieur</button>
-                <button onclick="loadFiles('Optimisation')">Optimisation</button>
-                <button onclick="loadFiles('Analyse des données')">Analyse des données</button>
-                <button onclick="loadFiles('Logiciel statistique')">Logiciel statistique (R)</button>
-                <button onclick="loadFiles('Gestion des projets')">Gestion des projets</button>
-                <button onclick="loadFiles('Finance des marchés')">Finance des marchés</button>
-                <button onclick="loadFiles('Économie Mauritanienne')">Économie Mauritanienne</button>
-                <button onclick="loadFiles('Archive S4')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S4</button>
+                <button onclick="loadFiles('Finance public')">Finance public</button><button onclick="loadFiles('GRH')">GRH</button><button onclick="loadFiles('Econometrie')">Econometrie</button><button onclick="loadFiles('Commerce extérieur')">Commerce extérieur</button><button onclick="loadFiles('Optimisation')">Optimisation</button><button onclick="loadFiles('Analyse des données')">Analyse des données</button><button onclick="loadFiles('Logiciel statistique')">Logiciel statistique (R)</button><button onclick="loadFiles('Gestion des projets')">Gestion des projets</button><button onclick="loadFiles('Finance des marchés')">Finance des marchés</button><button onclick="loadFiles('Économie Mauritanienne')">Économie Mauritanienne</button><button onclick="loadFiles('Archive S4')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S4</button>
             </div>
 
             <!-- ======================= IG ======================= -->
@@ -350,6 +332,27 @@
             <div id="ig-s2-list" class="buttons-grid hidden"><button onclick="loadFiles('Comptabilité financière II')">Comptabilité financière II</button><button onclick="loadFiles('principe de gestion')">Principe de gestion</button><button onclick="loadFiles('Langage C')">Langage C</button><button onclick="loadFiles('Système d\'exploitation')">Système d'exploitation</button><button onclick="loadFiles('Programation Web')">Programation Web</button><button onclick="loadFiles('Python')">Python</button><button onclick="loadFiles('Anglais technique')">Anglais technique</button><button onclick="loadFiles('Technique de communication')">Technique de communication</button><button onclick="loadFiles('Algèbre linéaire')">Algèbre linéaire</button><button onclick="loadFiles('Analyse II')">Analyse II</button><button onclick="loadFiles('Archive S2')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S2</button></div>
             <div id="ig-s3-list" class="buttons-grid hidden"><button onclick="loadFiles('Comptabilité analytique I')">Comptabilité analytique I</button><button onclick="loadFiles('Stratégie d’entreprise')">Stratégie d’entreprise</button><button onclick="loadFiles('Java I')">Java I</button><button onclick="loadFiles('PHP-My SQL')">PHP-My SQL</button><button onclick="loadFiles('Conception des bases de données I')">Conception BDD I</button><button onclick="loadFiles('Réseaux informatiques')">Réseaux informatiques</button><button onclick="loadFiles('Modélisation (UML/MERISE)')">Modélisation (UML/MERISE)</button><button onclick="loadFiles('Calcul multi-variables')">Calcul multi-variables</button><button onclick="loadFiles('Logiciel de Calcul Scientifique')">Logiciel de Calcul Scientifique</button><button onclick="loadFiles('probabilités et Statistiques')">probabilités et Statistiques</button><button onclick="loadFiles('Archive S3')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S3</button></div>
             <div id="ig-s4-list" class="buttons-grid hidden"><button onclick="loadFiles('Comptabilité analytique II')">Comptabilité analytique II</button><button onclick="loadFiles('Gestion des ressources humaines')">Gestion des ressources humaines</button><button onclick="loadFiles('Java II')">Java II</button><button onclick="loadFiles('C#')">C#</button><button onclick="loadFiles('PHP Frameworks')">PHP Frameworks</button><button onclick="loadFiles('Gestion de projet informatique')">Gestion de projet informatique</button><button onclick="loadFiles('Théories des Graphes')">Théories des Graphes</button><button onclick="loadFiles('Bases de données')">Bases de données</button><button onclick="loadFiles('Réseaux informatique II')">Réseaux informatique II</button><button onclick="loadFiles('Compilations')">Compilations</button><button onclick="loadFiles('Archive S4')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S4</button></div>
+            <!-- IG S5 (الجديد) -->
+            <div id="ig-s5-list" class="buttons-grid hidden">
+                <button onclick="loadFiles('Contrôle de gestion')">Contrôle de gestion</button>
+                <button onclick="loadFiles('Gestion financière')">Gestion financière</button>
+                <button onclick="loadFiles('Technologie DotNet')">Technologie DotNet</button>
+                <button onclick="loadFiles('JEE Framework')">JEE Framework</button>
+                <button onclick="loadFiles('Programmation Mobile')">Programmation Mobile</button>
+                <button onclick="loadFiles('Intelligence artificielle')">Intelligence artificielle</button>
+                <button onclick="loadFiles('Bases des données avancées')">Bases des données avancées</button>
+                <button onclick="loadFiles('Administration des Systèmes')">Administration des Systèmes</button>
+                <button onclick="loadFiles('Système d\'Informations Géographique')">Système d'Informations Géographique</button>
+                <button onclick="loadFiles('Rapport de stage de la 2ème année')">Rapport de stage</button>
+                <button onclick="loadFiles('Archive S5')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S5</button>
+            </div>
+            <!-- IG S6 (الجديد) -->
+            <div id="ig-s6-list" class="buttons-grid hidden">
+                <button onclick="loadFiles('Méthodologie de recherche')">Méthodologie de recherche</button>
+                <button onclick="loadFiles('Séminaire sur l\'entrepreneuriat')">Séminaire sur l'entrepreneuriat</button>
+                <button onclick="loadFiles('Mémoire de fin d\'études')">Mémoire de fin d'études</button>
+                <button onclick="loadFiles('Archive S6')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S6</button>
+            </div>
             
         </div>
 
@@ -363,7 +366,7 @@
         </div>
     </div>
 
-    <!-- متصفح داخلي (للنتائج) -->
+    <!-- متصفح داخلي -->
     <div id="web-viewer-overlay" class="hidden">
         <div class="viewer-header">
             <button onclick="closeWebViewer()" style="background:none; border:none; color:white; font-size:1.1rem; font-weight:bold;">❌ إغلاق</button>
@@ -403,22 +406,15 @@
         <div class="motivational-text">✨ اتدورو تفاليدو إن شاء الله ✨</div>
         
         <div class="social-buttons-container">
-            <!-- Facebook -->
             <a href="https://www.facebook.com/share/1Ce3zTEpvC/" target="_blank" class="social-btn fb-btn">
                 <i class="fab fa-facebook"></i> صفحتنا على فيسبوك
             </a>
-            <!-- WhatsApp -->
             <a href="https://chat.whatsapp.com/DBg3bcBQP2q8ERsoHkRY6N" target="_blank" class="social-btn wa-btn">
                 <i class="fab fa-whatsapp"></i> مجتمعنا على واتساب
             </a>
         </div>
 
         <div class="footer-divider"></div>
-        
-        <div class="dev-credit">Développé par</div>
-        <a href="https://wa.me/22220479962" target="_blank" class="pro-dev-link">
-            Mohamed Dah Agove
-        </a>
         
         <p class="copyright">جميع الحقوق محفوظة © <span id="current-year">2026</span></p>
     </footer>
@@ -510,13 +506,11 @@
         function normalizeText(text) { return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim(); }
         
         function isValidFile(filename) {
-            // قائمة الملفات الممنوعة (ملفات النظام)
             const forbidden = [
                 'index.html', 'style.css', 'script.js', 'sw.js', 
                 'manifest.json', 'icon-192.png', 'icon-512.png', 
                 'favicon.ico', 'cname', 'readme.md'
             ];
-            
             if (forbidden.includes(filename.toLowerCase())) return false;
             return true;
         }
@@ -570,7 +564,6 @@
         }
 
         function handleGlobalSearch(query) {
-            // البحث الفوري (حرف واحد يكفي)
             if(query.length === 0) {
                 closeSearch();
                 return;
@@ -588,11 +581,8 @@
             if(allFiles.length === 0) fetchFilesFromGitHub('main');
             
             const results = allFiles.filter(file => {
-                // استبعاد ملفات النظام
                 if(!isValidFile(file.name)) return false;
-
                 const fName = normalizeText(file.name);
-                // البحث: إذا كان الاسم يحتوي على الحرف المدخل
                 return fName.includes(term);
             });
             
