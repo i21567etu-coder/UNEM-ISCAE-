@@ -287,7 +287,7 @@
                 <button onclick="loadFiles('Etude des marchés')">Etude des marchés</button>
                 <button onclick="loadFiles('Logistique du commerce international')">Logistique du commerce international</button>
                 <button onclick="loadFiles('Management des projets')">Management des projets</button>
-                <button onclick="loadFiles('Rapport de stage de la 2ème année')">Rapport de stage</button>
+                <button onclick="loadFiles('Rapport de stage de la 2ème année')">Rapport de stage de la 2ème année</button>
                 <button onclick="loadFiles('Archive S5')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S5</button>
             </div>
             <!-- TCM S6 -->
@@ -343,7 +343,7 @@
                 <button onclick="loadFiles('Bases des données avancées')">Bases des données avancées</button>
                 <button onclick="loadFiles('Administration des Systèmes')">Administration des Systèmes</button>
                 <button onclick="loadFiles('Système d\'Informations Géographique')">Système d'Informations Géographique</button>
-                <button onclick="loadFiles('Rapport de stage de la 2ème année')">Rapport de stage</button>
+                <button onclick="loadFiles('Rapport de stage de la 2ème année')">Rapport de stage de la 2ème année</button>
                 <button onclick="loadFiles('Archive S5')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S5</button>
             </div>
             <!-- IG S6 (الجديد) -->
@@ -527,14 +527,22 @@
             setTimeout(() => {
                 document.getElementById('loading-spinner').classList.add('hidden');
                 const cleanSubject = normalizeText(subjectName);
-                const keywords = cleanSubject.split(' ').filter(w => w.length > 2);
+                const keywords = cleanSubject.split(' ').filter(w => w.length > 0);
                 const filtered = allFiles.filter(file => {
                     if(file.type !== "file") return false;
                     if(!isValidFile(file.name)) return false; 
                     const fName = normalizeText(file.name);
+                    
+                    if (cleanSubject.includes("archive")) {
+                        return keywords.every(k => fName.includes(k));
+                    }
+
                     if(fName.includes(cleanSubject)) return true;
-                    let matches = 0; keywords.forEach(k => { if(fName.includes(k)) matches++; });
-                    return (keywords.length > 0 && matches >= Math.ceil(keywords.length * 0.6));
+                    
+                    const significantKeywords = keywords.filter(w => w.length > 1);
+                    let matches = 0; 
+                    significantKeywords.forEach(k => { if(fName.includes(k)) matches++; });
+                    return (significantKeywords.length > 0 && matches >= Math.ceil(significantKeywords.length * 0.6));
                 });
                 if(filtered.length === 0) document.getElementById('no-files-msg').classList.remove('hidden');
                 else filtered.forEach(file => {
