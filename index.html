@@ -5,18 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>UNEM ISCAE - المكتبة الشاملة</title>
     
+    <!-- إعدادات PWA والأيقونات -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1b5e20">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <!-- الخطوط والأيقونات -->
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         /* ==================== STYLE.CSS ==================== */
         :root {
-            --primary-color: #1b5e20; /* أخضر غامق */
-            --secondary-color: #2e7d32;
-            --accent-color: #ffeb3b; /* أصفر */
-            --bg-color: #f1f8e9;
+            --primary-color: #1b5e20;      /* أخضر غامق */
+            --secondary-color: #2e7d32;    /* أخضر قياسي */
+            --accent-color: #ffeb3b;       /* أصفر */
+            --bg-color: #f1f8e9;           /* خلفية فاتحة */
             --card-bg: #ffffff;
             --text-color: #333;
         }
@@ -24,7 +30,7 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: 'Tajawal', sans-serif; margin: 0; padding-bottom: 0; background-color: var(--bg-color); color: var(--text-color); }
 
-        /* ================= الهيدر ================= */
+        /* الهيدر */
         .top-nav { background: #003300; color: white; padding: 10px; text-align: center; font-size: 0.9rem; }
         .unem-badge { background: var(--accent-color); color: #000; padding: 2px 8px; border-radius: 4px; font-weight: bold; }
         
@@ -37,11 +43,12 @@
         .logo-icon { font-size: 2.5rem; color: var(--primary-color); }
         .main-header h1 { margin: 0; font-size: 1.8rem; font-weight: 800; letter-spacing: 1px; }
 
-        /* ================= الحاوية والبطاقات ================= */
+        /* التنسيق العام */
         .container { width: 92%; max-width: 800px; margin: 0 auto; padding-bottom: 40px; }
         .section-box { background: var(--card-bg); border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         .section-title { color: var(--primary-color); border-bottom: 3px solid #c8e6c9; padding-bottom: 10px; margin: 0 0 20px; font-weight: bold; text-align: center; }
 
+        /* الشبكة */
         .semesters-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
         @media (min-width: 600px) { .semesters-grid { grid-template-columns: 1fr 1fr; } }
 
@@ -53,6 +60,7 @@
         .semester-card:hover { border-color: var(--primary-color); box-shadow: 0 5px 15px rgba(27, 94, 32, 0.1); }
         .icon-box { font-size: 2.5rem; margin-bottom: 10px; }
 
+        /* ألوان التخصصات */
         .card-ba .icon-box { color: #1b5e20; } 
         .card-fc .icon-box { color: #2e7d32; }
         .card-tcm .icon-box { color: #ff6f00; }
@@ -60,7 +68,7 @@
         .card-sae .icon-box { color: #00838f; }
         .card-ig .icon-box { color: #f9a825; }
 
-        /* ================= الأزرار ================= */
+        /* الأزرار */
         .buttons-grid { display: flex; flex-direction: column; gap: 10px; }
         .buttons-grid button {
             background: white; border: 1px solid #ddd; border-right: 5px solid var(--primary-color);
@@ -84,45 +92,36 @@
         .back-btn { background: #e8f5e9; border: none; padding: 8px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; color: var(--primary-color); }
         .hidden { display: none !important; }
         
-        /* البحث */
+        /* البحث وزر التثبيت */
         .search-box { background: white; border-radius: 50px; padding: 12px 20px; display: flex; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; border: 2px solid transparent; }
         .search-box:focus-within { border-color: var(--primary-color); }
         .search-box input { flex: 1; border: none; outline: none; font-size: 1rem; font-family: inherit; }
 
-        /* ================= نوافذ (Modals) ================= */
+        #install-btn {
+            background: var(--secondary-color); color: white; border: none; padding: 15px; width: 100%;
+            border-radius: 15px; font-weight: bold; font-size: 1.1rem; margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2); display: none; cursor: pointer;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
+
+        /* النوافذ المنبثقة */
         #pdf-viewer-overlay, #union-modal-overlay { 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             z-index: 9999; display: flex; flex-direction: column; 
         }
         #pdf-viewer-overlay { background: #263238; }
         #union-modal-overlay { 
-            background: rgba(0,0,0,0.8); 
-            justify-content: center; 
-            align-items: center; 
-            padding: 20px;
+            background: rgba(0,0,0,0.8); justify-content: center; align-items: center; padding: 20px;
         }
 
         .union-content {
-            background: white;
-            width: 100%;
-            max-width: 500px;
-            max-height: 80vh;
-            overflow-y: auto;
-            border-radius: 20px;
-            padding: 25px;
-            text-align: center;
-            position: relative;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            border-top: 10px solid var(--primary-color);
+            background: white; width: 100%; max-width: 500px; max-height: 80vh; overflow-y: auto;
+            border-radius: 20px; padding: 25px; text-align: center; position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3); border-top: 10px solid var(--primary-color);
         }
         .union-content h2 { color: var(--primary-color); margin-top: 0; }
-        .union-text {
-            text-align: justify;
-            line-height: 1.8;
-            color: #444;
-            font-size: 1rem;
-            margin-bottom: 20px;
-        }
+        .union-text { text-align: justify; line-height: 1.8; color: #444; font-size: 1rem; margin-bottom: 20px; }
 
         /* العارض */
         .viewer-header { background: #1b5e20; color: white; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; }
@@ -133,7 +132,7 @@
         #pdf-list { list-style: none; padding: 0; }
         #pdf-list li { background: white; padding: 15px; margin-bottom: 8px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 10px; border: 1px solid #eee; }
 
-        /* ================= التذييل ================= */
+        /* التذييل */
         .main-footer {
             background: linear-gradient(180deg, #1b5e20 0%, #003300 100%);
             color: white; padding: 30px 20px; text-align: center;
@@ -175,39 +174,38 @@
 
     <div class="container">
         
+        <button id="install-btn">
+            <i class="fas fa-download"></i> تثبيت التطبيق على الهاتف
+        </button>
+
         <div class="search-box">
-            <input type="text" id="global-search" placeholder="بحث عن مادة أو ملف..." oninput="handleGlobalSearch(this.value)">
+            <input type="text" id="global-search" placeholder="ابحث عن مادة أو ملف (يكفي حرف واحد)..." oninput="handleGlobalSearch(this.value)">
             <i class="fas fa-search" style="color:var(--primary-color)"></i>
         </div>
 
-        <!-- 1. القائمة الرئيسية -->
+        <!-- القائمة الرئيسية -->
         <div id="main-menu" class="section-box">
             <h2 class="section-title">القائمة الرئيسية</h2>
             <div class="semesters-grid">
-                
                 <div class="semester-card" onclick="showSpecializationSelection()">
                     <div class="icon-box"><i class="fas fa-book-reader"></i></div>
                     <h3>الملخصات والأرشيف</h3>
                     <p>جميع التخصصات (L1, L2, L3)</p>
                 </div>
-
                 <div class="semester-card" onclick="window.open('https://resultat-iscae.vercel.app/', '_blank')">
                     <div class="icon-box" style="color:#fbc02d"><i class="fas fa-trophy"></i></div>
-                    <h3>نتائج المعهد</h3> <!-- تم التعديل كما طلبت -->
+                    <h3>نتائج المعهد</h3>
                     <p>Résultats ISCAE</p>
                 </div>
-
-                <!-- زر عن الاتحاد الجديد -->
                 <div class="semester-card" onclick="openUnionModal()">
                     <div class="icon-box" style="color:#2e7d32"><i class="fas fa-info-circle"></i></div>
                     <h3>عن الاتحاد</h3>
                     <p>نبذة تعريفية وتاريخية</p>
                 </div>
-
             </div>
         </div>
 
-        <!-- 2. اختيار التخصص -->
+        <!-- اختيار التخصص -->
         <div id="specialization-selection" class="section-box hidden">
             <div class="header-with-back">
                 <button class="back-btn" onclick="goBackToMainMenu()">القائمة</button>
@@ -223,7 +221,7 @@
             </div>
         </div>
 
-        <!-- 3. اختيار المستوى -->
+        <!-- اختيار المستوى -->
         <div id="level-selection" class="section-box hidden">
             <div class="header-with-back">
                 <button class="back-btn" onclick="goBackToSpecialization()">التخصص</button>
@@ -236,7 +234,7 @@
             </div>
         </div>
 
-        <!-- 4. الفصول -->
+        <!-- الفصول -->
         <div id="semesters-container" class="section-box hidden">
             <div class="header-with-back">
                 <button class="back-btn" onclick="goBackToLevels()">المستويات</button>
@@ -245,7 +243,7 @@
             <div id="semesters-grid-view" class="semesters-grid"></div>
         </div>
 
-        <!-- 5. قائمة المواد -->
+        <!-- قائمة المواد -->
         <div id="subjects-container" class="section-box hidden">
             <div class="header-with-back">
                 <button class="back-btn" onclick="goBackToSemesters()">الفصول</button>
@@ -361,13 +359,14 @@
         <div class="viewer-header">
             <button onclick="closePdfViewer()" style="background:none; border:none; color:white; font-size:1.1rem; font-weight:bold;">❌ إغلاق</button>
             <span id="viewer-filename" style="max-width:150px; overflow:hidden; white-space:nowrap; color:#eee;">ملف</span>
+            <!-- زر الفتح الخارجي -->
             <button id="viewer-action-btn" style="background:rgba(255,255,255,0.2); border:none; color:white; padding:5px 12px; border-radius:20px;">فتح خارجي</button>
         </div>
         <div id="pdf-render-area"></div>
         <div id="rendering-msg"><div class="spinner"></div><p style="color:white; text-align:center; margin-top:10px;">جاري جلب الملف...</p></div>
     </div>
 
-    <!-- نافذة عن الاتحاد (الجديدة) -->
+    <!-- نافذة عن الاتحاد -->
     <div id="union-modal-overlay" class="hidden">
         <div class="union-content fade-in">
             <h2>عن الاتحاد</h2>
@@ -397,13 +396,48 @@
     <script>
         document.getElementById('current-year').textContent = new Date().getFullYear();
 
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').then(registration => {
+                    console.log('ServiceWorker registration successful');
+                }, err => {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+            });
+        }
+
+        // Install Button Logic
+        let deferredPrompt;
+        const installBtn = document.getElementById('install-btn');
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installBtn.style.display = 'block';
+        });
+
+        installBtn.addEventListener('click', (e) => {
+            installBtn.style.display = 'none';
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    console.log('User accepted the install prompt');
+                }
+                deferredPrompt = null;
+            });
+        });
+
         const repoOwner = "i21567etu-coder"; 
         const repoName = "UNEM-ISCAE-"; 
         
+        // خريطة الفروع - حروف كبيرة
         const branchMap = {
-            'ba': 'ba', 'fc': 'fc',
-            'tcm': 'tcm', 'grh': 'grh',
-            'sae': 'sae', 'ig': 'ig'
+            'ba': 'BA',
+            'fc': 'FC',
+            'tcm': 'TCM',
+            'grh': 'GRH',
+            'sae': 'SAE',
+            'ig': 'IG'
         };
 
         let allFiles = []; 
@@ -419,7 +453,6 @@
         function closeSearch() { document.getElementById('file-list-container').classList.add('hidden'); document.getElementById('main-menu').classList.remove('hidden'); }
         function closePdfViewer() { document.getElementById('pdf-viewer-overlay').classList.add('hidden'); document.getElementById('pdf-render-area').innerHTML = ""; }
         
-        // دوال نافذة الاتحاد
         function openUnionModal() { document.getElementById('union-modal-overlay').classList.remove('hidden'); }
         function closeUnionModal() { document.getElementById('union-modal-overlay').classList.add('hidden'); }
 
@@ -491,8 +524,14 @@
             return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
         }
 
+        function isValidFile(filename) {
+            const allowedExtensions = ['.pdf', '.ppt', '.pptx', '.doc', '.docx', '.xls', '.xlsx', '.jpg', '.jpeg', '.png'];
+            return allowedExtensions.some(ext => filename.toLowerCase().endsWith(ext));
+        }
+
         function loadFiles(subjectName) {
-            document.getElementById('file-list-container').classList.remove('hidden');
+            const listContainer = document.getElementById('file-list-container');
+            listContainer.classList.remove('hidden');
             const pdfList = document.getElementById('pdf-list');
             const spinner = document.getElementById('loading-spinner');
             const noFilesMsg = document.getElementById('no-files-msg');
@@ -501,6 +540,10 @@
             document.getElementById('selected-subject-name').textContent = subjectName;
             spinner.classList.remove('hidden');
             noFilesMsg.classList.add('hidden');
+
+            setTimeout(() => {
+                listContainer.scrollIntoView({ behavior: 'smooth' });
+            }, 100);
 
             if(allFiles.length === 0) fetchFilesFromGitHub(currentBranch);
 
@@ -512,8 +555,11 @@
 
                 const filtered = allFiles.filter(file => {
                     if(file.type !== "file") return false;
+                    if(!isValidFile(file.name)) return false;
+
                     const fName = normalizeText(file.name);
                     if(fName.includes(cleanSubject)) return true;
+
                     let matches = 0;
                     keywords.forEach(k => { if(fName.includes(k)) matches++; });
                     return (keywords.length > 0 && matches >= Math.ceil(keywords.length * 0.6));
@@ -544,7 +590,9 @@
             msg.style.display = 'block';
 
             const rawUrl = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/${currentBranch}/${encodeURIComponent(filePath)}`;
-            document.getElementById('viewer-action-btn').onclick = () => window.open(rawUrl, '_blank');
+            
+            const googleViewerLink = `https://docs.google.com/viewer?url=${rawUrl}`;
+            document.getElementById('viewer-action-btn').onclick = () => window.open(googleViewerLink, '_blank');
 
             const iframe = document.createElement('iframe');
             iframe.style.width = "100%";
@@ -558,8 +606,8 @@
                 msg.innerHTML = `
                     <div style="text-align:center; padding:20px; color:white;">
                         <p style="margin-bottom:15px; font-size:1.1rem;">⚠️ إذا لم يظهر الملف:</p>
-                        <a href="${rawUrl}" target="_blank" style="background:white; color:#333; padding:10px 20px; border-radius:20px; text-decoration:none; font-weight:bold;">
-                            <i class="fas fa-download"></i> تحميل مباشر
+                        <a href="${googleViewerLink}" target="_blank" style="background:white; color:#333; padding:10px 20px; border-radius:20px; text-decoration:none; font-weight:bold;">
+                            <i class="fas fa-external-link-alt"></i> فتح في عارض Google
                         </a>
                     </div>
                 `;
@@ -569,17 +617,27 @@
         }
 
         function handleGlobalSearch(query) {
-            if(query.length < 2) return;
+            if(query.length === 0) {
+                closeSearch();
+                return;
+            }
+
             hideAll();
-            document.getElementById('file-list-container').classList.remove('hidden');
+            const listContainer = document.getElementById('file-list-container');
+            listContainer.classList.remove('hidden');
             document.getElementById('selected-subject-name').textContent = "نتائج البحث: " + query;
             const pdfList = document.getElementById('pdf-list');
             pdfList.innerHTML = "";
             
             const term = normalizeText(query);
+            
             if(allFiles.length === 0) fetchFilesFromGitHub('main');
             
-            const results = allFiles.filter(f => normalizeText(f.name).includes(term));
+            const results = allFiles.filter(file => {
+                if(!isValidFile(file.name)) return false;
+                const fName = normalizeText(file.name);
+                return fName.includes(term);
+            });
             
             if(results.length === 0) {
                  document.getElementById('no-files-msg').classList.remove('hidden');
