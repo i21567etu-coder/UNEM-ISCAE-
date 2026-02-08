@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>UNEM ISCAE - المكتبة الشاملة</title>
+    <title>UNEM ISCAE - المنصة</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1b5e20">
@@ -29,17 +29,57 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: 'Tajawal', sans-serif; margin: 0; padding-bottom: 0; background-color: var(--bg-color); color: var(--text-color); }
 
-        .top-nav { background: #003300; color: white; padding: 10px; text-align: center; font-size: 0.9rem; }
-        .unem-badge { background: var(--accent-color); color: #000; padding: 2px 8px; border-radius: 4px; font-weight: bold; }
+        /* --- 1. الشريط العلوي (ذهبي مثل الصورة) --- */
+        .top-slogan {
+            background: linear-gradient(to bottom, #dac06e, #c7a746); /* لون ذهبي رملي */
+            color: #003300; /* نص أخضر غامق */
+            text-align: center;
+            padding: 8px;
+            font-size: 0.95rem;
+            font-weight: 800;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            position: relative;
+            z-index: 100;
+        }
+
+        /* --- 2. شريط القائمة (أخضر داكن مثل الصورة) --- */
+        .top-nav {
+            background: #003300; /* خلفية خضراء داكنة */
+            color: white; /* نص أبيض */
+            padding: 10px;
+            text-align: center;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        /* المربع الأبيض حول الاختصار */
+        .unem-badge {
+            background: #ffffff;
+            color: #003300;
+            padding: 2px 10px;
+            border-radius: 15px;
+            font-weight: 800;
+            margin-right: 5px;
+        }
         
         .main-header {
             background: linear-gradient(135deg, #1b5e20 0%, #4caf50 100%);
             color: white; padding: 35px 20px 45px; border-radius: 0 0 40px 40px; text-align: center;
             box-shadow: 0 4px 15px rgba(27, 94, 32, 0.4); margin-bottom: 25px;
         }
-        .logo-container { background: white; width: 70px; height: 70px; border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
-        .logo-icon { font-size: 2.5rem; color: var(--primary-color); }
+        
+        .logo-container { background: white; width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; box-shadow: 0 5px 15px rgba(0,0,0,0.2); overflow: hidden; }
+        
+        .logo-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            padding: 2px;
+            border-radius: 50%;
+        }
+
         .main-header h1 { margin: 0; font-size: 1.8rem; font-weight: 800; letter-spacing: 1px; }
+        .main-header p { font-size: 1.1rem; margin-top: 10px; opacity: 0.95; }
 
         .container { width: 92%; max-width: 800px; margin: 0 auto; padding-bottom: 40px; }
         .section-box { background: var(--card-bg); border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
@@ -150,13 +190,6 @@
         .social-btn i { margin-left: 8px; font-size: 1.2rem; }
 
         .copyright { margin-top: 25px; font-size: 0.8rem; opacity: 0.7; }
-        
-        /* الشريط العلوي الجديد */
-        .top-slogan {
-            background-color: #002200; color: #ffeb3b; text-align: center; padding: 8px;
-            font-size: 0.95rem; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            position: relative; z-index: 100;
-        }
     </style>
 </head>
 <body>
@@ -168,9 +201,12 @@
     </nav>
 
     <header class="main-header">
-        <div class="logo-container"><i class="fas fa-graduation-cap logo-icon"></i></div>
+        <div class="logo-container">
+            <img src="logo.png" alt="شعار الاتحاد" class="logo-img">
+        </div>
         <h1>UNEM ISCAE</h1>
-        <p>المكتبة الرقمية الشاملة 💚</p>
+        <!-- تم تغيير النص هنا -->
+        <p>منصة الاتحاد الوطني لطلبة موريتانيا 💚</p>
     </header>
 
     <div class="container">
@@ -293,9 +329,7 @@
             <!-- TCM S6 -->
             <div id="tcm-s6-list" class="buttons-grid hidden">
                 <button onclick="loadFiles('Méthodologie de recherche')">Méthodologie de recherche</button>
-                <button onclick="loadFiles('Séminaire sur l\'entrepreneuriat')">Séminaire sur l'entrepreneuriat</button>
-                <button onclick="loadFiles('Mémoire de fin d\'études')">Mémoire de fin d'études</button>
-                <button onclick="loadFiles('Archive S6')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S6</button>
+                <button onclick="loadFiles('Séminaire sur l\'entrepreneuriat')">Séminaire sur l'entrepreneuriat</button><button onclick="loadFiles('Mémoire de fin d\'études')">Mémoire de fin d'études</button><button onclick="loadFiles('Archive S6')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S6</button>
             </div>
 
             <!-- ======================= GRH ======================= -->
