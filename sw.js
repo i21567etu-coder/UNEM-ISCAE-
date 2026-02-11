@@ -1,4 +1,4 @@
-const CACHE_NAME = 'unem-iscae-v2';
+const CACHE_NAME = 'unem-iscae-v3';
 const assetsToCache = [
   './',
   './index.html',
