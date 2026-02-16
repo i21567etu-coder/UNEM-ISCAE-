@@ -529,16 +529,41 @@
             const cleanSubject = normalizeText(subjectName);
             const keywords = cleanSubject.split(' ').filter(w => w.length > 0);
             
+            // ============================================
+            // === الجزء المعدل لزيادة الدقة (Strict Mode) ===
+            // ============================================
             const filteredGithub = githubFiles.filter(file => {
                 if(file.type !== "file") return false;
                 if(!isValidFile(file.name)) return false; 
+                
                 const fName = normalizeText(file.name);
-                if (cleanSubject.includes("archive")) { return keywords.every(k => fName.includes(k)); }
+                
+                // 1. حالة الأرشيف (يجب توفر كل الكلمات)
+                if (cleanSubject.includes("archive")) { 
+                    return keywords.every(k => fName.includes(k)); 
+                }
+
+                // 2. المطابقة التامة (Exact Phrase Match) - الأقوى والأدق
                 if(fName.includes(cleanSubject)) return true;
-                const significantKeywords = keywords.filter(w => w.length > 1);
-                let matches = 0; significantKeywords.forEach(k => { if(fName.includes(k)) matches++; });
-                return (significantKeywords.length > 0 && matches >= Math.ceil(significantKeywords.length * 0.6));
+
+                // 3. المطابقة الذكية الدقيقة (Strict Keyword Match)
+                // استبعاد حروف الجر والكلمات القصيرة جداً لمنع الخلط
+                const stopWords = ['de', 'du', 'des', 'la', 'le', 'les', 'et', 'en', 'a', 'au', 'aux', 'l', 'i', 'ii'];
+                
+                // استخراج الكلمات الجوهرية (Essential Keywords)
+                const distinctKeywords = keywords.filter(w => !stopWords.includes(w) && w.length > 2);
+
+                if (distinctKeywords.length > 0) {
+                    // الشرط الجديد: يجب توفر *جميع* الكلمات المميزة للمادة في اسم الملف
+                    // مثال: Contrôle de gestion -> يجب أن يوجد "controle" و "gestion"
+                    // مثال: Gestion de projet -> يجب أن يوجد "gestion" و "projet"
+                    return distinctKeywords.every(k => fName.includes(k));
+                }
+
+                // fallback إذا كان الاسم قصيراً جداً
+                return fName.includes(cleanSubject);
             });
+            // ============================================
 
             const finalFiles = [...filteredGithub, ...supabaseFiles];
 
@@ -766,5 +791,41 @@
     </script>
     <!-- END PROTECTION CODE -->
     
+
+    <!-- START PROTECTION CODE -->
+    <script>
+    (function() {
+        // منع الزر الأيمن
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+
+        // منع اختصارات لوحة المفاتيح
+        document.onkeydown = function(e) {
+            // F12
+            if(e.keyCode == 123) {
+                return false;
+            }
+            // Ctrl+I (DevTools)
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) {
+                return false;
+            }
+            // Ctrl+J (Console)
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) {
+                return false;
+            }
+            // Ctrl+C (Inspect)
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) {
+                return false;
+            }
+            // Ctrl+U (View Source)
+            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) {
+                return false;
+            }
+        }
+    })();
+    </script>
+    <!-- END PROTECTION CODE -->
+    
 </body>
-                </html>
+</html>
