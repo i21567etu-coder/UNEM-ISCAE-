@@ -157,8 +157,56 @@
         .spinner { border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid #fff; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
         
+        /* === تعديلات القائمة لزر التحميل === */
         #pdf-list { list-style: none; padding: 0; }
-        #pdf-list li { background: white; padding: 15px; margin-bottom: 8px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 10px; border: 1px solid #eee; }
+        #pdf-list li { 
+            background: white; 
+            padding: 8px 12px; 
+            margin-bottom: 8px; 
+            border-radius: 12px; 
+            display: flex; 
+            justify-content: space-between;
+            align-items: center; 
+            border: 1px solid #eee; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        /* القسم الخاص بالاسم والأيقونة (للمعاينة) */
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            flex-grow: 1;
+            padding: 5px;
+        }
+        .file-info span {
+            font-weight: 500;
+            color: #424242;
+            word-break: break-word;
+        }
+
+        /* زر التحميل */
+        .download-btn {
+            background: #e0f2f1;
+            color: #00695c;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-right: 5px;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+        .download-btn:active {
+            transform: scale(0.95);
+            background: #b2dfdb;
+        }
+        .download-btn i { font-size: 1.1rem; }
 
         /* ستايل نموذج الرفع الجديد */
         .upload-form-group { margin-bottom: 15px; text-align: right; }
@@ -197,7 +245,7 @@
             <img src="logo.png" alt="شعار الاتحاد" class="logo-img">
         </div>
         <h1>UNEM ISCAE</h1>
-        <p>منصة الاتحاد الوطني لطلبة موريتانيا 💚</p>
+        <p>منصة الاتحاد الوطني لطلبة موريتانيا</p>
     </header>
 
     <div class="container">
@@ -298,7 +346,7 @@
 
             <!-- ======================= FC ======================= -->
             <div id="fc-s1-list" class="buttons-grid hidden"><button onclick="loadFiles('Principe de gestion')">Principe de gestion</button><button onclick="loadFiles('Comptabilité financière I')">Comptabilité financière I</button><button onclick="loadFiles('Statistique descriptive I')">Statistique descriptive I</button><button onclick="loadFiles('Mathématique')">Mathématique</button><button onclick="loadFiles('Anglais I')">Anglais I</button><button onclick="loadFiles('Méthodologie du travail universitaire')">Méthodologie</button><button onclick="loadFiles('MS office')">MS office</button><button onclick="loadFiles('Introduction à l’économie')">Introduction à l'économie</button><button onclick="loadFiles('Introduction au droit')">Introduction au droit</button><button onclick="loadFiles('Technique de communication')">Technique de communication</button><button onclick="loadFiles('Archive S1')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S1</button></div>
-            <div id="fc-s2-list" class="buttons-grid hidden"><button onclick="loadFiles('Comptabilité financière II')">Comptabilité financière II</button><button onclick="loadFiles('Micro-finance')">Micro-finance</button><button onclick="loadFiles('Economie d’entreprise')">Economie d'entreprise</button><button onclick="loadFiles('Statistique descriptive II')">Statistique descriptive II</button><button onclick="loadFiles('Mathématiques financières')">Mathématiques financières</button><button onclick="loadFiles('Anglais II')">Anglais II</button><button onclick="loadFiles('Aptitudes en TIC')">Aptitudes en TIC</button><button onclick="loadFiles('Développement personnel')">Développement personnel</button><button onclick="loadFiles('Microéconomie')">Microéconomie</button><button onclick="loadFiles('Droit des affaires')">Droit des affaires</button><button onclick="loadFiles('Archive S2')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S2</button></div>
+            <div id="fc-s2-list" class="buttons-grid hidden"><button onclick="loadFiles('Comptabilité financière II')">Comptabilité financière II</button><button onclick="loadFiles('Comptabilité financière II')">Comptabilité financière II</button><button onclick="loadFiles('Micro-finance')">Micro-finance</button><button onclick="loadFiles('Economie d’entreprise')">Economie d'entreprise</button><button onclick="loadFiles('Statistique descriptive II')">Statistique descriptive II</button><button onclick="loadFiles('Mathématiques financières')">Mathématiques financières</button><button onclick="loadFiles('Anglais II')">Anglais II</button><button onclick="loadFiles('Aptitudes en TIC')">Aptitudes en TIC</button><button onclick="loadFiles('Développement personnel')">Développement personnel</button><button onclick="loadFiles('Microéconomie')">Microéconomie</button><button onclick="loadFiles('Droit des affaires')">Droit des affaires</button><button onclick="loadFiles('Archive S2')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S2</button></div>
             <div id="fc-s3-list" class="buttons-grid hidden"><button onclick="loadFiles('Technique Bancaire')">Technique Bancaire</button><button onclick="loadFiles('Système financier mauritanien')">Système financier mauritanien</button><button onclick="loadFiles('Gestion Financière')">Gestion Financière</button><button onclick="loadFiles('Comptabilité des Sociétés')">Comptabilité des Sociétés</button><button onclick="loadFiles('Anglais des affaires')">Anglais des affaires</button><button onclick="loadFiles('Logiciels Comptables')">Logiciels Comptables</button><button onclick="loadFiles('Marketing')">Marketing</button><button onclick="loadFiles('Droit administrative')">Droit administrative</button><button onclick="loadFiles('Macroéconomie')">Macroéconomie</button><button onclick="loadFiles('Méthodes d’aide à la décision')">Méthodes d'aide à la décision</button><button onclick="loadFiles('Archive S3')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S3</button></div>
             <div id="fc-s4-list" class="buttons-grid hidden"><button onclick="loadFiles('Analyse financière')">Analyse financière</button><button onclick="loadFiles('Comptabilité de gestion')">Comptabilité de gestion</button><button onclick="loadFiles('Comptabilité des Sociétés II')">Comptabilité des Sociétés II</button><button onclick="loadFiles('Finance islamique')">Finance islamique</button><button onclick="loadFiles('Gestion de portefeuilles')">Gestion de portefeuilles</button><button onclick="loadFiles('Finance des marchés')">Finance des marchés</button><button onclick="loadFiles('Droit du travail')">Droit du travail</button><button onclick="loadFiles('GRH')">GRH</button><button onclick="loadFiles('Fiscalité')">Fiscalité</button><button onclick="loadFiles('Les instruments de Crédits')">Les instruments de Crédits</button><button onclick="loadFiles('Archive S4')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S4</button></div>
             <div id="fc-s5-list" class="buttons-grid hidden"><button onclick="loadFiles('Gestion de Trésorerie')">Gestion de Trésorerie</button><button onclick="loadFiles('Gestion de Trésorerie')">Gestion de Trésorerie</button><button onclick="loadFiles('Contrôle de Gestion')">Contrôle de Gestion</button><button onclick="loadFiles('Analyse financière Approfondie')">Analyse financière Approfondie</button><button onclick="loadFiles('Méthodes d\'évaluation de l\'entreprise')">Méthodes d'évaluation</button><button onclick="loadFiles('Marchés financiers')">Marchés financiers</button><button onclick="loadFiles('Audit financier')">Audit financier</button><button onclick="loadFiles('Normes Comptables Internationnales')">Normes Comptables (IAS/IFRS)</button><button onclick="loadFiles('Choix d\'investissement')">Choix d'investissement</button><button onclick="loadFiles('Droit bancaire et financier')">Droit bancaire et financier</button><button onclick="loadFiles('Rapport de stage de la 2ème année')">Rapport de stage (L2)</button><button onclick="loadFiles('Archive S5')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S5</button></div>
@@ -702,11 +750,58 @@
                                             .replace(/_/g, ' ')
                                             .replace('.pdf', '');
 
-                    li.innerHTML = `<i class="fas fa-file-pdf" style="color:#d32f2f"></i> ${displayName}`;
-                    li.onclick = () => openSmartViewer(file);
+                    // إنشاء عنصر المعلومات (أيقونة PDF + الاسم) - قابل للنقر للمعاينة
+                    const infoDiv = document.createElement('div');
+                    infoDiv.className = 'file-info';
+                    infoDiv.innerHTML = `<i class="fas fa-file-pdf" style="color:#d32f2f"></i> <span>${displayName}</span>`;
+                    infoDiv.onclick = () => openSmartViewer(file);
+
+                    // إنشاء زر التحميل - قابل للنقر للتحميل المباشر
+                    const dlBtn = document.createElement('button');
+                    dlBtn.className = 'download-btn';
+                    dlBtn.innerHTML = `<i class="fas fa-download"></i>`;
+                    dlBtn.title = "تحميل الملف";
+                    dlBtn.onclick = (e) => {
+                        e.stopPropagation(); // منع فتح المعاينة عند الضغط على التحميل
+                        triggerDownload(file);
+                    };
+
+                    // إضافة العناصر للقائمة
+                    li.appendChild(dlBtn); // الزر يساراً (بسبب RTL سيظهر يميناً في الكود لكن يساراً في العرض) - حسب الترتيب في HTML
+                    // لضبط الترتيب الصحيح مع flex و RTL:
+                    // الترتيب في الـ DOM: زر التحميل أولاً ثم المعلومات
+                    // مع space-between: الزر سيكون على اليمين والمعلومات على اليسار (في LTR)
+                    // في RTL: الزر سيكون على اليسار والمعلومات على اليمين. 
+                    // لنعكس الترتيب في الـ DOM ليكون الاسم أولاً ثم الزر، ليظهر الاسم يمين والزر يسار في RTL.
+                    
+                    li.innerHTML = ''; // تفريغ المحتوى السابق
+                    li.appendChild(infoDiv); // الاسم يمين
+                    li.appendChild(dlBtn);   // الزر يسار
+                    
                     pdfList.appendChild(li);
                 });
             }
+        }
+
+        // دالة التحميل المباشر الجديدة
+        function triggerDownload(fileObj) {
+            let downloadUrl = '';
+            if (fileObj.source === 'supabase') {
+                const { data } = supabaseClient.storage.from('pdf-files').getPublicUrl(fileObj.path);
+                downloadUrl = data.publicUrl;
+            } else {
+                // رابط GitHub الخام
+                downloadUrl = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/${currentBranch}/${encodeURIComponent(fileObj.path)}`;
+            }
+
+            // إنشاء رابط مخفي والضغط عليه
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.target = '_blank'; // فتح في تبويب جديد لضمان التحميل في بعض المتصفحات
+            link.download = fileObj.name; // محاولة اقتراح اسم الملف
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
         // --- دالة العرض الرئيسية (تم تعديلها لفتح شاشة البطاقات أولاً) ---
@@ -880,8 +975,22 @@
                 document.getElementById('no-files-msg').classList.add('hidden');
                 results.forEach(file => {
                     const li = document.createElement('li');
-                    li.innerHTML = `<i class="fas fa-file-pdf" style="color:#d32f2f"></i> ${file.name}`;
-                    li.onclick = () => openSmartViewer({...file, source: 'github'});
+                    
+                    const infoDiv = document.createElement('div');
+                    infoDiv.className = 'file-info';
+                    infoDiv.innerHTML = `<i class="fas fa-file-pdf" style="color:#d32f2f"></i> <span>${file.name}</span>`;
+                    infoDiv.onclick = () => openSmartViewer({...file, source: 'github'});
+
+                    const dlBtn = document.createElement('button');
+                    dlBtn.className = 'download-btn';
+                    dlBtn.innerHTML = `<i class="fas fa-download"></i>`;
+                    dlBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        triggerDownload({...file, source: 'github'});
+                    };
+
+                    li.appendChild(infoDiv);
+                    li.appendChild(dlBtn);
                     pdfList.appendChild(li);
                 });
             }
