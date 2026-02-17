@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>UNEM ISCAE - المنصة</title>
-
+    
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1b5e20">
     <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
@@ -14,7 +13,7 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
+    
     <!-- استدعاء مكتبة Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -29,534 +28,162 @@
             --text-color: #333;
         }
 
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        body {
-            font-family: 'Tajawal', sans-serif;
-            margin: 0;
-            padding-bottom: 0;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Tajawal', sans-serif; margin: 0; padding-bottom: 0; background-color: var(--bg-color); color: var(--text-color); }
 
         .top-slogan {
             background: linear-gradient(to bottom, #dac06e, #c7a746);
-            color: #003300;
-            text-align: center;
-            padding: 8px;
-            font-size: 0.95rem;
-            font-weight: 800;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-            position: relative;
-            z-index: 100;
+            color: #003300; text-align: center; padding: 8px; font-size: 0.95rem; font-weight: 800;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2); position: relative; z-index: 100;
         }
 
-        .top-nav {
-            background: #003300;
-            color: white;
-            padding: 10px;
-            text-align: center;
-            font-size: 0.9rem;
-            font-weight: bold;
-        }
-
-        .unem-badge {
-            background: #ffffff;
-            color: #003300;
-            padding: 2px 10px;
-            border-radius: 15px;
-            font-weight: 800;
-            margin-right: 5px;
-        }
-
+        .top-nav { background: #003300; color: white; padding: 10px; text-align: center; font-size: 0.9rem; font-weight: bold; }
+        .unem-badge { background: #ffffff; color: #003300; padding: 2px 10px; border-radius: 15px; font-weight: 800; margin-right: 5px; }
+        
         .main-header {
             background: linear-gradient(135deg, #1b5e20 0%, #4caf50 100%);
-            color: white;
-            padding: 35px 20px 45px;
-            border-radius: 0 0 40px 40px;
-            text-align: center;
-            box-shadow: 0 4px 15px rgba(27, 94, 32, 0.4);
-            margin-bottom: 25px;
+            color: white; padding: 35px 20px 45px; border-radius: 0 0 40px 40px; text-align: center;
+            box-shadow: 0 4px 15px rgba(27, 94, 32, 0.4); margin-bottom: 25px;
         }
+        
+        .logo-container { background: white; width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; box-shadow: 0 5px 15px rgba(0,0,0,0.2); overflow: hidden; }
+        .logo-img { width: 100%; height: 100%; object-fit: cover; padding: 2px; border-radius: 50%; }
 
-        .logo-container {
-            background: white;
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            margin: 0 auto 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-            overflow: hidden;
-        }
+        .main-header h1 { margin: 0; font-size: 1.8rem; font-weight: 800; letter-spacing: 1px; }
+        .main-header p { font-size: 1.1rem; margin-top: 10px; opacity: 0.95; }
 
-        .logo-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            padding: 2px;
-            border-radius: 50%;
-        }
+        .container { width: 92%; max-width: 800px; margin: 0 auto; padding-bottom: 40px; }
+        .section-box { background: var(--card-bg); border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .section-title { color: var(--primary-color); border-bottom: 3px solid #c8e6c9; padding-bottom: 10px; margin: 0 0 20px; font-weight: bold; text-align: center; }
 
-        .main-header h1 {
-            margin: 0;
-            font-size: 1.8rem;
-            font-weight: 800;
-            letter-spacing: 1px;
-        }
-
-        .main-header p {
-            font-size: 1.1rem;
-            margin-top: 10px;
-            opacity: 0.95;
-        }
-
-        .container {
-            width: 92%;
-            max-width: 800px;
-            margin: 0 auto;
-            padding-bottom: 40px;
-        }
-
-        .section-box {
-            background: var(--card-bg);
-            border-radius: 20px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-        }
-
-        .section-title {
-            color: var(--primary-color);
-            border-bottom: 3px solid #c8e6c9;
-            padding-bottom: 10px;
-            margin: 0 0 20px;
-            font-weight: bold;
-            text-align: center;
-        }
-
-        .semesters-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 15px;
-        }
-
-        @media (min-width: 600px) {
-            .semesters-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
+        .semesters-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        @media (min-width: 600px) { .semesters-grid { grid-template-columns: 1fr 1fr; } }
 
         .semester-card {
-            background: white;
-            border: 1px solid #eee;
-            border-radius: 16px;
-            padding: 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            background: white; border: 1px solid #eee; border-radius: 16px; padding: 20px; text-align: center;
+            cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
+        .semester-card:active { transform: scale(0.97); background: #e8f5e9; }
+        .semester-card:hover { border-color: var(--primary-color); box-shadow: 0 5px 15px rgba(27, 94, 32, 0.1); }
+        .icon-box { font-size: 2.5rem; margin-bottom: 10px; }
 
-        .semester-card:active {
-            transform: scale(0.97);
-            background: #e8f5e9;
-        }
-
-        .semester-card:hover {
-            border-color: var(--primary-color);
-            box-shadow: 0 5px 15px rgba(27, 94, 32, 0.1);
-        }
-
-        .icon-box {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-        }
-
-        .card-ba .icon-box {
-            color: #1b5e20;
-        }
-
-        .card-fc .icon-box {
-            color: #2e7d32;
-        }
-
-        .card-tcm .icon-box {
-            color: #ff6f00;
-        }
-
-        .card-grh .icon-box {
-            color: #1565c0;
-        }
-
-        .card-sae .icon-box {
-            color: #00838f;
-        }
-
-        .card-ig .icon-box {
-            color: #f9a825;
-        }
-
-        .buttons-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .buttons-grid button {
+        /* ستايل بطاقات التصنيف الجديدة (Cours, TD, TP, Archive) */
+        .category-card {
             background: white;
             border: 1px solid #ddd;
-            border-right: 5px solid var(--primary-color);
-            padding: 15px;
-            border-radius: 10px;
-            text-align: right;
-            font-weight: 600;
-            font-size: 1rem;
-            color: #333;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: 0.2s;
-        }
-
-        .buttons-grid button:active {
-            background: #e8f5e9;
-        }
-
-        .archive-btn {
-            background: #ff9800 !important;
-            color: white !important;
-            border: none !important;
-            justify-content: center !important;
-            text-align: center !important;
-            box-shadow: 0 4px 10px rgba(255, 152, 0, 0.3);
-        }
-
-        .header-with-back {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .back-btn {
-            background: #e8f5e9;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-weight: bold;
-            cursor: pointer;
-            color: var(--primary-color);
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        .search-box {
-            background: white;
-            border-radius: 50px;
-            padding: 12px 20px;
-            display: flex;
-            align-items: center;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-            margin-bottom: 20px;
-            border: 2px solid transparent;
-        }
-
-        .search-box:focus-within {
-            border-color: var(--primary-color);
-        }
-
-        .search-box input {
-            flex: 1;
-            border: none;
-            outline: none;
-            font-size: 1rem;
-            font-family: inherit;
-        }
-
-        #install-btn {
-            background: var(--secondary-color);
-            color: white;
-            border: none;
-            padding: 15px;
-            width: 100%;
             border-radius: 15px;
-            font-weight: bold;
-            font-size: 1.1rem;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            display: none;
+            padding: 25px;
+            text-align: center;
             cursor: pointer;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% {
-                transform: scale(1);
-            }
-
-            50% {
-                transform: scale(1.02);
-            }
-
-            100% {
-                transform: scale(1);
-            }
-        }
-
-        /* نوافذ */
-        #pdf-viewer-overlay,
-        #union-modal-overlay,
-        #web-viewer-overlay,
-        #upload-modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 9999;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
             display: flex;
             flex-direction: column;
-        }
-
-        #pdf-viewer-overlay,
-        #web-viewer-overlay {
-            background: #263238;
-        }
-
-        #union-modal-overlay,
-        #upload-modal-overlay {
-            background: rgba(0, 0, 0, 0.8);
-            justify-content: center;
             align-items: center;
-            padding: 20px;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+        .category-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary-color);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+        .category-card i {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+        .category-card h3 { margin: 0 0 5px; font-weight: 800; font-size: 1.2rem; color: #333; }
+        .category-card p { margin: 0; color: #666; font-size: 0.9rem; }
+
+        /* ألوان أيقونات البطاقات */
+        .cat-cours i { color: #1565c0; } /* أزرق */
+        .cat-td i { color: #e65100; }    /* برتقالي */
+        .cat-tp i { color: #00695c; }    /* تركواز */
+        .cat-archive i { color: #c62828; } /* أحمر */
+
+        .card-ba .icon-box { color: #1b5e20; } .card-fc .icon-box { color: #2e7d32; }
+        .card-tcm .icon-box { color: #ff6f00; } .card-grh .icon-box { color: #1565c0; }
+        .card-sae .icon-box { color: #00838f; } .card-ig .icon-box { color: #f9a825; }
+
+        .buttons-grid { display: flex; flex-direction: column; gap: 10px; }
+        .buttons-grid button {
+            background: white; border: 1px solid #ddd; border-right: 5px solid var(--primary-color);
+            padding: 15px; border-radius: 10px; text-align: right; font-weight: 600; font-size: 1rem;
+            color: #333; cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+            transition: 0.2s;
+        }
+        .buttons-grid button:active { background: #e8f5e9; }
+        
+        .archive-btn {
+            background: #ff9800 !important; color: white !important; border: none !important;
+            justify-content: center !important; text-align: center !important; box-shadow: 0 4px 10px rgba(255, 152, 0, 0.3);
+        }
+
+        .header-with-back { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .back-btn { background: #e8f5e9; border: none; padding: 8px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; color: var(--primary-color); }
+        .hidden { display: none !important; }
+        
+        .search-box { background: white; border-radius: 50px; padding: 12px 20px; display: flex; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; border: 2px solid transparent; }
+        .search-box:focus-within { border-color: var(--primary-color); }
+        .search-box input { flex: 1; border: none; outline: none; font-size: 1rem; font-family: inherit; }
+
+        #install-btn {
+            background: var(--secondary-color); color: white; border: none; padding: 15px; width: 100%;
+            border-radius: 15px; font-weight: bold; font-size: 1.1rem; margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2); display: none; cursor: pointer;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
+
+        /* نوافذ */
+        #pdf-viewer-overlay, #union-modal-overlay, #web-viewer-overlay, #upload-modal-overlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            z-index: 9999; display: flex; flex-direction: column; 
+        }
+        #pdf-viewer-overlay, #web-viewer-overlay { background: #263238; }
+        #union-modal-overlay, #upload-modal-overlay { 
+            background: rgba(0,0,0,0.8); justify-content: center; align-items: center; padding: 20px;
         }
 
         .union-content {
-            background: white;
-            width: 100%;
-            max-width: 500px;
-            max-height: 80vh;
-            overflow-y: auto;
-            border-radius: 20px;
-            padding: 25px;
-            text-align: center;
-            position: relative;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            border-top: 10px solid var(--primary-color);
+            background: white; width: 100%; max-width: 500px; max-height: 80vh; overflow-y: auto;
+            border-radius: 20px; padding: 25px; text-align: center; position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3); border-top: 10px solid var(--primary-color);
         }
+        .viewer-header { background: #1b5e20; color: white; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; }
+        #pdf-render-area, .web-viewer-container { flex: 1; width: 100%; background: #333; position: relative; }
+        .web-viewer-container iframe { width: 100%; height: 100%; border: none; }
 
-        .viewer-header {
-            background: #1b5e20;
-            color: white;
-            padding: 10px 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        #pdf-render-area,
-        .web-viewer-container {
-            flex: 1;
-            width: 100%;
-            background: #333;
-            position: relative;
-        }
-
-        .web-viewer-container iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-
-        .spinner {
-            border: 4px solid rgba(255, 255, 255, 0.3);
-            border-top: 4px solid #fff;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-
-        @keyframes spin {
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        #pdf-list {
-            list-style: none;
-            padding: 0;
-        }
-
-        #pdf-list li {
-            background: white;
-            padding: 15px;
-            margin-bottom: 8px;
-            border-radius: 8px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            border: 1px solid #eee;
-        }
+        .spinner { border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid #fff; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        
+        #pdf-list { list-style: none; padding: 0; }
+        #pdf-list li { background: white; padding: 15px; margin-bottom: 8px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 10px; border: 1px solid #eee; }
 
         /* ستايل نموذج الرفع الجديد */
-        .upload-form-group {
-            margin-bottom: 15px;
-            text-align: right;
-        }
+        .upload-form-group { margin-bottom: 15px; text-align: right; }
+        .upload-form-group label { display: block; margin-bottom: 5px; font-weight: bold; color: var(--primary-color); }
+        .upload-form-group select, .upload-form-group input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-family: inherit; font-size: 1rem; }
+        .upload-btn-submit { background: var(--primary-color); color: white; width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .upload-btn-submit:disabled { background: #ccc; }
+        .status-msg { margin-top: 10px; font-size: 0.9rem; font-weight: bold; }
+        .success { color: green; } .error { color: red; }
 
-        .upload-form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: var(--primary-color);
-        }
+        .main-footer { background: linear-gradient(180deg, #1b5e20 0%, #003300 100%); color: white; padding: 30px 20px; text-align: center; border-radius: 30px 30px 0 0; margin-top: 30px; position: relative; overflow: hidden; }
+        .motivational-text { font-size: 1.3rem; font-weight: 800; color: #ffeb3b; margin-bottom: 25px; display: inline-block; text-shadow: 0 2px 10px rgba(0,0,0,0.3); animation: floatText 3s ease-in-out infinite; }
+        @keyframes floatText { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px) scale(1.05); } }
+        .footer-divider { height: 1px; background: rgba(255,255,255,0.2); width: 80%; margin: 0 auto 20px; }
+        
+        .social-buttons-container { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-bottom: 20px; }
+        .social-btn { display: inline-flex; align-items: center; justify-content: center; padding: 10px 20px; color: white; text-decoration: none; font-weight: bold; border-radius: 50px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: transform 0.2s; min-width: 200px; }
+        .social-btn:active { transform: scale(0.95); }
+        .fb-btn { background: #1877F2; } .wa-btn { background: #25D366; }
+        .social-btn i { margin-left: 8px; font-size: 1.2rem; }
 
-        .upload-form-group select,
-        .upload-form-group input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            font-family: inherit;
-            font-size: 1rem;
-        }
-
-        .upload-btn-submit {
-            background: var(--primary-color);
-            color: white;
-            width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-
-        .upload-btn-submit:disabled {
-            background: #ccc;
-        }
-
-        .status-msg {
-            margin-top: 10px;
-            font-size: 0.9rem;
-            font-weight: bold;
-        }
-
-        .success {
-            color: green;
-        }
-
-        .error {
-            color: red;
-        }
-
-        .main-footer {
-            background: linear-gradient(180deg, #1b5e20 0%, #003300 100%);
-            color: white;
-            padding: 30px 20px;
-            text-align: center;
-            border-radius: 30px 30px 0 0;
-            margin-top: 30px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .motivational-text {
-            font-size: 1.3rem;
-            font-weight: 800;
-            color: #ffeb3b;
-            margin-bottom: 25px;
-            display: inline-block;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-            animation: floatText 3s ease-in-out infinite;
-        }
-
-        @keyframes floatText {
-
-            0%,
-            100% {
-                transform: translateY(0);
-            }
-
-            50% {
-                transform: translateY(-8px) scale(1.05);
-            }
-        }
-
-        .footer-divider {
-            height: 1px;
-            background: rgba(255, 255, 255, 0.2);
-            width: 80%;
-            margin: 0 auto 20px;
-        }
-
-        .social-buttons-container {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            flex-wrap: wrap;
-            margin-bottom: 20px;
-        }
-
-        .social-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 10px 20px;
-            color: white;
-            text-decoration: none;
-            font-weight: bold;
-            border-radius: 50px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-            transition: transform 0.2s;
-            min-width: 200px;
-        }
-
-        .social-btn:active {
-            transform: scale(0.95);
-        }
-
-        .fb-btn {
-            background: #1877F2;
-        }
-
-        .wa-btn {
-            background: #25D366;
-        }
-
-        .social-btn i {
-            margin-left: 8px;
-            font-size: 1.2rem;
-        }
-
-        .copyright {
-            margin-top: 25px;
-            font-size: 0.8rem;
-            opacity: 0.7;
-        }
-
-        .admin-trigger {
-            display: none;
-        }
+        .copyright { margin-top: 25px; font-size: 0.8rem; opacity: 0.7; }
+        .admin-trigger { display: none; }
     </style>
 </head>
-
 <body>
 
     <div class="top-slogan">الوطني يد تبني و أخرى تناضل</div>
@@ -574,14 +201,13 @@
     </header>
 
     <div class="container">
-
+        
         <button id="install-btn">
             <i class="fas fa-download"></i> تثبيت التطبيق على الهاتف
         </button>
 
         <div class="search-box">
-            <input type="text" id="global-search" placeholder="ابحث عن مادة أو ملف (يكفي حرف واحد)..."
-                oninput="handleGlobalSearch(this.value)">
+            <input type="text" id="global-search" placeholder="ابحث عن مادة أو ملف (يكفي حرف واحد)..." oninput="handleGlobalSearch(this.value)">
             <i class="fas fa-search" style="color:var(--primary-color)"></i>
         </div>
 
@@ -589,7 +215,7 @@
         <div id="main-menu" class="section-box">
             <h2 class="section-title">القائمة الرئيسية</h2>
             <div class="semesters-grid">
-
+                
                 <div class="semester-card" onclick="showSpecializationSelection()">
                     <div class="icon-box"><i class="fas fa-book-reader"></i></div>
                     <h3>الملخصات والأرشيف</h3>
@@ -612,36 +238,12 @@
                 <h2 class="section-title">اختر التخصص</h2>
             </div>
             <div class="semesters-grid">
-                <div class="semester-card card-ba" onclick="selectSpecialization('ba')">
-                    <div class="icon-box"><i class="fas fa-university"></i></div>
-                    <h3>BA</h3>
-                    <p>Banques et Assurances</p>
-                </div>
-                <div class="semester-card card-fc" onclick="selectSpecialization('fc')">
-                    <div class="icon-box"><i class="fas fa-calculator"></i></div>
-                    <h3>FC</h3>
-                    <p>Finance Comptabilité</p>
-                </div>
-                <div class="semester-card card-tcm" onclick="selectSpecialization('tcm')">
-                    <div class="icon-box"><i class="fas fa-bullhorn"></i></div>
-                    <h3>TCM</h3>
-                    <p>Technique Marketing</p>
-                </div>
-                <div class="semester-card card-grh" onclick="selectSpecialization('grh')">
-                    <div class="icon-box"><i class="fas fa-users-cog"></i></div>
-                    <h3>GRH</h3>
-                    <p>Ressources Humaines</p>
-                </div>
-                <div class="semester-card card-sae" onclick="selectSpecialization('sae')">
-                    <div class="icon-box"><i class="fas fa-chart-pie"></i></div>
-                    <h3>SAE</h3>
-                    <p>Statistique Appliquée</p>
-                </div>
-                <div class="semester-card card-ig" onclick="selectSpecialization('ig')">
-                    <div class="icon-box"><i class="fas fa-laptop-code"></i></div>
-                    <h3>IG</h3>
-                    <p>Informatique Gestion</p>
-                </div>
+                <div class="semester-card card-ba" onclick="selectSpecialization('ba')"><div class="icon-box"><i class="fas fa-university"></i></div><h3>BA</h3><p>Banques et Assurances</p></div>
+                <div class="semester-card card-fc" onclick="selectSpecialization('fc')"><div class="icon-box"><i class="fas fa-calculator"></i></div><h3>FC</h3><p>Finance Comptabilité</p></div>
+                <div class="semester-card card-tcm" onclick="selectSpecialization('tcm')"><div class="icon-box"><i class="fas fa-bullhorn"></i></div><h3>TCM</h3><p>Technique Marketing</p></div>
+                <div class="semester-card card-grh" onclick="selectSpecialization('grh')"><div class="icon-box"><i class="fas fa-users-cog"></i></div><h3>GRH</h3><p>Ressources Humaines</p></div>
+                <div class="semester-card card-sae" onclick="selectSpecialization('sae')"><div class="icon-box"><i class="fas fa-chart-pie"></i></div><h3>SAE</h3><p>Statistique Appliquée</p></div>
+                <div class="semester-card card-ig" onclick="selectSpecialization('ig')"><div class="icon-box"><i class="fas fa-laptop-code"></i></div><h3>IG</h3><p>Informatique Gestion</p></div>
             </div>
         </div>
 
@@ -652,18 +254,9 @@
                 <h2 class="section-title">المستوى الدراسي</h2>
             </div>
             <div class="semesters-grid">
-                <div class="semester-card" onclick="showSemesters('l1')">
-                    <h3>L1</h3>
-                    <p>السنة الأولى</p>
-                </div>
-                <div class="semester-card" onclick="showSemesters('l2')">
-                    <h3>L2</h3>
-                    <p>السنة الثانية</p>
-                </div>
-                <div class="semester-card" onclick="showSemesters('l3')">
-                    <h3>L3</h3>
-                    <p>السنة الثالثة</p>
-                </div>
+                <div class="semester-card" onclick="showSemesters('l1')"><h3>L1</h3><p>السنة الأولى</p></div>
+                <div class="semester-card" onclick="showSemesters('l2')"><h3>L2</h3><p>السنة الثانية</p></div>
+                <div class="semester-card" onclick="showSemesters('l3')"><h3>L3</h3><p>السنة الثالثة</p></div>
             </div>
         </div>
 
@@ -684,463 +277,131 @@
             </div>
 
             <!-- ======================= BA ======================= -->
-            <div id="ba-s1-list" class="buttons-grid hidden"><button onclick="loadFiles('Principe de gestion')">Principe
-                    de gestion</button><button onclick="loadFiles('Comptabilité financière I')">Comptabilité financière
-                    I</button><button onclick="loadFiles('Statistique descriptive I')">Statistique descriptive
-                    I</button><button onclick="loadFiles('Mathématique')">Mathématique</button><button
-                    onclick="loadFiles('Anglais I')">Anglais I</button><button
-                    onclick="loadFiles('Méthodologie du travail universitaire')">Méthodologie</button><button
-                    onclick="loadFiles('MS office')">MS office</button><button
-                    onclick="loadFiles('Introduction à l’économie')">Introduction à l'économie</button><button
-                    onclick="loadFiles('Introduction au droit')">Introduction au droit</button><button
-                    onclick="loadFiles('Technique de communication')">Technique de communication</button><button
-                    onclick="loadFiles('Archive S1')" class="archive-btn"><i class="fas fa-archive"></i> L'archive
-                    S1</button></div>
-            <div id="ba-s2-list" class="buttons-grid hidden"><button
-                    onclick="loadFiles('Comptabilité financière II')">Comptabilité financière II</button><button
-                    onclick="loadFiles('Micro-finance')">Micro-finance</button><button
-                    onclick="loadFiles('Economie d’entreprise')">Economie d'entreprise</button><button
-                    onclick="loadFiles('Statistique descriptive II')">Statistique descriptive II</button><button
-                    onclick="loadFiles('Mathématiques financières')">Mathématiques financières</button><button
-                    onclick="loadFiles('Anglais II')">Anglais II</button><button
-                    onclick="loadFiles('Aptitudes en TIC')">Aptitudes en TIC</button><button
-                    onclick="loadFiles('Développement personnel')">Développement personnel</button><button
-                    onclick="loadFiles('Microéconomie')">Microéconomie</button><button
-                    onclick="loadFiles('Droit des affaires')">Droit des affaires</button><button
-                    onclick="loadFiles('Archive S2')" class="archive-btn"><i class="fas fa-archive"></i> L'archive
-                    S2</button></div>
-            <div id="ba-s3-list" class="buttons-grid hidden"><button onclick="loadFiles('Technique Bancaire')">Technique
-                    Bancaire</button><button onclick="loadFiles('Système financier mauritanien')">Système financier
-                    mauritanien</button><button onclick="loadFiles('Gestion Financière')">Gestion
-                    Financière</button><button onclick="loadFiles('Comptabilité des Sociétés')">Comptabilité des
-                    Sociétés</button><button onclick="loadFiles('Anglais des affaires')">Anglais des
-                    affaires</button><button onclick="loadFiles('Logiciels Bancaire')">Logiciels
-                    Bancaire</button><button onclick="loadFiles('Marketing')">Marketing</button><button
-                    onclick="loadFiles('Droit administrative')">Droit administrative</button><button
-                    onclick="loadFiles('Macroéconomie')">Macroéconomie</button><button
-                    onclick="loadFiles('Méthodes d’aide à la décision')">Méthodes d'aide à la décision</button><button
-                    onclick="loadFiles('Archive S3')" class="archive-btn"><i class="fas fa-archive"></i> L'archive
-                    S3</button></div>
-            <div id="ba-s4-list" class="buttons-grid hidden"><button
-                    onclick="loadFiles('Comptabilité des Société assurance')">Comptabilité des
-                    Assurances</button><button onclick="loadFiles('Assurances des biens')">Assurances des
-                    biens</button><button onclick="loadFiles('Comptabilité Bancaire')">Comptabilité
-                    Bancaire</button><button onclick="loadFiles('Comptabilité de Gestion')">Comptabilité de
-                    Gestion</button><button onclick="loadFiles('Finance des marchés')">Finance des
-                    marchés</button><button onclick="loadFiles('Analyse Financière')">Analyse Financière</button><button
-                    onclick="loadFiles('Gestion de la trésorerie')">Gestion de la trésorerie</button><button
-                    onclick="loadFiles('GRH')">GRH</button><button onclick="loadFiles('Droit des assurances')">Droit des
-                    assurances</button><button onclick="loadFiles('Commerce international')">Commerce
-                    international</button><button onclick="loadFiles('Archive S4')" class="archive-btn"><i
-                        class="fas fa-archive"></i> L'archive S4</button></div>
-            <div id="ba-s5-list" class="buttons-grid hidden"><button
-                    onclick="loadFiles('Gestion de portefeuille')">Gestion de portefeuille</button><button
-                    onclick="loadFiles('Comptabilité bancaire II')">Comptabilité bancaire II</button><button
-                    onclick="loadFiles('Gestion des risques')">Gestion des risques</button><button
-                    onclick="loadFiles('Finance islamique')">Finance islamique</button><button
-                    onclick="loadFiles('Stratégie d’entreprise')">Stratégie d’entreprise</button><button
-                    onclick="loadFiles('Gestion de patrimoine')">Gestion de patrimoine</button><button
-                    onclick="loadFiles('Fiscalité')">Fiscalité</button><button
-                    onclick="loadFiles('Politiques et choix d’investissement')">Politiques
-                    d'investissement</button><button onclick="loadFiles('Droit bancaire et financier')">Droit bancaire
-                    et financier</button><button onclick="loadFiles('Rapport de stage de la 2ème année')">Rapport de
-                    stage (L2)</button><button onclick="loadFiles('Archive S5')" class="archive-btn"><i
-                        class="fas fa-archive"></i> L'archive S5</button></div>
-            <div id="ba-s6-list" class="buttons-grid hidden"><button
-                    onclick="loadFiles('Méthodologie de recherche')">Méthodologie de recherche</button><button
-                    onclick="loadFiles('Séminaire sur l\'entrepreneuriat')">Séminaire sur
-                    l'entrepreneuriat</button><button onclick="loadFiles('Mémoire de fin d\'études')">Mémoire de fin
-                    d'études</button><button onclick="loadFiles('Archive S6')" class="archive-btn"><i
-                        class="fas fa-archive"></i> L'archive S6</button></div>
+            <div id="ba-s1-list" class="buttons-grid hidden">
+                <button onclick="loadFiles('Principe de gestion')">Principe de gestion</button>
+                <button onclick="loadFiles('Comptabilité financière I')">Comptabilité financière I</button>
+                <button onclick="loadFiles('Statistique descriptive I')">Statistique descriptive I</button>
+                <button onclick="loadFiles('Mathématique')">Mathématique</button>
+                <button onclick="loadFiles('Anglais I')">Anglais I</button>
+                <button onclick="loadFiles('Méthodologie du travail universitaire')">Méthodologie</button>
+                <button onclick="loadFiles('MS office')">MS office</button>
+                <button onclick="loadFiles('Introduction à l’économie')">Introduction à l'économie</button>
+                <button onclick="loadFiles('Introduction au droit')">Introduction au droit</button>
+                <button onclick="loadFiles('Technique de communication')">Technique de communication</button>
+                <button onclick="loadFiles('Archive S1')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S1</button>
+            </div>
+            <div id="ba-s2-list" class="buttons-grid hidden"><button onclick="loadFiles('Comptabilité financière II')">Comptabilité financière II</button><button onclick="loadFiles('Micro-finance')">Micro-finance</button><button onclick="loadFiles('Economie d’entreprise')">Economie d'entreprise</button><button onclick="loadFiles('Statistique descriptive II')">Statistique descriptive II</button><button onclick="loadFiles('Mathématiques financières')">Mathématiques financières</button><button onclick="loadFiles('Anglais II')">Anglais II</button><button onclick="loadFiles('Aptitudes en TIC')">Aptitudes en TIC</button><button onclick="loadFiles('Développement personnel')">Développement personnel</button><button onclick="loadFiles('Microéconomie')">Microéconomie</button><button onclick="loadFiles('Droit des affaires')">Droit des affaires</button><button onclick="loadFiles('Archive S2')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S2</button></div>
+            <div id="ba-s3-list" class="buttons-grid hidden"><button onclick="loadFiles('Technique Bancaire')">Technique Bancaire</button><button onclick="loadFiles('Système financier mauritanien')">Système financier mauritanien</button><button onclick="loadFiles('Gestion Financière')">Gestion Financière</button><button onclick="loadFiles('Comptabilité des Sociétés')">Comptabilité des Sociétés</button><button onclick="loadFiles('Anglais des affaires')">Anglais des affaires</button><button onclick="loadFiles('Logiciels Bancaire')">Logiciels Bancaire</button><button onclick="loadFiles('Marketing')">Marketing</button><button onclick="loadFiles('Droit administrative')">Droit administrative</button><button onclick="loadFiles('Macroéconomie')">Macroéconomie</button><button onclick="loadFiles('Méthodes d’aide à la décision')">Méthodes d'aide à la décision</button><button onclick="loadFiles('Archive S3')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S3</button></div>
+            <div id="ba-s4-list" class="buttons-grid hidden"><button onclick="loadFiles('Comptabilité des Société assurance')">Comptabilité des Assurances</button><button onclick="loadFiles('Assurances des biens')">Assurances des biens</button><button onclick="loadFiles('Comptabilité Bancaire')">Comptabilité Bancaire</button><button onclick="loadFiles('Comptabilité de Gestion')">Comptabilité de Gestion</button><button onclick="loadFiles('Finance des marchés')">Finance des marchés</button><button onclick="loadFiles('Analyse Financière')">Analyse Financière</button><button onclick="loadFiles('Gestion de la trésorerie')">Gestion de la trésorerie</button><button onclick="loadFiles('GRH')">GRH</button><button onclick="loadFiles('Droit des assurances')">Droit des assurances</button><button onclick="loadFiles('Commerce international')">Commerce international</button><button onclick="loadFiles('Archive S4')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S4</button></div>
+            <div id="ba-s5-list" class="buttons-grid hidden"><button onclick="loadFiles('Gestion de portefeuille')">Gestion de portefeuille</button><button onclick="loadFiles('Comptabilité bancaire II')">Comptabilité bancaire II</button><button onclick="loadFiles('Gestion des risques')">Gestion des risques</button><button onclick="loadFiles('Finance islamique')">Finance islamique</button><button onclick="loadFiles('Stratégie d’entreprise')">Stratégie d’entreprise</button><button onclick="loadFiles('Gestion de patrimoine')">Gestion de patrimoine</button><button onclick="loadFiles('Fiscalité')">Fiscalité</button><button onclick="loadFiles('Politiques et choix d’investissement')">Politiques d'investissement</button><button onclick="loadFiles('Droit bancaire et financier')">Droit bancaire et financier</button><button onclick="loadFiles('Rapport de stage de la 2ème année')">Rapport de stage (L2)</button><button onclick="loadFiles('Archive S5')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S5</button></div>
+            <div id="ba-s6-list" class="buttons-grid hidden"><button onclick="loadFiles('Méthodologie de recherche')">Méthodologie de recherche</button><button onclick="loadFiles('Séminaire sur l\'entrepreneuriat')">Séminaire sur l'entrepreneuriat</button><button onclick="loadFiles('Mémoire de fin d\'études')">Mémoire de fin d'études</button><button onclick="loadFiles('Archive S6')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S6</button></div>
 
             <!-- ======================= FC ======================= -->
-            <div id="fc-s1-list" class="buttons-grid hidden"><button onclick="loadFiles('Principe de gestion')">Principe
-                    de gestion</button><button onclick="loadFiles('Comptabilité financière I')">Comptabilité financière
-                    I</button><button onclick="loadFiles('Statistique descriptive I')">Statistique descriptive
-                    I</button><button onclick="loadFiles('Mathématique')">Mathématique</button><button
-                    onclick="loadFiles('Anglais I')">Anglais I</button><button
-                    onclick="loadFiles('Méthodologie du travail universitaire')">Méthodologie</button><button
-                    onclick="loadFiles('MS office')">MS office</button><button
-                    onclick="loadFiles('Introduction à l’économie')">Introduction à l'économie</button><button
-                    onclick="loadFiles('Introduction au droit')">Introduction au droit</button><button
-                    onclick="loadFiles('Technique de communication')">Technique de communication</button><button
-                    onclick="loadFiles('Archive S1')" class="archive-btn"><i class="fas fa-archive"></i> L'archive
-                    S1</button></div>
-            <div id="fc-s2-list" class="buttons-grid hidden"><button
-                    onclick="loadFiles('Comptabilité financière II')">Comptabilité financière II</button><button
-                    onclick="loadFiles('Comptabilité financière II')">Comptabilité financière II</button><button
-                    onclick="loadFiles('Micro-finance')">Micro-finance</button><button
-                    onclick="loadFiles('Economie d’entreprise')">Economie d'entreprise</button><button
-                    onclick="loadFiles('Statistique descriptive II')">Statistique descriptive II</button><button
-                    onclick="loadFiles('Mathématiques financières')">Mathématiques financières</button><button
-                    onclick="loadFiles('Anglais II')">Anglais II</button><button
-                    onclick="loadFiles('Aptitudes en TIC')">Aptitudes en TIC</button><button
-                    onclick="loadFiles('Développement personnel')">Développement personnel</button><button
-                    onclick="loadFiles('Microéconomie')">Microéconomie</button><button
-                    onclick="loadFiles('Droit des affaires')">Droit des affaires</button><button
-                    onclick="loadFiles('Archive S2')" class="archive-btn"><i class="fas fa-archive"></i> L'archive
-                    S2</button></div>
-            <div id="fc-s3-list" class="buttons-grid hidden"><button onclick="loadFiles('Technique Bancaire')">Technique
-                    Bancaire</button><button onclick="loadFiles('Système financier mauritanien')">Système financier
-                    mauritanien</button><button onclick="loadFiles('Gestion Financière')">Gestion
-                    Financière</button><button onclick="loadFiles('Comptabilité des Sociétés')">Comptabilité des
-                    Sociétés</button><button onclick="loadFiles('Anglais des affaires')">Anglais des
-                    affaires</button><button onclick="loadFiles('Logiciels Comptables')">Logiciels
-                    Comptables</button><button onclick="loadFiles('Marketing')">Marketing</button><button
-                    onclick="loadFiles('Droit administrative')">Droit administrative</button><button
-                    onclick="loadFiles('Macroéconomie')">Macroéconomie</button><button
-                    onclick="loadFiles('Méthodes d’aide à la décision')">Méthodes d'aide à la décision</button><button
-                    onclick="loadFiles('Archive S3')" class="archive-btn"><i class="fas fa-archive"></i> L'archive
-                    S3</button></div>
-            <div id="fc-s4-list" class="buttons-grid hidden"><button onclick="loadFiles('Analyse financière')">Analyse
-                    financière</button><button onclick="loadFiles('Comptabilité de gestion')">Comptabilité de
-                    gestion</button><button onclick="loadFiles('Comptabilité des Sociétés II')">Comptabilité des
-                    Sociétés II</button><button onclick="loadFiles('Finance islamique')">Finance
-                    islamique</button><button onclick="loadFiles('Gestion de portefeuilles')">Gestion de
-                    portefeuilles</button><button onclick="loadFiles('Finance des marchés')">Finance des
-                    marchés</button><button onclick="loadFiles('Droit du travail')">Droit du travail</button><button
-                    onclick="loadFiles('GRH')">GRH</button><button
-                    onclick="loadFiles('Fiscalité')">Fiscalité</button><button
-                    onclick="loadFiles('Les instruments de Crédits')">Les instruments de Crédits</button><button
-                    onclick="loadFiles('Archive S4')" class="archive-btn"><i class="fas fa-archive"></i> L'archive
-                    S4</button></div>
-            <div id="fc-s5-list" class="buttons-grid hidden"><button
-                    onclick="loadFiles('Gestion de Trésorerie')">Gestion de Trésorerie</button><button
-                    onclick="loadFiles('Contrôle de Gestion')">Contrôle de Gestion</button><button
-                    onclick="loadFiles('Analyse financière Approfondie')">Analyse financière Approfondie</button><button
-                    onclick="loadFiles('Méthodes d\'évaluation de l\'entreprise')">Méthodes d'évaluation</button><button
-                    onclick="loadFiles('Marchés financiers')">Marchés financiers</button><button
-                    onclick="loadFiles('Audit financier')">Audit financier</button><button
-                    onclick="loadFiles('Normes Comptables Internationnales')">Normes Comptables
-                    (IAS/IFRS)</button><button onclick="loadFiles('Choix d\'investissement')">Choix
-                    d'investissement</button><button onclick="loadFiles('Droit bancaire et financier')">Droit bancaire
-                    et financier</button><button onclick="loadFiles('Rapport de stage de la 2ème année')">Rapport de
-                    stage (L2)</button><button onclick="loadFiles('Archive S5')" class="archive-btn"><i
-                        class="fas fa-archive"></i> L'archive S5</button></div>
-            <div id="fc-s6-list" class="buttons-grid hidden"><button
-                    onclick="loadFiles('Méthodologie de recherche')">Méthodologie de recherche</button><button
-                    onclick="loadFiles('Séminaire sur l\'entrepreneuriat')">Séminaire sur
-                    l'entrepreneuriat</button><button onclick="loadFiles('Mémoire de fin d\'études')">Mémoire de fin
-                    d'études</button><button onclick="loadFiles('Archive S6')" class="archive-btn"><i
-                        class="fas fa-archive"></i> L'archive S6</button></div>
+            <div id="fc-s1-list" class="buttons-grid hidden"><button onclick="loadFiles('Principe de gestion')">Principe de gestion</button><button onclick="loadFiles('Comptabilité financière I')">Comptabilité financière I</button><button onclick="loadFiles('Statistique descriptive I')">Statistique descriptive I</button><button onclick="loadFiles('Mathématique')">Mathématique</button><button onclick="loadFiles('Anglais I')">Anglais I</button><button onclick="loadFiles('Méthodologie du travail universitaire')">Méthodologie</button><button onclick="loadFiles('MS office')">MS office</button><button onclick="loadFiles('Introduction à l’économie')">Introduction à l'économie</button><button onclick="loadFiles('Introduction au droit')">Introduction au droit</button><button onclick="loadFiles('Technique de communication')">Technique de communication</button><button onclick="loadFiles('Archive S1')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S1</button></div>
+            <div id="fc-s2-list" class="buttons-grid hidden"><button onclick="loadFiles('Comptabilité financière II')">Comptabilité financière II</button><button onclick="loadFiles('Micro-finance')">Micro-finance</button><button onclick="loadFiles('Economie d’entreprise')">Economie d'entreprise</button><button onclick="loadFiles('Statistique descriptive II')">Statistique descriptive II</button><button onclick="loadFiles('Mathématiques financières')">Mathématiques financières</button><button onclick="loadFiles('Anglais II')">Anglais II</button><button onclick="loadFiles('Aptitudes en TIC')">Aptitudes en TIC</button><button onclick="loadFiles('Développement personnel')">Développement personnel</button><button onclick="loadFiles('Microéconomie')">Microéconomie</button><button onclick="loadFiles('Droit des affaires')">Droit des affaires</button><button onclick="loadFiles('Archive S2')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S2</button></div>
+            <div id="fc-s3-list" class="buttons-grid hidden"><button onclick="loadFiles('Technique Bancaire')">Technique Bancaire</button><button onclick="loadFiles('Système financier mauritanien')">Système financier mauritanien</button><button onclick="loadFiles('Gestion Financière')">Gestion Financière</button><button onclick="loadFiles('Comptabilité des Sociétés')">Comptabilité des Sociétés</button><button onclick="loadFiles('Anglais des affaires')">Anglais des affaires</button><button onclick="loadFiles('Logiciels Comptables')">Logiciels Comptables</button><button onclick="loadFiles('Marketing')">Marketing</button><button onclick="loadFiles('Droit administrative')">Droit administrative</button><button onclick="loadFiles('Macroéconomie')">Macroéconomie</button><button onclick="loadFiles('Méthodes d’aide à la décision')">Méthodes d'aide à la décision</button><button onclick="loadFiles('Archive S3')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S3</button></div>
+            <div id="fc-s4-list" class="buttons-grid hidden"><button onclick="loadFiles('Analyse financière')">Analyse financière</button><button onclick="loadFiles('Comptabilité de gestion')">Comptabilité de gestion</button><button onclick="loadFiles('Comptabilité des Sociétés II')">Comptabilité des Sociétés II</button><button onclick="loadFiles('Finance islamique')">Finance islamique</button><button onclick="loadFiles('Gestion de portefeuilles')">Gestion de portefeuilles</button><button onclick="loadFiles('Finance des marchés')">Finance des marchés</button><button onclick="loadFiles('Droit du travail')">Droit du travail</button><button onclick="loadFiles('GRH')">GRH</button><button onclick="loadFiles('Fiscalité')">Fiscalité</button><button onclick="loadFiles('Les instruments de Crédits')">Les instruments de Crédits</button><button onclick="loadFiles('Archive S4')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S4</button></div>
+            <div id="fc-s5-list" class="buttons-grid hidden"><button onclick="loadFiles('Gestion de Trésorerie')">Gestion de Trésorerie</button><button onclick="loadFiles('Gestion de Trésorerie')">Gestion de Trésorerie</button><button onclick="loadFiles('Contrôle de Gestion')">Contrôle de Gestion</button><button onclick="loadFiles('Analyse financière Approfondie')">Analyse financière Approfondie</button><button onclick="loadFiles('Méthodes d\'évaluation de l\'entreprise')">Méthodes d'évaluation</button><button onclick="loadFiles('Marchés financiers')">Marchés financiers</button><button onclick="loadFiles('Audit financier')">Audit financier</button><button onclick="loadFiles('Normes Comptables Internationnales')">Normes Comptables (IAS/IFRS)</button><button onclick="loadFiles('Choix d\'investissement')">Choix d'investissement</button><button onclick="loadFiles('Droit bancaire et financier')">Droit bancaire et financier</button><button onclick="loadFiles('Rapport de stage de la 2ème année')">Rapport de stage (L2)</button><button onclick="loadFiles('Archive S5')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S5</button></div>
+            <div id="fc-s6-list" class="buttons-grid hidden"><button onclick="loadFiles('Méthodologie de recherche')">Méthodologie de recherche</button><button onclick="loadFiles('Séminaire sur l\'entrepreneuriat')">Séminaire sur l'entrepreneuriat</button><button onclick="loadFiles('Mémoire de fin d\'études')">Mémoire de fin d'études</button><button onclick="loadFiles('Archive S6')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S6</button></div>
 
             <!-- ======================= TCM ======================= -->
-            <div id="tcm-s1-list" class="buttons-grid hidden"><button
-                    onclick="loadFiles('Initiation à la gestion commerciale')">Initiation Gestion
-                    Commerciale</button><button onclick="loadFiles('Principe de gestion')">Principe de
-                    gestion</button><button onclick="loadFiles('Comptabilité financière I')">Comptabilité financière
-                    I</button><button onclick="loadFiles('Introduction à l’économie')">Introduction à
-                    l'économie</button><button onclick="loadFiles('Anglais I')">Anglais I</button><button
-                    onclick="loadFiles('Techniques de communication')">Techniques de communication</button><button
-                    onclick="loadFiles('MS office')">MS office</button><button
-                    onclick="loadFiles('Statistique descriptive I')">Statistique descriptive I</button><button
-                    onclick="loadFiles('Mathématique')">Mathématique</button><button
-                    onclick="loadFiles('Introduction au droit')">Introduction au droit</button><button
-                    onclick="loadFiles('Archive S1')" class="archive-btn"><i class="fas fa-archive"></i> L'archive
-                    S1</button></div>
-            <div id="tcm-s2-list" class="buttons-grid hidden"><button
-                    onclick="loadFiles('Gestion commerciale de la relation client')">Gestion Relation
-                    Client</button><button onclick="loadFiles('Economie d\'entreprise')">Economie
-                    d'entreprise</button><button onclick="loadFiles('Comptabilité financière II')">Comptabilité
-                    financière II</button><button onclick="loadFiles('Gestion financière')">Gestion
-                    financière</button><button onclick="loadFiles('Anglais II')">Anglais II</button><button
-                    onclick="loadFiles('Aptitudes en TIC')">Aptitudes en TIC</button><button
-                    onclick="loadFiles('Développement personnel')">Développement personnel</button><button
-                    onclick="loadFiles('Microéconomie')">Microéconomie</button><button
-                    onclick="loadFiles('Macro-économie')">Macro-économie</button><button
-                    onclick="loadFiles('Statistique descriptive II')">Statistique descriptive II</button><button
-                    onclick="loadFiles('Archive S2')" class="archive-btn"><i class="fas fa-archive"></i> L'archive
-                    S2</button></div>
-            <div id="tcm-s3-list" class="buttons-grid hidden"><button onclick="loadFiles('Marketing I')">Marketing
-                    I</button><button onclick="loadFiles('Commerce international I')">Commerce international
-                    I</button><button onclick="loadFiles('Business Intelligence')">Business Intelligence</button><button
-                    onclick="loadFiles('Gestion financière II')">Gestion financière II</button><button
-                    onclick="loadFiles('Anglais des affaires')">Anglais des affaires</button><button
-                    onclick="loadFiles('Gestion de production')">Gestion de production</button><button
-                    onclick="loadFiles('Logiciels de gestion commerciale')">Logiciels de gestion
-                    commerciale</button><button onclick="loadFiles('Droit administratif')">Droit
-                    administratif</button><button onclick="loadFiles('Droit des affaires')">Droit des
-                    affaires</button><button onclick="loadFiles('GRH')">GRH</button><button
-                    onclick="loadFiles('Archive S3')" class="archive-btn"><i class="fas fa-archive"></i> L'archive
-                    S3</button></div>
-            <div id="tcm-s4-list" class="buttons-grid hidden"><button onclick="loadFiles('Marketing II')">Marketing
-                    II</button><button onclick="loadFiles('Commerce international II')">Commerce international
-                    II</button><button onclick="loadFiles('Commerce électronique')">Commerce
-                    électronique</button><button onclick="loadFiles('Finance Internationale')">Finance
-                    Internationale</button><button onclick="loadFiles('Techniques Douanières et Transit')">Techniques
-                    Douanières et Transit</button><button onclick="loadFiles('Analyse financière')">Analyse
-                    financière</button><button onclick="loadFiles('Stratégie d’entreprise')">Stratégie
-                    d’entreprise</button><button onclick="loadFiles('Techniques de sondage')">Techniques de
-                    sondage</button><button onclick="loadFiles('Droit des assurances')">Droit des
-                    assurances</button><button onclick="loadFiles('Recherche opérationnelle')">Recherche
-                    opérationnelle</button><button onclick="loadFiles('Archive S4')" class="archive-btn"><i
-                        class="fas fa-archive"></i> L'archive S4</button></div>
-            <div id="tcm-s5-list" class="buttons-grid hidden"><button
-                    onclick="loadFiles('Communication Marketing et commerciale')">Communication Marketing et
-                    commerciale</button><button onclick="loadFiles('Planification Marketing')">Planification
-                    Marketing</button><button onclick="loadFiles('Techniques de Négociations Commerciales')">Techniques
-                    de Négociations Commerciales</button><button
-                    onclick="loadFiles('Fiscalité')">Fiscalité</button><button
-                    onclick="loadFiles('E-Marketing')">E-Marketing</button><button
-                    onclick="loadFiles('Finance des Marchés')">Finance des Marchés</button><button
-                    onclick="loadFiles('Etude des marchés')">Etude des marchés</button><button
-                    onclick="loadFiles('Logistique du commerce international')">Logistique du commerce
-                    international</button><button onclick="loadFiles('Management des projets')">Management des
-                    projets</button><button onclick="loadFiles('Rapport de stage de la 2ème année')">Rapport de stage de
-                    la 2ème année</button><button onclick="loadFiles('Archive S5')" class="archive-btn"><i
-                        class="fas fa-archive"></i> L'archive S5</button></div>
-            <div id="tcm-s6-list" class="buttons-grid hidden"><button
-                    onclick="loadFiles('Méthodologie de recherche')">Méthodologie de recherche</button><button
-                    onclick="loadFiles('Séminaire sur l\'entrepreneuriat')">Séminaire sur
-                    l'entrepreneuriat</button><button onclick="loadFiles('Mémoire de fin d\'études')">Mémoire de fin
-                    d'études</button><button onclick="loadFiles('Archive S6')" class="archive-btn"><i
-                        class="fas fa-archive"></i> L'archive S6</button></div>
+            <div id="tcm-s1-list" class="buttons-grid hidden"><button onclick="loadFiles('Initiation à la gestion commerciale')">Initiation Gestion Commerciale</button><button onclick="loadFiles('Principe de gestion')">Principe de gestion</button><button onclick="loadFiles('Comptabilité financière I')">Comptabilité financière I</button><button onclick="loadFiles('Introduction à l’économie')">Introduction à l'économie</button><button onclick="loadFiles('Anglais I')">Anglais I</button><button onclick="loadFiles('Techniques de communication')">Techniques de communication</button><button onclick="loadFiles('MS office')">MS office</button><button onclick="loadFiles('Statistique descriptive I')">Statistique descriptive I</button><button onclick="loadFiles('Mathématique')">Mathématique</button><button onclick="loadFiles('Introduction au droit')">Introduction au droit</button><button onclick="loadFiles('Archive S1')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S1</button></div>
+            <div id="tcm-s2-list" class="buttons-grid hidden"><button onclick="loadFiles('Gestion commerciale de la relation client')">Gestion Relation Client</button><button onclick="loadFiles('Economie d\'entreprise')">Economie d'entreprise</button><button onclick="loadFiles('Comptabilité financière II')">Comptabilité financière II</button><button onclick="loadFiles('Gestion financière')">Gestion financière</button><button onclick="loadFiles('Anglais II')">Anglais II</button><button onclick="loadFiles('Aptitudes en TIC')">Aptitudes en TIC</button><button onclick="loadFiles('Développement personnel')">Développement personnel</button><button onclick="loadFiles('Microéconomie')">Microéconomie</button><button onclick="loadFiles('Macro-économie')">Macro-économie</button><button onclick="loadFiles('Statistique descriptive II')">Statistique descriptive II</button><button onclick="loadFiles('Archive S2')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S2</button></div>
+            <div id="tcm-s3-list" class="buttons-grid hidden"><button onclick="loadFiles('Marketing I')">Marketing I</button><button onclick="loadFiles('Commerce international I')">Commerce international I</button><button onclick="loadFiles('Business Intelligence')">Business Intelligence</button><button onclick="loadFiles('Gestion financière II')">Gestion financière II</button><button onclick="loadFiles('Anglais des affaires')">Anglais des affaires</button><button onclick="loadFiles('Gestion de production')">Gestion de production</button><button onclick="loadFiles('Logiciels de gestion commerciale')">Logiciels de gestion commerciale</button><button onclick="loadFiles('Droit administratif')">Droit administratif</button><button onclick="loadFiles('Droit des affaires')">Droit des affaires</button><button onclick="loadFiles('GRH')">GRH</button><button onclick="loadFiles('Archive S3')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S3</button></div>
+            <div id="tcm-s4-list" class="buttons-grid hidden"><button onclick="loadFiles('Marketing II')">Marketing II</button><button onclick="loadFiles('Commerce international II')">Commerce international II</button><button onclick="loadFiles('Commerce électronique')">Commerce électronique</button><button onclick="loadFiles('Finance Internationale')">Finance Internationale</button><button onclick="loadFiles('Techniques Douanières et Transit')">Techniques Douanières et Transit</button><button onclick="loadFiles('Analyse financière')">Analyse financière</button><button onclick="loadFiles('Stratégie d’entreprise')">Stratégie d’entreprise</button><button onclick="loadFiles('Techniques de sondage')">Techniques de sondage</button><button onclick="loadFiles('Droit des assurances')">Droit des assurances</button><button onclick="loadFiles('Recherche opérationnelle')">Recherche opérationnelle</button><button onclick="loadFiles('Archive S4')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S4</button></div>
+            <div id="tcm-s5-list" class="buttons-grid hidden"><button onclick="loadFiles('Communication Marketing et commerciale')">Communication Marketing et commerciale</button><button onclick="loadFiles('Planification Marketing')">Planification Marketing</button><button onclick="loadFiles('Techniques de Négociations Commerciales')">Techniques de Négociations Commerciales</button><button onclick="loadFiles('Fiscalité')">Fiscalité</button><button onclick="loadFiles('E-Marketing')">E-Marketing</button><button onclick="loadFiles('Finance des Marchés')">Finance des Marchés</button><button onclick="loadFiles('Etude des marchés')">Etude des marchés</button><button onclick="loadFiles('Logistique du commerce international')">Logistique du commerce international</button><button onclick="loadFiles('Management des projets')">Management des projets</button><button onclick="loadFiles('Rapport de stage de la 2ème année')">Rapport de stage de la 2ème année</button><button onclick="loadFiles('Archive S5')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S5</button></div>
+            <div id="tcm-s6-list" class="buttons-grid hidden"><button onclick="loadFiles('Méthodologie de recherche')">Méthodologie de recherche</button><button onclick="loadFiles('Séminaire sur l\'entrepreneuriat')">Séminaire sur l'entrepreneuriat</button><button onclick="loadFiles('Mémoire de fin d\'études')">Mémoire de fin d'études</button><button onclick="loadFiles('Archive S6')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S6</button></div>
 
             <!-- ======================= GRH ======================= -->
-            <div id="grh-s1-list" class="buttons-grid hidden"><button
-                    onclick="loadFiles('Initiation à la gestion des RH')">Initiation Gestion RH</button><button
-                    onclick="loadFiles('Principes de gestion')">Principes de gestion</button><button
-                    onclick="loadFiles('Comptabilité financière I')">Comptabilité financière I</button><button
-                    onclick="loadFiles('Introduction à l’économie')">Introduction à l'économie</button><button
-                    onclick="loadFiles('Anglais I')">Anglais I</button><button onclick="loadFiles('MS Office')">MS
-                    Office</button><button onclick="loadFiles('Techniques de Communication')">Techniques de
-                    Communication</button><button onclick="loadFiles('Statistique descriptive I')">Statistique
-                    descriptive I</button><button onclick="loadFiles('Mathématiques')">Mathématiques</button><button
-                    onclick="loadFiles('Introduction au droit')">Introduction au droit</button><button
-                    onclick="loadFiles('Archive S1')" class="archive-btn"><i class="fas fa-archive"></i> L'archive
-                    S1</button></div>
-            <div id="grh-s2-list" class="buttons-grid hidden"><button
-                    onclick="loadFiles('Evaluation des compétences')">Evaluation des compétences</button><button
-                    onclick="loadFiles('Gestion Administrative des RH I')">Gestion Admin. RH I</button><button
-                    onclick="loadFiles('Comptabilité financière II')">Comptabilité financière II</button><button
-                    onclick="loadFiles('Gestion financière I')">Gestion financière I</button><button
-                    onclick="loadFiles('Anglais II')">Anglais II</button><button
-                    onclick="loadFiles('Aptitudes en TIC')">Aptitudes en TIC</button><button
-                    onclick="loadFiles('Développement personnel')">Développement personnel</button><button
-                    onclick="loadFiles('Rédaction administrative I')">Rédaction administrative I</button><button
-                    onclick="loadFiles('Droit de travail I')">Droit de travail I</button><button
-                    onclick="loadFiles('Statistiques descriptives II')">Statistiques descriptives II</button><button
-                    onclick="loadFiles('Archive S2')" class="archive-btn"><i class="fas fa-archive"></i> L'archive
-                    S2</button></div>
-            <div id="grh-s3-list" class="buttons-grid hidden"><button onclick="loadFiles('Gestion de la paie')">Gestion
-                    de la paie</button><button onclick="loadFiles('Recrutement')">Recrutement</button><button
-                    onclick="loadFiles('Sécurité sociale I')">Sécurité sociale I</button><button
-                    onclick="loadFiles('Gestion financière II')">Gestion financière II</button><button
-                    onclick="loadFiles('Plan et ingénierie de formation')">Plan et ingénierie de
-                    formation</button><button onclick="loadFiles('Logiciels paie')">Logiciels paie</button><button
-                    onclick="loadFiles('Anglais des affaires')">Anglais des affaires</button><button
-                    onclick="loadFiles('Rédaction administrative II')">Rédaction administrative II</button><button
-                    onclick="loadFiles('Droit de travail II')">Droit de travail II</button><button
-                    onclick="loadFiles('Droit des obligations')">Droit des obligations</button><button
-                    onclick="loadFiles('Archive S3')" class="archive-btn"><i class="fas fa-archive"></i> L'archive
-                    S3</button></div>
-            <div id="grh-s4-list" class="buttons-grid hidden"><button onclick="loadFiles('GPEC')">GPEC</button><button
-                    onclick="loadFiles('Sécurité sociale II')">Sécurité sociale II</button><button
-                    onclick="loadFiles('Stratégie d\'entreprise')">Stratégie d'entreprise</button><button
-                    onclick="loadFiles('Macroéconomie')">Macroéconomie</button><button
-                    onclick="loadFiles('Microéconomie')">Microéconomie</button><button
-                    onclick="loadFiles('Analyse financière')">Analyse financière</button><button
-                    onclick="loadFiles('Communication interne')">Communication interne</button><button
-                    onclick="loadFiles('Système d\'information RH')">Système d'information RH</button><button
-                    onclick="loadFiles('Gestion des conflits et négociations')">Gestion des conflits et
-                    négociations</button><button onclick="loadFiles('Droit Administratif')">Droit
-                    Administratif</button><button onclick="loadFiles('Archive S4')" class="archive-btn"><i
-                        class="fas fa-archive"></i> L'archive S4</button></div>
-            <div id="grh-s5-list" class="buttons-grid hidden"><button
-                    onclick="loadFiles('Sources de motivation du personnel')">Sources de motivation du
-                    personnel</button><button onclick="loadFiles('Politique de rémunération')">Politique de
-                    rémunération</button><button onclick="loadFiles('Audit des Ressources Humaines')">Audit des
-                    Ressources Humaines</button><button onclick="loadFiles('Droit pénal général')">Droit pénal
-                    général</button><button onclick="loadFiles('Passation des marchés')">Passation des
-                    marchés</button><button onclick="loadFiles('Sociologie des organisations')">Sociologie des
-                    organisations</button><button onclick="loadFiles('Rapport de stage de la 2ème année')">Rapport de
-                    stage</button><button onclick="loadFiles('Outils pilotage RH')">Outils pilotage RH</button><button
-                    onclick="loadFiles('Management des projets')">Management des projets</button><button
-                    onclick="loadFiles('Gestion des connaissances')">Gestion des connaissances</button><button
-                    onclick="loadFiles('Archive S5')" class="archive-btn"><i class="fas fa-archive"></i> L'archive
-                    S5</button></div>
-            <div id="grh-s6-list" class="buttons-grid hidden"><button
-                    onclick="loadFiles('Méthodologie de recherche')">Méthodologie de recherche</button><button
-                    onclick="loadFiles('Séminaire sur l\'entrepreneuriat')">Séminaire sur
-                    l'entrepreneuriat</button><button onclick="loadFiles('Mémoire de fin d\'études')">Mémoire de fin
-                    d'études</button><button onclick="loadFiles('Archive S6')" class="archive-btn"><i
-                        class="fas fa-archive"></i> L'archive S6</button></div>
+            <div id="grh-s1-list" class="buttons-grid hidden"><button onclick="loadFiles('Initiation à la gestion des RH')">Initiation Gestion RH</button><button onclick="loadFiles('Principes de gestion')">Principes de gestion</button><button onclick="loadFiles('Comptabilité financière I')">Comptabilité financière I</button><button onclick="loadFiles('Introduction à l’économie')">Introduction à l'économie</button><button onclick="loadFiles('Anglais I')">Anglais I</button><button onclick="loadFiles('MS Office')">MS Office</button><button onclick="loadFiles('Techniques de Communication')">Techniques de Communication</button><button onclick="loadFiles('Statistique descriptive I')">Statistique descriptive I</button><button onclick="loadFiles('Mathématiques')">Mathématiques</button><button onclick="loadFiles('Introduction au droit')">Introduction au droit</button><button onclick="loadFiles('Archive S1')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S1</button></div>
+            <div id="grh-s2-list" class="buttons-grid hidden"><button onclick="loadFiles('Evaluation des compétences')">Evaluation des compétences</button><button onclick="loadFiles('Gestion Administrative des RH I')">Gestion Admin. RH I</button><button onclick="loadFiles('Comptabilité financière II')">Comptabilité financière II</button><button onclick="loadFiles('Gestion financière I')">Gestion financière I</button><button onclick="loadFiles('Anglais II')">Anglais II</button><button onclick="loadFiles('Aptitudes en TIC')">Aptitudes en TIC</button><button onclick="loadFiles('Développement personnel')">Développement personnel</button><button onclick="loadFiles('Rédaction administrative I')">Rédaction administrative I</button><button onclick="loadFiles('Droit de travail I')">Droit de travail I</button><button onclick="loadFiles('Statistiques descriptives II')">Statistiques descriptives II</button><button onclick="loadFiles('Archive S2')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S2</button></div>
+            <div id="grh-s3-list" class="buttons-grid hidden"><button onclick="loadFiles('Gestion de la paie')">Gestion de la paie</button><button onclick="loadFiles('Recrutement')">Recrutement</button><button onclick="loadFiles('Sécurité sociale I')">Sécurité sociale I</button><button onclick="loadFiles('Gestion financière II')">Gestion financière II</button><button onclick="loadFiles('Plan et ingénierie de formation')">Plan et ingénierie de formation</button><button onclick="loadFiles('Logiciels paie')">Logiciels paie</button><button onclick="loadFiles('Anglais des affaires')">Anglais des affaires</button><button onclick="loadFiles('Rédaction administrative II')">Rédaction administrative II</button><button onclick="loadFiles('Droit de travail II')">Droit de travail II</button><button onclick="loadFiles('Droit des obligations')">Droit des obligations</button><button onclick="loadFiles('Archive S3')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S3</button></div>
+            <div id="grh-s4-list" class="buttons-grid hidden"><button onclick="loadFiles('GPEC')">GPEC</button><button onclick="loadFiles('Sécurité sociale II')">Sécurité sociale II</button><button onclick="loadFiles('Stratégie d\'entreprise')">Stratégie d'entreprise</button><button onclick="loadFiles('Macroéconomie')">Macroéconomie</button><button onclick="loadFiles('Microéconomie')">Microéconomie</button><button onclick="loadFiles('Analyse financière')">Analyse financière</button><button onclick="loadFiles('Communication interne')">Communication interne</button><button onclick="loadFiles('Système d\'information RH')">Système d'information RH</button><button onclick="loadFiles('Gestion des conflits et négociations')">Gestion des conflits et négociations</button><button onclick="loadFiles('Droit Administratif')">Droit Administratif</button><button onclick="loadFiles('Archive S4')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S4</button></div>
+            <div id="grh-s5-list" class="buttons-grid hidden"><button onclick="loadFiles('Sources de motivation du personnel')">Sources de motivation du personnel</button><button onclick="loadFiles('Politique de rémunération')">Politique de rémunération</button><button onclick="loadFiles('Audit des Ressources Humaines')">Audit des Ressources Humaines</button><button onclick="loadFiles('Droit pénal général')">Droit pénal général</button><button onclick="loadFiles('Passation des marchés')">Passation des marchés</button><button onclick="loadFiles('Sociologie des organisations')">Sociologie des organisations</button><button onclick="loadFiles('Rapport de stage de la 2ème année')">Rapport de stage</button><button onclick="loadFiles('Outils pilotage RH')">Outils pilotage RH</button><button onclick="loadFiles('Management des projets')">Management des projets</button><button onclick="loadFiles('Gestion des connaissances')">Gestion des connaissances</button><button onclick="loadFiles('Archive S5')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S5</button></div>
+            <div id="grh-s6-list" class="buttons-grid hidden"><button onclick="loadFiles('Méthodologie de recherche')">Méthodologie de recherche</button><button onclick="loadFiles('Séminaire sur l\'entrepreneuriat')">Séminaire sur l'entrepreneuriat</button><button onclick="loadFiles('Mémoire de fin d\'études')">Mémoire de fin d'études</button><button onclick="loadFiles('Archive S6')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S6</button></div>
 
             <!-- ======================= SAE ======================= -->
-            <div id="sae-s1-list" class="buttons-grid hidden"><button
-                    onclick="loadFiles('Introduction à l’économie')">Introduction à l'économie</button><button
-                    onclick="loadFiles('Principe de gestion')">Principe de gestion</button><button
-                    onclick="loadFiles('Calcul intégral I')">Calcul intégral I</button><button
-                    onclick="loadFiles('Calcul matricielle I')">Calcul matricielle I</button><button
-                    onclick="loadFiles('Probabilité I')">Probabilité I</button><button
-                    onclick="loadFiles('Statistique descriptive')">Statistique descriptive</button><button
-                    onclick="loadFiles('Anglais technique')">Anglais technique</button><button
-                    onclick="loadFiles('Méthodologie de travail universitaire')">Méthodologie</button><button
-                    onclick="loadFiles('Introduction au droit')">Introduction au droit</button><button
-                    onclick="loadFiles('MS office I')">MS office I</button><button onclick="loadFiles('Archive S1')"
-                    class="archive-btn"><i class="fas fa-archive"></i> L'archive S1</button></div>
-            <div id="sae-s2-list" class="buttons-grid hidden"><button
-                    onclick="loadFiles('Macro-économie')">Macro-économie</button><button
-                    onclick="loadFiles('Microéconomie')">Microéconomie</button><button
-                    onclick="loadFiles('Calcul intégral II')">Calcul intégral II</button><button
-                    onclick="loadFiles('Calcul matricielle II')">Calcul matricielle II</button><button
-                    onclick="loadFiles('Probabilité II')">Probabilité II</button><button
-                    onclick="loadFiles('Statistique descriptive II')">Statistique descriptive II</button><button
-                    onclick="loadFiles('Anglais technique II')">Anglais technique II</button><button
-                    onclick="loadFiles('MS office II')">MS office II</button><button
-                    onclick="loadFiles('Comptabilité générale')">Comptabilité générale</button><button
-                    onclick="loadFiles('Technique de communication')">Technique de communication</button><button
-                    onclick="loadFiles('Archive S2')" class="archive-btn"><i class="fas fa-archive"></i> L'archive
-                    S2</button></div>
-            <div id="sae-s3-list" class="buttons-grid hidden"><button
-                    onclick="loadFiles('Statistique inferential')">Statistique inferential</button><button
-                    onclick="loadFiles('Technique de sondage')">Technique de sondage</button><button
-                    onclick="loadFiles('Programmation linéaire')">Programmation linéaire</button><button
-                    onclick="loadFiles('Comptabilité nationale')">Comptabilité nationale</button><button
-                    onclick="loadFiles('Microeconomie 2')">Microeconomie 2</button><button
-                    onclick="loadFiles('Macro-économie 2')">Macro-économie 2</button><button
-                    onclick="loadFiles('Marketing')">Marketing</button><button
-                    onclick="loadFiles('Mangement')">Mangement</button><button
-                    onclick="loadFiles('Monnaies et crédit')">Monnaies et crédit</button><button
-                    onclick="loadFiles('Logiciel (spss ou R)')">Logiciel (spss ou R)</button><button
-                    onclick="loadFiles('Archive S3')" class="archive-btn"><i class="fas fa-archive"></i> L'archive
-                    S3</button></div>
-            <div id="sae-s4-list" class="buttons-grid hidden"><button onclick="loadFiles('Finance public')">Finance
-                    public</button><button onclick="loadFiles('GRH')">GRH</button><button
-                    onclick="loadFiles('Econometrie')">Econometrie</button><button
-                    onclick="loadFiles('Commerce extérieur')">Commerce extérieur</button><button
-                    onclick="loadFiles('Optimisation')">Optimisation</button><button
-                    onclick="loadFiles('Analyse des données')">Analyse des données</button><button
-                    onclick="loadFiles('Logiciel statistique')">Logiciel statistique (R)</button><button
-                    onclick="loadFiles('Gestion des projets')">Gestion des projets</button><button
-                    onclick="loadFiles('Finance des marchés')">Finance des marchés</button><button
-                    onclick="loadFiles('Économie Mauritanienne')">Économie Mauritanienne</button><button
-                    onclick="loadFiles('Archive S4')" class="archive-btn"><i class="fas fa-archive"></i> L'archive
-                    S4</button></div>
+            <div id="sae-s1-list" class="buttons-grid hidden"><button onclick="loadFiles('Introduction à l’économie')">Introduction à l'économie</button><button onclick="loadFiles('Principe de gestion')">Principe de gestion</button><button onclick="loadFiles('Calcul intégral I')">Calcul intégral I</button><button onclick="loadFiles('Calcul matricielle I')">Calcul matricielle I</button><button onclick="loadFiles('Probabilité I')">Probabilité I</button><button onclick="loadFiles('Statistique descriptive')">Statistique descriptive</button><button onclick="loadFiles('Anglais technique')">Anglais technique</button><button onclick="loadFiles('Méthodologie de travail universitaire')">Méthodologie</button><button onclick="loadFiles('Introduction au droit')">Introduction au droit</button><button onclick="loadFiles('MS office I')">MS office I</button><button onclick="loadFiles('Archive S1')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S1</button></div>
+            <div id="sae-s2-list" class="buttons-grid hidden"><button onclick="loadFiles('Macro-économie')">Macro-économie</button><button onclick="loadFiles('Microéconomie')">Microéconomie</button><button onclick="loadFiles('Calcul intégral II')">Calcul intégral II</button><button onclick="loadFiles('Calcul matricielle II')">Calcul matricielle II</button><button onclick="loadFiles('Probabilité II')">Probabilité II</button><button onclick="loadFiles('Statistique descriptive II')">Statistique descriptive II</button><button onclick="loadFiles('Anglais technique II')">Anglais technique II</button><button onclick="loadFiles('MS office II')">MS office II</button><button onclick="loadFiles('Comptabilité générale')">Comptabilité générale</button><button onclick="loadFiles('Technique de communication')">Technique de communication</button><button onclick="loadFiles('Archive S2')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S2</button></div>
+            <div id="sae-s3-list" class="buttons-grid hidden"><button onclick="loadFiles('Statistique inferential')">Statistique inferential</button><button onclick="loadFiles('Technique de sondage')">Technique de sondage</button><button onclick="loadFiles('Programmation linéaire')">Programmation linéaire</button><button onclick="loadFiles('Comptabilité nationale')">Comptabilité nationale</button><button onclick="loadFiles('Microeconomie 2')">Microeconomie 2</button><button onclick="loadFiles('Macro-économie 2')">Macro-économie 2</button><button onclick="loadFiles('Marketing')">Marketing</button><button onclick="loadFiles('Mangement')">Mangement</button><button onclick="loadFiles('Monnaies et crédit')">Monnaies et crédit</button><button onclick="loadFiles('Logiciel (spss ou R)')">Logiciel (spss ou R)</button><button onclick="loadFiles('Archive S3')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S3</button></div>
+            <div id="sae-s4-list" class="buttons-grid hidden"><button onclick="loadFiles('Finance public')">Finance public</button><button onclick="loadFiles('GRH')">GRH</button><button onclick="loadFiles('Econometrie')">Econometrie</button><button onclick="loadFiles('Commerce extérieur')">Commerce extérieur</button><button onclick="loadFiles('Optimisation')">Optimisation</button><button onclick="loadFiles('Analyse des données')">Analyse des données</button><button onclick="loadFiles('Logiciel statistique')">Logiciel statistique (R)</button><button onclick="loadFiles('Gestion des projets')">Gestion des projets</button><button onclick="loadFiles('Finance des marchés')">Finance des marchés</button><button onclick="loadFiles('Économie Mauritanienne')">Économie Mauritanienne</button><button onclick="loadFiles('Archive S4')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S4</button></div>
             <div id="sae-s5-list" class="buttons-grid hidden"></div>
             <div id="sae-s6-list" class="buttons-grid hidden"></div>
 
             <!-- ======================= IG ======================= -->
-            <div id="ig-s1-list" class="buttons-grid hidden"><button
-                    onclick="loadFiles('Introduction à l’économie')">Introduction à l'économie</button><button
-                    onclick="loadFiles('Introduction au droit')">Introduction au droit</button><button
-                    onclick="loadFiles('Comptabilité financière')">Comptabilité financière</button><button
-                    onclick="loadFiles('Algorithmiques')">Algorithmiques</button><button
-                    onclick="loadFiles('Architecture des ordinateurs')">Architecture des ordinateurs</button><button
-                    onclick="loadFiles('MS office')">MS office</button><button
-                    onclick="loadFiles('Anglais technique')">Anglais technique</button><button
-                    onclick="loadFiles('Méthodologie du travail universitaire')">Méthodologie</button><button
-                    onclick="loadFiles('Logique mathématique')">Logique mathématique</button><button
-                    onclick="loadFiles('Analyse I')">Analyse I</button><button onclick="loadFiles('Archive S1')"
-                    class="archive-btn"><i class="fas fa-archive"></i> L'archive S1</button></div>
-            <div id="ig-s2-list" class="buttons-grid hidden"><button
-                    onclick="loadFiles('Comptabilité financière II')">Comptabilité financière II</button><button
-                    onclick="loadFiles('principe de gestion')">Principe de gestion</button><button
-                    onclick="loadFiles('Langage C')">Langage C</button><button
-                    onclick="loadFiles('Système d\'exploitation')">Système d'exploitation</button><button
-                    onclick="loadFiles('Programation Web')">Programation Web</button><button
-                    onclick="loadFiles('Python')">Python</button><button
-                    onclick="loadFiles('Anglais technique')">Anglais technique</button><button
-                    onclick="loadFiles('Technique de communication')">Technique de communication</button><button
-                    onclick="loadFiles('Algèbre linéaire')">Algèbre linéaire</button><button
-                    onclick="loadFiles('Analyse II')">Analyse II</button><button onclick="loadFiles('Archive S2')"
-                    class="archive-btn"><i class="fas fa-archive"></i> L'archive S2</button></div>
-            <div id="ig-s3-list" class="buttons-grid hidden"><button
-                    onclick="loadFiles('Comptabilité analytique I')">Comptabilité analytique I</button><button
-                    onclick="loadFiles('Stratégie d’entreprise')">Stratégie d’entreprise</button><button
-                    onclick="loadFiles('Java I')">Java I</button><button onclick="loadFiles('PHP-My SQL')">PHP-My
-                    SQL</button><button onclick="loadFiles('Conception des bases de données I')">Conception BDD
-                    I</button><button onclick="loadFiles('Réseaux informatiques')">Réseaux informatiques</button><button
-                    onclick="loadFiles('Modélisation (UML/MERISE)')">Modélisation (UML/MERISE)</button><button
-                    onclick="loadFiles('Calcul multi-variables')">Calcul multi-variables</button><button
-                    onclick="loadFiles('Logiciel de Calcul Scientifique')">Logiciel de Calcul
-                    Scientifique</button><button onclick="loadFiles('probabilités et Statistiques')">probabilités et
-                    Statistiques</button><button onclick="loadFiles('Archive S3')" class="archive-btn"><i
-                        class="fas fa-archive"></i> L'archive S3</button></div>
-            <div id="ig-s4-list" class="buttons-grid hidden"><button
-                    onclick="loadFiles('Comptabilité analytique II')">Comptabilité analytique II</button><button
-                    onclick="loadFiles('Gestion des ressources humaines')">Gestion des ressources
-                    humaines</button><button onclick="loadFiles('Java II')">Java II</button><button
-                    onclick="loadFiles('C#')">C#</button><button onclick="loadFiles('PHP Frameworks')">PHP
-                    Frameworks</button><button onclick="loadFiles('Gestion de projet informatique')">Gestion de projet
-                    informatique</button><button onclick="loadFiles('Théories des Graphes')">Théories des
-                    Graphes</button><button onclick="loadFiles('Bases de données')">Bases de données</button><button
-                    onclick="loadFiles('Réseaux informatique II')">Réseaux informatique II</button><button
-                    onclick="loadFiles('Compilations')">Compilations</button><button onclick="loadFiles('Archive S4')"
-                    class="archive-btn"><i class="fas fa-archive"></i> L'archive S4</button></div>
-            <div id="ig-s5-list" class="buttons-grid hidden"><button onclick="loadFiles('Contrôle de gestion')">Contrôle
-                    de gestion</button><button onclick="loadFiles('Gestion financière')">Gestion
-                    financière</button><button onclick="loadFiles('Technologie DotNet')">Technologie
-                    DotNet</button><button onclick="loadFiles('JEE Framework')">JEE Framework</button><button
-                    onclick="loadFiles('Programmation Mobile')">Programmation Mobile</button><button
-                    onclick="loadFiles('Intelligence artificielle')">Intelligence artificielle</button><button
-                    onclick="loadFiles('Bases des données avancées')">Bases des données avancées</button><button
-                    onclick="loadFiles('Administration des Systèmes')">Administration des Systèmes</button><button
-                    onclick="loadFiles('Système d\'Informations Géographique')">Système d'Informations
-                    Géographique</button><button onclick="loadFiles('Rapport de stage de la 2ème année')">Rapport de
-                    stage de la 2ème année</button><button onclick="loadFiles('Archive S5')" class="archive-btn"><i
-                        class="fas fa-archive"></i> L'archive S5</button></div>
-            <div id="ig-s6-list" class="buttons-grid hidden"><button
-                    onclick="loadFiles('Méthodologie de recherche')">Méthodologie de recherche</button><button
-                    onclick="loadFiles('Séminaire sur l\'entrepreneuriat')">Séminaire sur
-                    l'entrepreneuriat</button><button onclick="loadFiles('Mémoire de fin d\'études')">Mémoire de fin
-                    d'études</button><button onclick="loadFiles('Archive S6')" class="archive-btn"><i
-                        class="fas fa-archive"></i> L'archive S6</button></div>
-
+            <div id="ig-s1-list" class="buttons-grid hidden"><button onclick="loadFiles('Introduction à l’économie')">Introduction à l'économie</button><button onclick="loadFiles('Introduction au droit')">Introduction au droit</button><button onclick="loadFiles('Comptabilité financière')">Comptabilité financière</button><button onclick="loadFiles('Algorithmiques')">Algorithmiques</button><button onclick="loadFiles('Architecture des ordinateurs')">Architecture des ordinateurs</button><button onclick="loadFiles('MS office')">MS office</button><button onclick="loadFiles('Anglais technique')">Anglais technique</button><button onclick="loadFiles('Méthodologie du travail universitaire')">Méthodologie</button><button onclick="loadFiles('Logique mathématique')">Logique mathématique</button><button onclick="loadFiles('Analyse I')">Analyse I</button><button onclick="loadFiles('Archive S1')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S1</button></div>
+            <div id="ig-s2-list" class="buttons-grid hidden"><button onclick="loadFiles('Comptabilité financière II')">Comptabilité financière II</button><button onclick="loadFiles('principe de gestion')">Principe de gestion</button><button onclick="loadFiles('Langage C')">Langage C</button><button onclick="loadFiles('Système d\'exploitation')">Système d'exploitation</button><button onclick="loadFiles('Programation Web')">Programation Web</button><button onclick="loadFiles('Python')">Python</button><button onclick="loadFiles('Anglais technique')">Anglais technique</button><button onclick="loadFiles('Technique de communication')">Technique de communication</button><button onclick="loadFiles('Algèbre linéaire')">Algèbre linéaire</button><button onclick="loadFiles('Analyse II')">Analyse II</button><button onclick="loadFiles('Archive S2')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S2</button></div>
+            <div id="ig-s3-list" class="buttons-grid hidden"><button onclick="loadFiles('Comptabilité analytique I')">Comptabilité analytique I</button><button onclick="loadFiles('Stratégie d’entreprise')">Stratégie d’entreprise</button><button onclick="loadFiles('Java I')">Java I</button><button onclick="loadFiles('PHP-My SQL')">PHP-My SQL</button><button onclick="loadFiles('Conception des bases de données I')">Conception BDD I</button><button onclick="loadFiles('Réseaux informatiques')">Réseaux informatiques</button><button onclick="loadFiles('Modélisation (UML/MERISE)')">Modélisation (UML/MERISE)</button><button onclick="loadFiles('Calcul multi-variables')">Calcul multi-variables</button><button onclick="loadFiles('Logiciel de Calcul Scientifique')">Logiciel de Calcul Scientifique</button><button onclick="loadFiles('probabilités et Statistiques')">probabilités et Statistiques</button><button onclick="loadFiles('Archive S3')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S3</button></div>
+            <div id="ig-s4-list" class="buttons-grid hidden"><button onclick="loadFiles('Comptabilité analytique II')">Comptabilité analytique II</button><button onclick="loadFiles('Gestion des ressources humaines')">Gestion des ressources humaines</button><button onclick="loadFiles('Java II')">Java II</button><button onclick="loadFiles('C#')">C#</button><button onclick="loadFiles('PHP Frameworks')">PHP Frameworks</button><button onclick="loadFiles('Gestion de projet informatique')">Gestion de projet informatique</button><button onclick="loadFiles('Théories des Graphes')">Théories des Graphes</button><button onclick="loadFiles('Bases de données')">Bases de données</button><button onclick="loadFiles('Réseaux informatique II')">Réseaux informatique II</button><button onclick="loadFiles('Compilations')">Compilations</button><button onclick="loadFiles('Archive S4')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S4</button></div>
+            <div id="ig-s5-list" class="buttons-grid hidden"><button onclick="loadFiles('Contrôle de gestion')">Contrôle de gestion</button><button onclick="loadFiles('Gestion financière')">Gestion financière</button><button onclick="loadFiles('Technologie DotNet')">Technologie DotNet</button><button onclick="loadFiles('JEE Framework')">JEE Framework</button><button onclick="loadFiles('Programmation Mobile')">Programmation Mobile</button><button onclick="loadFiles('Intelligence artificielle')">Intelligence artificielle</button><button onclick="loadFiles('Bases des données avancées')">Bases des données avancées</button><button onclick="loadFiles('Administration des Systèmes')">Administration des Systèmes</button><button onclick="loadFiles('Système d\'Informations Géographique')">Système d'Informations Géographique</button><button onclick="loadFiles('Rapport de stage de la 2ème année')">Rapport de stage de la 2ème année</button><button onclick="loadFiles('Archive S5')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S5</button></div>
+            <div id="ig-s6-list" class="buttons-grid hidden"><button onclick="loadFiles('Méthodologie de recherche')">Méthodologie de recherche</button><button onclick="loadFiles('Séminaire sur l\'entrepreneuriat')">Séminaire sur l'entrepreneuriat</button><button onclick="loadFiles('Mémoire de fin d\'études')">Mémoire de fin d'études</button><button onclick="loadFiles('Archive S6')" class="archive-btn"><i class="fas fa-archive"></i> L'archive S6</button></div>
+            
         </div>
 
-        <!-- 6. NEW: اختيار نوع الملف (Dossiers) -->
-        <div id="course-types-container" class="section-box hidden">
+        <!-- NEW: حاوية اختيار نوع الملف (البطاقات) -->
+        <div id="category-selection-container" class="section-box hidden">
             <div class="header-with-back">
-                <button class="back-btn" onclick="goBackToSubjects()"><i class="fas fa-arrow-right"></i> المواد</button>
+                <button class="back-btn" onclick="goBackToSubjects()">المواد</button>
                 <h2 class="section-title">اختر نوع الملف</h2>
             </div>
-            <h3 style="text-align:center; color:var(--primary-color); margin-bottom:20px;">📂 <span
-                    id="folder-subject-name"></span></h3>
-
-            <div class="semesters-grid">
-                <div class="semester-card" onclick="openFolder('cours')">
-                    <div class="icon-box" style="color:#1565c0"><i class="fas fa-chalkboard-teacher"></i></div>
+            <h3 style="text-align:center; color:var(--primary-color); margin-bottom:20px;">
+                <span id="selected-subject-title-card"></span> 📂
+            </h3>
+            
+            <div class="category-grid">
+                <!-- Card: Cours -->
+                <div class="category-card cat-cours" onclick="selectCategory('cours')">
+                    <i class="fas fa-chalkboard-teacher"></i>
                     <h3>Cours</h3>
                     <p>الدروس</p>
                 </div>
-                <div class="semester-card" onclick="openFolder('td')">
-                    <div class="icon-box" style="color:#ef6c00"><i class="fas fa-tasks"></i></div>
+
+                <!-- Card: TD -->
+                <div class="category-card cat-td" onclick="selectCategory('td')">
+                    <i class="fas fa-list-ol"></i>
                     <h3>TD</h3>
                     <p>الأعمال الموجهة</p>
                 </div>
-                <div class="semester-card" onclick="openFolder('devoir')">
-                    <div class="icon-box" style="color:#2e7d32"><i class="fas fa-file-alt"></i></div>
-                    <h3>Devoir</h3>
-                    <p>الواجبات</p>
+
+                <!-- Card: TP -->
+                <div class="category-card cat-tp" onclick="selectCategory('tp')">
+                    <i class="fas fa-laptop-code"></i>
+                    <h3>TP</h3>
+                    <p>الأعمال التطبيقية</p>
                 </div>
-                <div class="semester-card" onclick="openFolder('exam')">
-                    <div class="icon-box" style="color:#c62828"><i class="fas fa-user-graduate"></i></div>
-                    <h3>Examen</h3>
-                    <p>الامتحانات</p>
+
+                <!-- Card: Archive -->
+                <div class="category-card cat-archive" onclick="selectCategory('archive')">
+                    <i class="fas fa-archive"></i>
+                    <h3>Archive</h3>
+                    <p>أرشيف الامتحانات</p>
                 </div>
             </div>
         </div>
 
-        <!-- حاوية عرض الملفات -->
+        <!-- حاوية عرض الملفات (تم تعديلها لإخفاء التبويبات القديمة) -->
         <div id="file-list-container" class="section-box hidden">
-            <button class="back-btn" onclick="closeSearch()"
-                style="width:100%; text-align:center; margin-bottom:15px; background:#ef9a9a; color:#b71c1c;">إغلاق
-                والعودة</button>
-            <h3 style="text-align:center;">📂 الملفات: <span id="selected-subject-name"
-                    style="color:var(--primary-color)"></span></h3>
+            <button class="back-btn" onclick="goBackToCategories()" style="width:100%; text-align:center; margin-bottom:15px; background:#ef9a9a; color:#b71c1c;">عودة للتصنيفات</button>
+            <h3 style="text-align:center;">📂 الملفات: <span id="selected-subject-name" style="color:var(--primary-color)"></span></h3>
+            
+            <!-- التبويبات القديمة مخفية الآن لأننا نستخدم البطاقات -->
+            <div class="tabs-container hidden">
+                <button class="tab-btn active" onclick="switchTab('cours')">📚 Cours</button>
+                <button class="tab-btn" onclick="switchTab('td')">📝 TD</button>
+                <button class="tab-btn" onclick="switchTab('tp')">💻 TP</button>
+                <button class="tab-btn" onclick="switchTab('archive')">🏛️ Archive</button>
+            </div>
+
             <div id="loading-spinner" class="spinner hidden"></div>
             <ul id="pdf-list"></ul>
-            <p id="no-files-msg" class="hidden" style="text-align:center; color:#777; margin-top:20px;">⚠️ لم يتم العثور
-                على ملفات لهذا القسم حالياً.</p>
+            <p id="no-files-msg" class="hidden" style="text-align:center; color:#777; margin-top:20px;">⚠️ لا توجد ملفات في هذا القسم حالياً.</p>
         </div>
     </div>
 
     <!-- متصفح داخلي -->
     <div id="web-viewer-overlay" class="hidden">
         <div class="viewer-header">
-            <button onclick="closeWebViewer()"
-                style="background:none; border:none; color:white; font-size:1.1rem; font-weight:bold;">❌ إغلاق</button>
+            <button onclick="closeWebViewer()" style="background:none; border:none; color:white; font-size:1.1rem; font-weight:bold;">❌ إغلاق</button>
             <span id="web-viewer-title" style="color:white; font-weight:bold;"></span>
             <div style="width:30px"></div>
         </div>
@@ -1152,19 +413,12 @@
     <!-- نافذة العرض -->
     <div id="pdf-viewer-overlay" class="hidden">
         <div class="viewer-header">
-            <button onclick="closePdfViewer()"
-                style="background:none; border:none; color:white; font-size:1.1rem; font-weight:bold;">❌ إغلاق</button>
-            <span id="viewer-filename"
-                style="max-width:150px; overflow:hidden; white-space:nowrap; color:#eee;">ملف</span>
-            <button id="viewer-action-btn"
-                style="background:rgba(255,255,255,0.2); border:none; color:white; padding:5px 12px; border-radius:20px;">فتح
-                خارجي</button>
+            <button onclick="closePdfViewer()" style="background:none; border:none; color:white; font-size:1.1rem; font-weight:bold;">❌ إغلاق</button>
+            <span id="viewer-filename" style="max-width:150px; overflow:hidden; white-space:nowrap; color:#eee;">ملف</span>
+            <button id="viewer-action-btn" style="background:rgba(255,255,255,0.2); border:none; color:white; padding:5px 12px; border-radius:20px;">فتح خارجي</button>
         </div>
         <div id="pdf-render-area"></div>
-        <div id="rendering-msg">
-            <div class="spinner"></div>
-            <p style="color:white; text-align:center; margin-top:10px;">جاري جلب الملف...</p>
-        </div>
+        <div id="rendering-msg"><div class="spinner"></div><p style="color:white; text-align:center; margin-top:10px;">جاري جلب الملف...</p></div>
     </div>
 
     <!-- نافذة عن الاتحاد -->
@@ -1172,18 +426,13 @@
         <div class="union-content fade-in">
             <h2>عن الاتحاد</h2>
             <div class="union-text">
-                <p>في الثالث عشر مايو عام ألفين ( 13/05/2000 ) كانت الحركة الطلابية الوطنية على موعد مع مرحلة جديدة في
-                    تاريخها ونقطة تحول محورية، حيث انطلق الاتحاد الوطني لطلبة موريتانيا، زاده عزيمة لا تستكين وشعاره:
-                    وعي، وحدة، بناء، مشيدا صرح النضال السديد ورافعا لواء القضية الطلابية بعزم لا يستكين، نابذا عهد
-                    الخمول والاستكانة وراء ظهره، فكان بحق صوت الطالب المعبر عن تطلعاته بصدق والمنافح عنه بقوة والمناضل
-                    المؤتمن على قضيته، فرفع الظلم ورد الحق وصان المكتسب.</p>
+                <p>في الثالث عشر مايو عام ألفين ( 13/05/2000 ) كانت الحركة الطلابية الوطنية على موعد مع مرحلة جديدة في تاريخها ونقطة تحول محورية، حيث انطلق الاتحاد الوطني لطلبة موريتانيا، زاده عزيمة لا تستكين وشعاره: وعي، وحدة، بناء، مشيدا صرح النضال السديد ورافعا لواء القضية الطلابية بعزم لا يستكين، نابذا عهد الخمول والاستكانة وراء ظهره، فكان بحق صوت الطالب المعبر عن تطلعاته بصدق والمنافح عنه بقوة والمناضل المؤتمن على قضيته، فرفع الظلم ورد الحق وصان المكتسب.</p>
             </div>
-            <button onclick="closeUnionModal()" class="back-btn"
-                style="width:100%; background: var(--primary-color); color:white;">إغلاق</button>
+            <button onclick="closeUnionModal()" class="back-btn" style="width:100%; background: var(--primary-color); color:white;">إغلاق</button>
         </div>
     </div>
 
-    <!-- نافذة الرفع -->
+    <!-- نافذة الرفع (تم التعديل لإضافة نوع الملف) -->
     <div id="upload-modal-overlay" class="hidden">
         <div class="union-content fade-in" style="max-width:400px;">
             <h2>رفع ملف جديد</h2>
@@ -1191,39 +440,38 @@
                 <div class="upload-form-group">
                     <label>التخصص</label>
                     <select id="upload-spec" required onchange="updateUploadSubjects()">
-                        <option value="BA">BA</option>
-                        <option value="FC">FC</option>
-                        <option value="TCM">TCM</option>
-                        <option value="GRH">GRH</option>
-                        <option value="SAE">SAE</option>
-                        <option value="IG">IG</option>
+                        <option value="BA">BA</option> <option value="FC">FC</option>
+                        <option value="TCM">TCM</option> <option value="GRH">GRH</option>
+                        <option value="SAE">SAE</option> <option value="IG">IG</option>
                     </select>
                 </div>
                 <div class="upload-form-group">
                     <label>المستوى</label>
-                    <select id="upload-level" required>
-                        <option value="L1">L1</option>
-                        <option value="L2">L2</option>
-                        <option value="L3">L3</option>
-                    </select>
+                    <select id="upload-level" required><option value="L1">L1</option><option value="L2">L2</option><option value="L3">L3</option></select>
                 </div>
                 <div class="upload-form-group">
                     <label>الفصل</label>
                     <select id="upload-semester" required onchange="updateUploadSubjects()">
-                        <option value="S1">S1</option>
-                        <option value="S2">S2</option>
-                        <option value="S3">S3</option>
-                        <option value="S4">S4</option>
-                        <option value="S5">S5</option>
-                        <option value="S6">S6</option>
+                        <option value="S1">S1</option><option value="S2">S2</option><option value="S3">S3</option>
+                        <option value="S4">S4</option><option value="S5">S5</option><option value="S6">S6</option>
                     </select>
                 </div>
                 <div class="upload-form-group">
                     <label>المادة</label>
-                    <select id="upload-subject" required>
-                        <option value="">اختر التخصص والفصل أولاً...</option>
+                    <select id="upload-subject" required><option value="">اختر التخصص والفصل أولاً...</option></select>
+                </div>
+                
+                <!-- إضافة نوع الملف -->
+                <div class="upload-form-group">
+                    <label>نوع الملف</label>
+                    <select id="upload-type" required>
+                        <option value="Cours">Cours (درس/ملخص)</option>
+                        <option value="TD">TD (تمارين)</option>
+                        <option value="TP">TP (تطبيق)</option>
+                        <option value="Archive">Archive (إمتحان)</option>
                     </select>
                 </div>
+
                 <div class="upload-form-group">
                     <label>اختر ملف (PDF)</label>
                     <input type="file" id="upload-file" accept="application/pdf" required>
@@ -1231,8 +479,7 @@
                 <div id="upload-status" class="status-msg"></div>
                 <button type="submit" id="upload-submit-btn" class="upload-btn-submit">رفع الملف</button>
             </form>
-            <button onclick="closeUploadModal()" class="back-btn"
-                style="width:100%; margin-top:10px; background: #e0e0e0; color:#333;">إلغاء</button>
+            <button onclick="closeUploadModal()" class="back-btn" style="width:100%; margin-top:10px; background: #e0e0e0; color:#333;">إلغاء</button>
         </div>
     </div>
 
@@ -1240,39 +487,35 @@
     <footer class="main-footer">
         <div class="motivational-text">✨ اتدورو تفاليدو إن شاء الله ✨</div>
         <div class="social-buttons-container">
-            <a href="https://www.facebook.com/share/1Ce3zTEpvC/" target="_blank" class="social-btn fb-btn"><i
-                    class="fab fa-facebook"></i> صفحتنا على فيسبوك</a>
-            <a href="https://chat.whatsapp.com/DBg3bcBQP2q8ERsoHkRY6N" target="_blank" class="social-btn wa-btn"><i
-                    class="fab fa-whatsapp"></i> مجتمعنا على واتساب</a>
+            <a href="https://www.facebook.com/share/1Ce3zTEpvC/" target="_blank" class="social-btn fb-btn"><i class="fab fa-facebook"></i> صفحتنا على فيسبوك</a>
+            <a href="https://chat.whatsapp.com/DBg3bcBQP2q8ERsoHkRY6N" target="_blank" class="social-btn wa-btn"><i class="fab fa-whatsapp"></i> مجتمعنا على واتساب</a>
         </div>
         <div class="footer-divider"></div>
-        <p class="copyright">جميع الحقوق محفوظة © <span id="copyright-year"
-                style="cursor:pointer; user-select:none;">2026</span></p>
+        <p class="copyright">جميع الحقوق محفوظة © <span id="copyright-year" style="cursor:pointer; user-select:none;">2026</span></p>
     </footer>
 
     <script>
         document.getElementById('copyright-year').textContent = new Date().getFullYear();
 
-        // منطق الدخول للإدارة (5 ضغطات سريعة)
+        // منطق الدخول للإدارة
         let tapCount = 0;
         let tapTimer;
         const yearSpan = document.getElementById('copyright-year');
 
         yearSpan.addEventListener('click', () => {
             tapCount++;
-            clearTimeout(tapTimer); // إعادة ضبط المؤقت مع كل ضغطة
+            clearTimeout(tapTimer); 
 
-            if (tapCount === 5) { // تفعيل عند الضغطة الخامسة
+            if (tapCount === 5) { 
                 const pass = prompt("أدخل رمز الإدارة:");
-                if (pass === "I21567@Unem ISCAE @MDA") {
+                if(pass === "I21567@Unem ISCAE @MDA") {
                     openUploadModal();
                 } else {
                     alert("رمز خاطئ!");
                 }
-                tapCount = 0; // تصفير العداد
+                tapCount = 0; 
             }
 
-            // تصفير العداد إذا توقف المستخدم عن الضغط لمدة ثانية
             tapTimer = setTimeout(() => {
                 tapCount = 0;
             }, 1000);
@@ -1286,21 +529,46 @@
 
         // إعداد Supabase
         const SUPABASE_URL = 'https://rcdaxtretxskeyghxugm.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_OupfdnKe5eQmqULV46O0wQ_xUglAncv';
+        const SUPABASE_KEY = 'sb_publishable_OupfdnKe5eQmqULV46O0wQ_xUglAncv'; 
         let supabaseClient;
         try { supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } catch (e) { console.error("Supabase init error:", e); }
 
-        const repoOwner = "i21567etu-coder";
-        const repoName = "UNEM-ISCAE-";
+        const repoOwner = "i21567etu-coder"; 
+        const repoName = "UNEM-ISCAE-"; 
         const branchMap = { 'ba': 'BA', 'fc': 'FC', 'tcm': 'TCM', 'grh': 'GRH', 'sae': 'SAE', 'ig': 'IG' };
 
-        let allFiles = []; let currentSpecialization = ''; let currentLevel = ''; let currentSemester = ''; let currentBranch = 'main';
+        let allFiles = []; let currentSpecialization = ''; let currentLevel = ''; let currentSemester = ''; let currentBranch = 'main'; 
+        let currentSubjectFiles = []; 
+        let currentTab = 'cours'; 
+        let isArchiveSpecialCase = false; // متغير للتحكم في حالة الأرشيف العام
 
         function hideAll() { document.querySelectorAll('.section-box').forEach(el => el.classList.add('hidden')); }
         function goBackToMainMenu() { hideAll(); document.getElementById('main-menu').classList.remove('hidden'); }
         function goBackToSpecialization() { hideAll(); document.getElementById('specialization-selection').classList.remove('hidden'); }
         function goBackToLevels() { hideAll(); document.getElementById('level-selection').classList.remove('hidden'); }
-        function goBackToSemesters() { hideAll(); showSemesters(currentLevel); }
+        
+        function goBackToSemesters() { 
+            hideAll(); 
+            // تأكد من أننا نرجع للفصل الصحيح
+            if(currentLevel) {
+                document.getElementById('semesters-container').classList.remove('hidden');
+            } else {
+                document.getElementById('level-selection').classList.remove('hidden');
+            }
+        }
+
+        // دالة العودة الجديدة من شاشة البطاقات إلى المواد
+        function goBackToSubjects() {
+            hideAll();
+            document.getElementById('subjects-container').classList.remove('hidden');
+        }
+
+        // دالة العودة من قائمة الملفات إلى البطاقات
+        function goBackToCategories() {
+            hideAll();
+            document.getElementById('category-selection-container').classList.remove('hidden');
+        }
+
         function closeSearch() { document.getElementById('file-list-container').classList.add('hidden'); document.getElementById('main-menu').classList.remove('hidden'); }
         function closePdfViewer() { document.getElementById('pdf-viewer-overlay').classList.add('hidden'); document.getElementById('pdf-render-area').innerHTML = ""; }
         function openUnionModal() { document.getElementById('union-modal-overlay').classList.remove('hidden'); }
@@ -1310,22 +578,22 @@
 
         function showSpecializationSelection() { hideAll(); document.getElementById('specialization-selection').classList.remove('hidden'); }
         function selectSpecialization(spec) {
-            currentSpecialization = spec; currentBranch = branchMap[spec] || 'main'; allFiles = [];
+            currentSpecialization = spec; currentBranch = branchMap[spec] || 'main'; allFiles = []; 
             hideAll(); document.getElementById('level-selection').classList.remove('hidden');
             fetchFilesFromGitHub(currentBranch);
         }
         function showSemesters(level) {
             currentLevel = level; hideAll(); document.getElementById('semesters-container').classList.remove('hidden');
-            const grid = document.getElementById('semesters-grid-view'); grid.innerHTML = '';
+            const grid = document.getElementById('semesters-grid-view'); grid.innerHTML = ''; 
             let semesters = (level === 'l1') ? ['s1', 's2'] : (level === 'l2') ? ['s3', 's4'] : ['s5', 's6'];
             semesters.forEach(sem => {
                 const div = document.createElement('div'); div.className = 'semester-card';
-                div.innerHTML = `<div class="icon-box" style="font-size:2rem;color:var(--primary-color)">${sem.toUpperCase()}</div><h3>Semestre ${sem.replace('s', '')}</h3>`;
+                div.innerHTML = `<div class="icon-box" style="font-size:2rem;color:var(--primary-color)">${sem.toUpperCase()}</div><h3>Semestre ${sem.replace('s','')}</h3>`;
                 div.onclick = () => showSubjects(sem); grid.appendChild(div);
             });
         }
         function showSubjects(semester) {
-            currentSemester = semester;
+            currentSemester = semester; 
             hideAll(); document.getElementById('subjects-container').classList.remove('hidden');
             document.querySelectorAll('.buttons-grid').forEach(list => list.classList.add('hidden'));
             const targetId = `${currentSpecialization}-${semester}-list`;
@@ -1338,118 +606,232 @@
             const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/?ref=${branch}`;
             try {
                 const res = await fetch(apiUrl);
-                if (res.ok) {
+                if(res.ok) {
                     const data = await res.json();
-                    if (Array.isArray(data)) allFiles = data;
+                    if(Array.isArray(data)) allFiles = data;
                 }
-            } catch (err) { console.log("Waiting..."); }
+            } catch(err) { console.log("Waiting..."); }
         }
 
         function normalizeText(text) { return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim(); }
-
-        function getSafeSubjectCode(name) {
-            return name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "_").replace(/_+/g, "_");
-        }
-
+        function getSafeSubjectCode(name) { return name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "_").replace(/_+/g, "_"); }
+        
         function isValidFile(filename) {
-            const forbidden = [
-                'index.html', 'style.css', 'script.js', 'sw.js',
-                'manifest.json', 'icon-192.png', 'icon-512.png',
-                'favicon.ico', 'cname', 'readme.md',
-                'emptyfolderplaceholder', '.emptyfolderplaceholder'
-            ];
-            if (forbidden.includes(filename.toLowerCase())) return false;
+            const forbidden = ['index.html', 'style.css', 'script.js', 'sw.js', 'manifest.json', 'icon-192.png', 'icon-512.png', 'favicon.ico', 'cname', 'readme.md', '.gitkeep', '.ds_store'];
+            const lower = filename.toLowerCase();
+            if (lower.includes('placeholder')) return false;
+            if (filename === '.keep') return false;
+            if (forbidden.includes(lower)) return false;
+            if (lower.startsWith('.')) return false;
             return true;
         }
 
-        // --- دالة العرض الرئيسية (تقرأ من GitHub + Supabase) ---
-        async function loadFiles(subjectName) {
-            const listContainer = document.getElementById('file-list-container'); listContainer.classList.remove('hidden');
-            const pdfList = document.getElementById('pdf-list'); pdfList.innerHTML = "";
-            document.getElementById('selected-subject-name').textContent = subjectName;
-            document.getElementById('loading-spinner').classList.remove('hidden');
-            document.getElementById('no-files-msg').classList.add('hidden');
-            setTimeout(() => { listContainer.scrollIntoView({ behavior: 'smooth' }); }, 100);
+        // ============================================
+        // === منطق التبويبات والتصنيف الذكي ===
+        // ============================================
 
-            if (allFiles.length === 0) await fetchFilesFromGitHub(currentBranch);
-            let githubFiles = allFiles.map(f => ({ ...f, source: 'github' }));
+        // دالة جديدة لاختيار التصنيف من البطاقات
+        function selectCategory(categoryName) {
+            // إخفاء حاوية البطاقات
+            document.getElementById('category-selection-container').classList.add('hidden');
+            // إظهار قائمة الملفات
+            document.getElementById('file-list-container').classList.remove('hidden');
+            
+            // تفعيل التصنيف المطلوب
+            currentTab = categoryName;
+            renderFilteredFiles();
+        }
 
-            let supabaseFiles = [];
-            if (supabaseClient && currentSpecialization && currentLevel && currentSemester) {
-                const subjectFolder = getSafeSubjectCode(subjectName);
-                const folderPath = `${currentSpecialization.toUpperCase()}/${currentLevel.toUpperCase()}/${currentSemester.toUpperCase()}/${subjectFolder}`;
-                const { data, error } = await supabaseClient.storage.from('pdf-files').list(folderPath);
+        function switchTab(tabName) {
+            currentTab = tabName;
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            const activeBtn = document.querySelector(`.tab-btn[onclick="switchTab('${tabName}')"]`);
+            if(activeBtn) activeBtn.classList.add('active');
+            renderFilteredFiles();
+        }
 
-                if (data && data.length > 0) {
-                    supabaseFiles = data.map(f => ({
-                        name: f.name,
-                        type: 'file',
-                        source: 'supabase',
-                        path: `${folderPath}/${f.name}`
-                    }));
-                }
+        function getFileCategory(filename) {
+            const lowerName = normalizeText(filename);
+            
+            if (lowerName.includes('[archive]')) return 'archive';
+            if (lowerName.includes('[td]')) return 'td';
+            if (lowerName.includes('[tp]')) return 'tp';
+            if (lowerName.includes('[cours]')) return 'cours';
+
+            const archiveKeywords = [
+                'archive', 'examen', 'exam', 'sujet', 'rattrapage', 'devoir', 
+                'session', 'test', 'partiel', 'midterm', 'final', 'epreuve',
+                'exeman', 'examan', 'exl' 
+            ];
+            
+            if (archiveKeywords.some(k => lowerName.includes(k))) return 'archive';
+
+            if (/(^|[^a-z])(dev|dv|di)([^a-z]|$)/i.test(lowerName)) return 'archive';
+
+            const tdKeywords = ['td', 'serie', 'série', 'exercice', 'exo', 'travaux diriges'];
+            if (tdKeywords.some(k => lowerName.includes(k))) return 'td';
+
+            const tpKeywords = ['tp', 'pratique', 'atelier', 'lab', 'travaux pratiques'];
+            if (tpKeywords.some(k => lowerName.includes(k))) return 'tp';
+
+            return 'cours';
+        }
+
+        function renderFilteredFiles() {
+            const pdfList = document.getElementById('pdf-list');
+            pdfList.innerHTML = "";
+            
+            let filtered;
+            
+            if (isArchiveSpecialCase) {
+                filtered = currentSubjectFiles;
+            } else {
+                filtered = currentSubjectFiles.filter(file => getFileCategory(file.name) === currentTab);
             }
 
-            const cleanSubject = normalizeText(subjectName);
-            const keywords = cleanSubject.split(' ').filter(w => w.length > 0);
-
-            // ============================================
-            // === الجزء المعدل لزيادة الدقة (Strict Mode) ===
-            // ============================================
-            const filteredGithub = githubFiles.filter(file => {
-                if (file.type !== "file") return false;
-                if (!isValidFile(file.name)) return false;
-
-                const fName = normalizeText(file.name);
-
-                // 1. حالة الأرشيف (يجب توفر كل الكلمات)
-                if (cleanSubject.includes("archive")) {
-                    return keywords.every(k => fName.includes(k));
-                }
-
-                // 2. المطابقة التامة (Exact Phrase Match) - الأقوى والأدق
-                if (fName.includes(cleanSubject)) return true;
-
-                // 3. المطابقة الذكية الدقيقة (Strict Keyword Match)
-                // استبعاد حروف الجر والكلمات القصيرة جداً لمنع الخلط
-                const stopWords = ['de', 'du', 'des', 'la', 'le', 'les', 'et', 'en', 'a', 'au', 'aux', 'l', 'i', 'ii'];
-
-                // استخراج الكلمات الجوهرية (Essential Keywords)
-                const distinctKeywords = keywords.filter(w => !stopWords.includes(w) && w.length > 2);
-
-                if (distinctKeywords.length > 0) {
-                    // الشرط الجديد: يجب توفر *جميع* الكلمات المميزة للمادة في اسم الملف
-                    // مثال: Contrôle de gestion -> يجب أن يوجد "controle" و "gestion"
-                    // مثال: Gestion de projet -> يجب أن يوجد "gestion" و "projet"
-                    return distinctKeywords.every(k => fName.includes(k));
-                }
-
-                // fallback إذا كان الاسم قصيراً جداً
-                return fName.includes(cleanSubject);
-            });
-            // ============================================
-
-            const finalFiles = [...filteredGithub, ...supabaseFiles];
-
-            setTimeout(() => {
-                document.getElementById('loading-spinner').classList.add('hidden');
-                if (finalFiles.length === 0) document.getElementById('no-files-msg').classList.remove('hidden');
-                else finalFiles.forEach(file => {
-                    if (!isValidFile(file.name)) return; // Double check for Supabase files
+            if (filtered.length === 0) {
+                document.getElementById('no-files-msg').classList.remove('hidden');
+            } else {
+                document.getElementById('no-files-msg').classList.add('hidden');
+                filtered.forEach(file => {
                     const li = document.createElement('li');
                     let displayName = file.name;
-                    if (file.source === 'supabase') {
-                        const parts = displayName.split('-');
-                        if (parts.length > 1 && !isNaN(parts[0])) { displayName = parts.slice(1).join('-'); }
-                    }
+                    
+                    displayName = displayName.replace(/\[.*?\]/g, '') 
+                                            .replace(/^\d+-/, '') 
+                                            .replace(/_/g, ' ')
+                                            .replace('.pdf', '');
+
                     li.innerHTML = `<i class="fas fa-file-pdf" style="color:#d32f2f"></i> ${displayName}`;
                     li.onclick = () => openSmartViewer(file);
                     pdfList.appendChild(li);
                 });
-            }, 500);
+            }
         }
 
-        // دالة فتح العارض
+        // --- دالة العرض الرئيسية (تم تعديلها لفتح شاشة البطاقات أولاً) ---
+        async function loadFiles(subjectName) {
+            // حفظ اسم المادة
+            document.getElementById('selected-subject-name').textContent = subjectName;
+            document.getElementById('selected-subject-title-card').textContent = subjectName;
+
+            const cleanSubject = normalizeText(subjectName);
+            
+            // تحديد إذا كانت "Archive S1" - حالة خاصة تبقى كما هي
+            if (cleanSubject.includes("archive") && cleanSubject.match(/s[1-6]/)) {
+                isArchiveSpecialCase = true;
+                // في حالة الأرشيف العام، نذهب مباشرة للملفات لأن لا يوجد تصنيف فرعي
+                document.getElementById('file-list-container').classList.remove('hidden');
+                document.getElementById('category-selection-container').classList.add('hidden');
+                hideAll();
+                document.getElementById('file-list-container').classList.remove('hidden');
+                // تغيير زر العودة ليرجع للمواد
+                document.querySelector('#file-list-container .back-btn').setAttribute('onclick', 'goBackToSubjects()');
+                document.querySelector('.tabs-container').classList.add('hidden'); 
+            } else {
+                isArchiveSpecialCase = false;
+                // الحالة العادية: نفتح شاشة اختيار التصنيف (البطاقات)
+                hideAll();
+                document.getElementById('category-selection-container').classList.remove('hidden');
+                // إعادة ضبط زر العودة في قائمة الملفات ليرجع للبطاقات
+                document.querySelector('#file-list-container .back-btn').setAttribute('onclick', 'goBackToCategories()');
+            }
+            
+            // البدء في جلب الملفات في الخلفية
+            if(allFiles.length === 0) await fetchFilesFromGitHub(currentBranch);
+            let githubFiles = allFiles.map(f => ({...f, source: 'github'}));
+
+            let supabaseFiles = [];
+            if(supabaseClient && currentSpecialization && currentLevel && currentSemester) {
+                const subjectFolder = getSafeSubjectCode(subjectName);
+                const folderPath = `${currentSpecialization.toUpperCase()}/${currentLevel.toUpperCase()}/${currentSemester.toUpperCase()}/${subjectFolder}`;
+                const { data, error } = await supabaseClient.storage.from('pdf-files').list(folderPath);
+                
+                if(data && data.length > 0) {
+                    supabaseFiles = data
+                        .filter(f => isValidFile(f.name))
+                        .map(f => ({
+                            name: f.name,
+                            type: 'file',
+                            source: 'supabase',
+                            path: `${folderPath}/${f.name}` 
+                        }));
+                }
+            }
+
+            const keywords = cleanSubject.split(' ').filter(w => w.length > 0);
+            
+            const filteredGithub = githubFiles.filter(file => {
+                if(file.type !== "file") return false;
+                if(!isValidFile(file.name)) return false; 
+                
+                const fName = normalizeText(file.name);
+                const fNameSpaced = fName.replace(/[^a-z0-9]/g, ' '); 
+
+                if (isArchiveSpecialCase) {
+                    if (!fName.includes("archive")) return false;
+                    if (cleanSubject.includes("s1")) {
+                        if (fName.includes("s2") || fName.includes("s3") || fName.includes("s4")) return false;
+                        return fName.includes("s1") || fName.includes("semestre 1");
+                    }
+                    if (cleanSubject.includes("s2")) {
+                        if (fName.includes("s1") || fName.includes("s3") || fName.includes("s4")) return false;
+                        return fName.includes("s2") || fName.includes("semestre 2");
+                    }
+                    if (cleanSubject.includes("s3")) {
+                        if (fName.includes("s1") || fName.includes("s2") || fName.includes("s4")) return false;
+                        return fName.includes("s3") || fName.includes("semestre 3");
+                    }
+                    if (cleanSubject.includes("s4")) {
+                        if (fName.includes("s3") || fName.includes("s5")) return false;
+                        return fName.includes("s4") || fName.includes("semestre 4");
+                    }
+                    return false;
+                }
+                
+                if (fName.startsWith("archive s")) return false;
+
+                if (cleanSubject === 'langage c') {
+                    if (!fName.includes('langage')) return false;
+                    if (!fName.match(/\bc\b/)) return false;
+                    if (fName.includes('sql') || fName.includes('base de donnee') || fName.includes('bases de donnees')) return false;
+                    return true;
+                }
+
+                const subjectRoman = cleanSubject.match(/\b(i|ii|iii|iv|v|vi)\b/); 
+                const subjectHasRoman = subjectRoman ? subjectRoman[0] : null;
+                const fileRomanMatch = fNameSpaced.match(/\b(i|ii|iii|iv|v|vi)\b/);
+                const fileHasRoman = fileRomanMatch ? fileRomanMatch[0] : null;
+
+                if (subjectHasRoman) {
+                    if (fileHasRoman !== subjectHasRoman) return false; 
+                } else {
+                    if (fileHasRoman) return false; 
+                }
+
+                const stopWords = ['de', 'du', 'des', 'la', 'le', 'les', 'et', 'en', 'a', 'au', 'aux', 'l'];
+                const distinctKeywords = keywords.filter(w => !stopWords.includes(w) && w.length > 2);
+
+                if (distinctKeywords.length > 0) {
+                    return distinctKeywords.every(k => {
+                        if (k.length <= 3) {
+                            return new RegExp(`\\b${k}\\b`).test(fNameSpaced);
+                        }
+                        return fName.includes(k);
+                    });
+                }
+
+                return fName.includes(cleanSubject);
+            });
+
+            currentSubjectFiles = [...filteredGithub, ...supabaseFiles];
+
+            // إذا كنا في حالة الأرشيف الخاص، اعرض النتائج فوراً
+            if(isArchiveSpecialCase) {
+                renderFilteredFiles();
+            }
+        }
+
         function openSmartViewer(fileObj) {
             const overlay = document.getElementById('pdf-viewer-overlay');
             const area = document.getElementById('pdf-render-area');
@@ -1476,30 +858,41 @@
         }
 
         function handleGlobalSearch(query) {
-            if (query.length === 0) { closeSearch(); return; }
+            if(query.length === 0) { closeSearch(); return; }
             hideAll();
             const listContainer = document.getElementById('file-list-container'); listContainer.classList.remove('hidden');
+            // إخفاء حاوية البطاقات والتبويبات عند البحث
+            document.getElementById('category-selection-container').classList.add('hidden');
+            document.querySelector('.tabs-container').classList.add('hidden');
+            // تعديل زر العودة للرجوع للقائمة الرئيسية
+            document.querySelector('#file-list-container .back-btn').setAttribute('onclick', 'closeSearch()');
+
             document.getElementById('selected-subject-name').textContent = "نتائج البحث: " + query;
             const pdfList = document.getElementById('pdf-list'); pdfList.innerHTML = "";
             const term = normalizeText(query);
-            if (allFiles.length === 0) fetchFilesFromGitHub('main');
+            if(allFiles.length === 0) fetchFilesFromGitHub('main');
             const results = allFiles.filter(file => {
-                if (!isValidFile(file.name)) return false;
+                if(!isValidFile(file.name)) return false;
                 return normalizeText(file.name).includes(term);
             });
-            if (results.length === 0) document.getElementById('no-files-msg').classList.remove('hidden');
+            if(results.length === 0) document.getElementById('no-files-msg').classList.remove('hidden');
             else {
                 document.getElementById('no-files-msg').classList.add('hidden');
                 results.forEach(file => {
                     const li = document.createElement('li');
                     li.innerHTML = `<i class="fas fa-file-pdf" style="color:#d32f2f"></i> ${file.name}`;
-                    li.onclick = () => openSmartViewer({ ...file, source: 'github' });
+                    li.onclick = () => openSmartViewer({...file, source: 'github'});
                     pdfList.appendChild(li);
                 });
             }
         }
+        
+        // تعديل دالة الإغلاق لترجع للقائمة الصحيحة
+        function closeSearch() { 
+            hideAll();
+            document.getElementById('main-menu').classList.remove('hidden'); 
+        }
 
-        // بيانات المواد
         const subjectsData = {
             "BA": {
                 "S1": ["Principe de gestion", "Comptabilité financière I", "Statistique descriptive I", "Mathématique", "Anglais I", "Méthodologie du travail universitaire", "MS office", "Introduction à l’économie", "Introduction au droit", "Technique de communication", "Archive S1"],
@@ -1577,6 +970,7 @@
             const level = document.getElementById('upload-level').value;
             const semester = document.getElementById('upload-semester').value;
             const subject = document.getElementById('upload-subject').value;
+            const type = document.getElementById('upload-type').value; 
             const fileInput = document.getElementById('upload-file');
             const file = fileInput.files[0];
 
@@ -1585,17 +979,15 @@
 
             try {
                 const timestamp = new Date().getTime();
-
-                // 1. تنظيف اسم المادة ليكون اسم مجلد (إزالة المسافات والأكسونات)
                 const subjectFolder = getSafeSubjectCode(subject);
-
-                // 2. تنظيف اسم الملف الأصلي (إزالة الأكسونات والمسافات والرموز)
+                
                 let safeFileName = file.name
-                    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // إزالة الأكسونات
-                    .replace(/[^a-zA-Z0-9.\-_]/g, "_"); // استبدال الرموز بـ _
+                                   .normalize("NFD").replace(/[\u0300-\u036f]/g, "") 
+                                   .replace(/[^a-zA-Z0-9.\-_]/g, "_");
 
-                // المسار: تخصص / مستوى / فصل / مجلد المادة / توقيت-اسم الملف
-                const filePath = `${spec}/${level}/${semester}/${subjectFolder}/${timestamp}-${safeFileName}`;
+                const taggedFileName = `${type}_${timestamp}_${safeFileName}`;
+                
+                const filePath = `${spec}/${level}/${semester}/${subjectFolder}/${taggedFileName}`;
 
                 const { data, error } = await supabaseClient.storage.from('pdf-files').upload(filePath, file, { cacheControl: '3600', upsert: false });
                 if (error) throw error;
@@ -1614,83 +1006,47 @@
 
     <!-- Protection -->
     <script>
-        (function () {
-            document.addEventListener('contextmenu', function (e) { e.preventDefault(); });
-            document.onkeydown = function (e) { if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0) || e.keyCode == 'C'.charCodeAt(0))) || (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0))) return false; }
-        })();
+    (function() {
+        document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+        document.onkeydown = function(e) { if(e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0) || e.keyCode == 'C'.charCodeAt(0))) || (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0))) return false; }
+    })();
     </script>
-
-    <!-- START PROTECTION CODE -->
-    <script>
-        (function () {
-            // منع الزر الأيمن
-            document.addEventListener('contextmenu', function (e) {
-                e.preventDefault();
-            });
-
-            // منع اختصارات لوحة المفاتيح
-            document.onkeydown = function (e) {
-                // F12
-                if (e.keyCode == 123) {
-                    return false;
-                }
-                // Ctrl+I (DevTools)
-                if (e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) {
-                    return false;
-                }
-                // Ctrl+J (Console)
-                if (e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) {
-                    return false;
-                }
-                // Ctrl+C (Inspect)
-                if (e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) {
-                    return false;
-                }
-                // Ctrl+U (View Source)
-                if (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) {
-                    return false;
-                }
-            }
-        })();
-    </script>
-    <!-- END PROTECTION CODE -->
 
 
     <!-- START PROTECTION CODE -->
     <script>
-        (function () {
-            // منع الزر الأيمن
-            document.addEventListener('contextmenu', function (e) {
-                e.preventDefault();
-            });
+    (function() {
+        // منع الزر الأيمن
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
 
-            // منع اختصارات لوحة المفاتيح
-            document.onkeydown = function (e) {
-                // F12
-                if (e.keyCode == 123) {
-                    return false;
-                }
-                // Ctrl+I (DevTools)
-                if (e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) {
-                    return false;
-                }
-                // Ctrl+J (Console)
-                if (e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) {
-                    return false;
-                }
-                // Ctrl+C (Inspect)
-                if (e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) {
-                    return false;
-                }
-                // Ctrl+U (View Source)
-                if (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) {
-                    return false;
-                }
+        // منع اختصارات لوحة المفاتيح
+        document.onkeydown = function(e) {
+            // F12
+            if(e.keyCode == 123) {
+                return false;
             }
-        })();
+            // Ctrl+I (DevTools)
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) {
+                return false;
+            }
+            // Ctrl+J (Console)
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) {
+                return false;
+            }
+            // Ctrl+C (Inspect)
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) {
+                return false;
+            }
+            // Ctrl+U (View Source)
+            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) {
+                return false;
+            }
+        }
+    })();
     </script>
     <!-- END PROTECTION CODE -->
-
+    
 </body>
-
 </html>
