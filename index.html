@@ -1147,9 +1147,21 @@ function openSmartViewer(fileObj) {
             } else { subjectSelect.innerHTML = '<option value="">لا توجد بيانات</option>'; }
         }
 
+        // 1. تعريف المتغيرات الأساسية (إذا تم حذفها لن يعمل الرفع وسيتم تحديث الصفحة)
+        const uploadForm = document.getElementById('upload-form');
+        const statusDiv = document.getElementById('upload-status');
+        const submitBtn = document.getElementById('upload-submit-btn');
+
+        // 2. دالة الرفع المتعدد
         uploadForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            if (!supabaseClient) { statusDiv.textContent = 'خطأ في اتصال قاعدة البيانات'; statusDiv.className = 'status-msg error'; return; }
+            // هذا السطر مهم جداً: يمنع المتصفح من إعادة تحميل الصفحة (الذهاب للرئيسية)
+            e.preventDefault(); 
+            
+            if (!supabaseClient) { 
+                statusDiv.textContent = 'خطأ في اتصال قاعدة البيانات (Supabase)'; 
+                statusDiv.className = 'status-msg error'; 
+                return; 
+            }
             
             const spec = document.getElementById('upload-spec').value;
             const level = document.getElementById('upload-level').value;
@@ -1169,11 +1181,10 @@ function openSmartViewer(fileObj) {
             let successCount = 0;
             let errorCount = 0;
 
-            // حلقة تكرارية لرفع كل ملف على حدة
+            // المرور على جميع الملفات المحددة ورفعها واحداً تلو الآخر
             for (let i = 0; i < files.length; i++) {
                 const file = files[i];
                 
-                // إظهار حالة الرفع للإدارة
                 statusDiv.textContent = `⏳ جاري رفع الملف (${i + 1} من ${files.length})...`; 
                 statusDiv.className = 'status-msg';
 
@@ -1181,15 +1192,16 @@ function openSmartViewer(fileObj) {
                     const timestamp = new Date().getTime();
                     const subjectFolder = getSafeSubjectCode(subject);
                     
-                    // تنظيف اسم الملف
+                    // تنظيف اسم الملف من الحروف المعقدة
                     let safeFileName = file.name
                                        .normalize("NFD").replace(/[\u0300-\u036f]/g, "") 
                                        .replace(/[^a-zA-Z0-9.\-_]/g, "_");
 
-                    // إضافة المتغير i لضمان عدم تطابق الأسماء إذا رُفعت في نفس اللحظة
+                    // تجهيز الرابط النهائي للملف
                     const taggedFileName = `${type}_${timestamp}_${i}_${safeFileName}`;
                     const filePath = `${spec}/${level}/${semester}/${subjectFolder}/${taggedFileName}`;
 
+                    // عملية الرفع إلى Supabase
                     const { data, error } = await supabaseClient.storage.from('pdf-files').upload(filePath, file, { cacheControl: '3600', upsert: false });
                     if (error) throw error;
                     
@@ -1200,7 +1212,7 @@ function openSmartViewer(fileObj) {
                 }
             }
 
-            // عرض النتيجة النهائية بعد انتهاء الرفع
+            // عرض رسالة النتيجة النهائية
             if (errorCount === 0) {
                 statusDiv.textContent = `✅ تم رفع ${successCount} ملف(ات) بنجاح!`; 
                 statusDiv.className = 'status-msg success';
@@ -1209,7 +1221,7 @@ function openSmartViewer(fileObj) {
                 statusDiv.className = 'status-msg error';
             }
 
-            // إعادة ضبط النموذج بعد 4 ثوانٍ
+            // إعادة النموذج لحالته الطبيعية بعد 4 ثوانٍ
             setTimeout(() => {
                 uploadForm.reset(); 
                 document.getElementById('upload-subject').innerHTML = '<option value="">اختر التخصص والفصل أولاً...</option>';
