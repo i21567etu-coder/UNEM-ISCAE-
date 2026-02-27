@@ -6,7 +6,7 @@
     <title>UNEM ISCAE - المنصة</title>
     
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#1b5e20">
+    <meta name="theme-color" content="#0f5132">
     <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
     <link rel="apple-touch-icon" href="icon-192.png">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -18,218 +18,319 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-        /* ==================== STYLE.CSS ==================== */
+        /* ==================== MODERN STYLE.CSS ==================== */
         :root {
-            --primary-color: #1b5e20;
-            --secondary-color: #2e7d32;
-            --accent-color: #ffeb3b;
-            --bg-color: #f1f8e9;
+            --primary-color: #0f5132;    /* أخضر ملكي داكن */
+            --secondary-color: #198754;  /* أخضر زمردي */
+            --accent-color: #ffc107;     /* ذهبي/أصفر جذاب */
+            --bg-color: #f8fafc;         /* أبيض مائل للرمادي المريح */
             --card-bg: #ffffff;
-            --text-color: #333;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 10px 15px -3px rgba(15, 81, 50, 0.08);
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            --radius-lg: 24px;
+            --radius-md: 16px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: 'Tajawal', sans-serif; margin: 0; padding-bottom: 0; background-color: var(--bg-color); color: var(--text-color); }
+        body { 
+            font-family: 'Tajawal', sans-serif; 
+            margin: 0; padding-bottom: 0; 
+            background-color: var(--bg-color); 
+            color: var(--text-primary); 
+            line-height: 1.6;
+        }
 
+        /* --- التحريكات (Animations) --- */
+        @keyframes fadeUp {
+            0% { opacity: 0; transform: translateY(15px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        .section-box:not(.hidden) {
+            animation: fadeUp 0.4s ease-out forwards;
+        }
+
+        /* --- الأشرطة العلوية --- */
         .top-slogan {
-            background: linear-gradient(to bottom, #dac06e, #c7a746);
-            color: #003300; text-align: center; padding: 8px; font-size: 0.95rem; font-weight: 800;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.2); position: relative; z-index: 100;
+            background: linear-gradient(90deg, #d4af37, #f3e5ab, #d4af37);
+            color: #4a3c00; text-align: center; padding: 8px; font-size: 0.95rem; font-weight: 800;
+            box-shadow: var(--shadow-sm); position: relative; z-index: 100;
         }
 
-        .top-nav { background: #003300; color: white; padding: 10px; text-align: center; font-size: 0.9rem; font-weight: bold; }
-        .unem-badge { background: #ffffff; color: #003300; padding: 2px 10px; border-radius: 15px; font-weight: 800; margin-right: 5px; }
+        .top-nav { 
+            background: var(--primary-color); color: white; padding: 12px; 
+            text-align: center; font-size: 0.95rem; font-weight: 700; 
+            letter-spacing: 0.5px;
+        }
+        .unem-badge { 
+            background: rgba(255,255,255,0.15); color: white; 
+            padding: 4px 12px; border-radius: 20px; font-weight: 800; margin-right: 5px; 
+            backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.2);
+        }
         
+        /* --- الهيدر الرئيسي --- */
         .main-header {
-            background: linear-gradient(135deg, #1b5e20 0%, #4caf50 100%);
-            color: white; padding: 35px 20px 45px; border-radius: 0 0 40px 40px; text-align: center;
-            box-shadow: 0 4px 15px rgba(27, 94, 32, 0.4); margin-bottom: 25px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white; padding: 40px 20px 50px; 
+            border-radius: 0 0 40px 40px; text-align: center;
+            box-shadow: 0 10px 30px rgba(25, 135, 84, 0.3); margin-bottom: -30px; /* لدمج الهيدر مع المحتوى */
+            position: relative; overflow: hidden;
         }
+        /* تأثيرات زخرفية في الهيدر */
+        .main-header::after {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+            animation: pulseBg 10s infinite alternate; pointer-events: none;
+        }
+        @keyframes pulseBg { 0% { transform: scale(1); } 100% { transform: scale(1.1); } }
         
-        .logo-container { background: white; width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; box-shadow: 0 5px 15px rgba(0,0,0,0.2); overflow: hidden; }
-        .logo-img { width: 100%; height: 100%; object-fit: cover; padding: 2px; border-radius: 50%; }
+        .logo-container { 
+            background: white; width: 90px; height: 90px; border-radius: 50%; 
+            margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; 
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.4); 
+            border: 4px solid rgba(255,255,255,0.2); overflow: hidden; 
+            position: relative; z-index: 2;
+        }
+        .logo-img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; padding: 2px;}
 
-        .main-header h1 { margin: 0; font-size: 1.8rem; font-weight: 800; letter-spacing: 1px; }
-        .main-header p { font-size: 1.1rem; margin-top: 10px; opacity: 0.95; }
+        .main-header h1 { margin: 0; font-size: 2rem; font-weight: 800; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .main-header p { font-size: 1.1rem; margin-top: 8px; opacity: 0.9; font-weight: 500; }
 
-        .container { width: 92%; max-width: 800px; margin: 0 auto; padding-bottom: 40px; }
-        .section-box { background: var(--card-bg); border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .section-title { color: var(--primary-color); border-bottom: 3px solid #c8e6c9; padding-bottom: 10px; margin: 0 0 20px; font-weight: bold; text-align: center; }
+        /* --- الحاوية الرئيسية --- */
+        .container { 
+            width: 92%; max-width: 800px; margin: 0 auto; 
+            padding-top: 50px; padding-bottom: 40px; position: relative; z-index: 10;
+        }
+        .section-box { 
+            background: var(--card-bg); border-radius: var(--radius-lg); 
+            padding: 25px; margin-bottom: 20px; box-shadow: var(--shadow-md); 
+            border: 1px solid rgba(0,0,0,0.03);
+        }
+        .section-title { 
+            color: var(--primary-color); position: relative; 
+            padding-bottom: 12px; margin: 0 0 25px; font-weight: 800; text-align: center; 
+        }
+        .section-title::after {
+            content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+            width: 50px; height: 4px; background: var(--secondary-color); border-radius: 10px;
+        }
 
-        .semesters-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        /* --- شريط البحث --- */
+        .search-box { 
+            background: white; border-radius: 50px; padding: 15px 25px; 
+            display: flex; align-items: center; box-shadow: var(--shadow-md); 
+            margin-bottom: 25px; border: 2px solid transparent; 
+            transition: var(--transition);
+        }
+        .search-box:focus-within { border-color: var(--secondary-color); transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+        .search-box input { flex: 1; border: none; outline: none; font-size: 1.05rem; font-family: inherit; color: var(--text-primary); }
+        .search-box input::placeholder { color: #94a3b8; }
+        .search-box i { font-size: 1.2rem; }
+
+        /* --- البطاقات (الشبكة) --- */
+        .semesters-grid { display: grid; grid-template-columns: 1fr; gap: 18px; }
         @media (min-width: 600px) { .semesters-grid { grid-template-columns: 1fr 1fr; } }
 
         .semester-card {
-            background: white; border: 1px solid #eee; border-radius: 16px; padding: 20px; text-align: center;
-            cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: white; border: 1px solid rgba(0,0,0,0.04); 
+            border-radius: var(--radius-md); padding: 25px 20px; text-align: center;
+            cursor: pointer; transition: var(--transition); 
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            position: relative; overflow: hidden;
         }
-        .semester-card:active { transform: scale(0.97); background: #e8f5e9; }
-        .semester-card:hover { border-color: var(--primary-color); box-shadow: 0 5px 15px rgba(27, 94, 32, 0.1); }
-        .icon-box { font-size: 2.5rem; margin-bottom: 10px; }
+        .semester-card::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px;
+            background: var(--secondary-color); transform: scaleX(0); transition: var(--transition);
+        }
+        .semester-card:hover { 
+            transform: translateY(-5px); box-shadow: var(--shadow-md); border-color: rgba(25, 135, 84, 0.2);
+        }
+        .semester-card:hover::before { transform: scaleX(1); }
+        .semester-card:active { transform: scale(0.98); background: #f8fafc; }
+        
+        .icon-box { 
+            width: 65px; height: 65px; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.8rem; margin-bottom: 15px; 
+            background: rgba(15, 81, 50, 0.05); color: var(--primary-color);
+            transition: var(--transition);
+        }
+        .semester-card:hover .icon-box { background: var(--primary-color); color: white; transform: scale(1.1) rotate(5deg); }
 
-        /* ستايل بطاقات التصنيف الجديدة (Cours, TD, TP, Archive) */
+        .semester-card h3 { margin: 0 0 5px; font-weight: 800; font-size: 1.2rem; color: var(--text-primary); }
+        .semester-card p { margin: 0; color: var(--text-secondary); font-size: 0.9rem; font-weight: 500;}
+
+        /* بطاقات التصنيفات الجديدة */
+        .category-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .category-card {
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 15px;
-            padding: 25px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 15px;
+            background: white; border: 1px solid #e2e8f0; border-radius: var(--radius-md);
+            padding: 25px 15px; text-align: center; cursor: pointer; transition: var(--transition);
         }
-        .category-card:hover {
-            transform: translateY(-5px);
-            border-color: var(--primary-color);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-        }
-        .category-card i {
-            font-size: 2.5rem;
-            margin-bottom: 15px;
-        }
-        .category-card h3 { margin: 0 0 5px; font-weight: 800; font-size: 1.2rem; color: #333; }
-        .category-card p { margin: 0; color: #666; font-size: 0.9rem; }
+        .category-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-md); }
+        .category-card i { font-size: 2.5rem; margin-bottom: 12px; transition: var(--transition); }
+        .category-card:hover i { transform: scale(1.1); }
+        .category-card h3 { margin: 0 0 5px; font-weight: 800; font-size: 1.1rem; }
+        .category-card p { margin: 0; color: var(--text-secondary); font-size: 0.85rem; }
 
         /* ألوان أيقونات البطاقات */
-        .cat-cours i { color: #1565c0; } /* أزرق */
-        .cat-td i { color: #e65100; }    /* برتقالي */
-        .cat-tp i { color: #00695c; }    /* تركواز */
-        .cat-archive i { color: #c62828; } /* أحمر */
+        .cat-cours i { color: #3b82f6; } .cat-cours:hover { border-color: #3b82f6; box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.15); }
+        .cat-td i { color: #f59e0b; }    .cat-td:hover { border-color: #f59e0b; box-shadow: 0 10px 15px -3px rgba(245, 158, 11, 0.15); }
+        .cat-tp i { color: #14b8a6; }    .cat-tp:hover { border-color: #14b8a6; box-shadow: 0 10px 15px -3px rgba(20, 184, 166, 0.15); }
+        .cat-archive i { color: #ef4444; } .cat-archive:hover { border-color: #ef4444; box-shadow: 0 10px 15px -3px rgba(239, 68, 68, 0.15); }
 
-        .card-ba .icon-box { color: #1b5e20; } .card-fc .icon-box { color: #2e7d32; }
-        .card-tcm .icon-box { color: #ff6f00; } .card-grh .icon-box { color: #1565c0; }
-        .card-sae .icon-box { color: #00838f; } .card-ig .icon-box { color: #f9a825; }
+        /* --- ألوان مخصصة للتخصصات --- */
+        .card-ba .icon-box { color: #16a34a; background: rgba(22, 163, 74, 0.1); } 
+        .card-fc .icon-box { color: #2563eb; background: rgba(37, 99, 235, 0.1); }
+        .card-tcm .icon-box { color: #ea580c; background: rgba(234, 88, 12, 0.1); } 
+        .card-grh .icon-box { color: #8b5cf6; background: rgba(139, 92, 246, 0.1); }
+        .card-sae .icon-box { color: #0891b2; background: rgba(8, 145, 178, 0.1); } 
+        .card-ig .icon-box { color: #eab308; background: rgba(234, 179, 8, 0.1); }
 
-        .buttons-grid { display: flex; flex-direction: column; gap: 10px; }
+        /* --- الأزرار والقوائم --- */
+        .buttons-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
         .buttons-grid button {
-            background: white; border: 1px solid #ddd; border-right: 5px solid var(--primary-color);
-            padding: 15px; border-radius: 10px; text-align: right; font-weight: 600; font-size: 1rem;
-            color: #333; cursor: pointer; display: flex; justify-content: space-between; align-items: center;
-            transition: 0.2s;
+            background: white; border: 1px solid #e2e8f0; border-right: 5px solid var(--primary-color);
+            padding: 16px; border-radius: 12px; text-align: right; font-weight: 700; font-size: 1rem;
+            color: var(--text-primary); cursor: pointer; transition: var(--transition);
+            box-shadow: var(--shadow-sm); font-family: inherit;
         }
-        .buttons-grid button:active { background: #e8f5e9; }
+        .buttons-grid button:hover { transform: translateX(-5px); background: #f8fafc; box-shadow: var(--shadow-md); border-color: #cbd5e1; }
+        .buttons-grid button:active { transform: translateX(0) scale(0.98); }
         
         .archive-btn {
-            background: #ff9800 !important; color: white !important; border: none !important;
-            justify-content: center !important; text-align: center !important; box-shadow: 0 4px 10px rgba(255, 152, 0, 0.3);
+            background: linear-gradient(135deg, #f59e0b, #ea580c) !important; color: white !important; border: none !important;
+            text-align: center !important; box-shadow: 0 4px 15px rgba(234, 88, 12, 0.3) !important;
+            font-size: 1.1rem !important; border-radius: 50px !important;
         }
+        .archive-btn:hover { transform: translateY(-3px) !important; box-shadow: 0 8px 20px rgba(234, 88, 12, 0.4) !important; }
 
-        .header-with-back { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .back-btn { background: #e8f5e9; border: none; padding: 8px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; color: var(--primary-color); }
+        .header-with-back { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .back-btn { 
+            background: rgba(15, 81, 50, 0.08); border: none; padding: 10px 20px; 
+            border-radius: 50px; font-weight: 800; cursor: pointer; color: var(--primary-color); 
+            transition: var(--transition); display: flex; align-items: center; gap: 8px; font-family: inherit;
+        }
+        .back-btn::before { content: '\f0da'; font-family: 'Font Awesome 6 Free'; font-weight: 900; } /* سهم للعودة */
+        .back-btn:hover { background: var(--primary-color); color: white; }
         .hidden { display: none !important; }
-        
-        .search-box { background: white; border-radius: 50px; padding: 12px 20px; display: flex; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; border: 2px solid transparent; }
-        .search-box:focus-within { border-color: var(--primary-color); }
-        .search-box input { flex: 1; border: none; outline: none; font-size: 1rem; font-family: inherit; }
 
         #install-btn {
-            background: var(--secondary-color); color: white; border: none; padding: 15px; width: 100%;
-            border-radius: 15px; font-weight: bold; font-size: 1.1rem; margin-bottom: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2); display: none; cursor: pointer;
-            animation: pulse 2s infinite;
+            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+            color: white; border: none; padding: 16px; width: 100%;
+            border-radius: 50px; font-weight: 800; font-size: 1.1rem; margin-bottom: 25px;
+            box-shadow: 0 8px 20px rgba(25, 135, 84, 0.3); display: none; cursor: pointer;
+            transition: var(--transition); font-family: inherit;
         }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
+        #install-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(25, 135, 84, 0.4); }
 
-        /* نوافذ */
+        /* --- قائمة الملفات (PDF) --- */
+        #pdf-list { list-style: none; padding: 0; }
+        #pdf-list li { 
+            background: white; padding: 10px 15px; margin-bottom: 12px; 
+            border-radius: 16px; display: flex; justify-content: space-between;
+            align-items: center; border: 1px solid #e2e8f0; 
+            box-shadow: var(--shadow-sm); transition: var(--transition);
+        }
+        #pdf-list li:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: #cbd5e1; }
+        
+        .file-info { display: flex; align-items: center; gap: 15px; cursor: pointer; flex-grow: 1; padding: 5px; }
+        .file-info i { font-size: 1.5rem; color: #ef4444; background: #fee2e2; padding: 10px; border-radius: 12px; }
+        .file-info span { font-weight: 600; color: var(--text-primary); word-break: break-word; font-size: 1rem; }
+
+        .download-btn {
+            background: #f1f5f9; color: var(--primary-color); border: none;
+            width: 45px; height: 45px; border-radius: 50%; display: flex;
+            align-items: center; justify-content: center; cursor: pointer;
+            transition: var(--transition); flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .download-btn:hover { background: var(--primary-color); color: white; transform: translateY(-2px); }
+        .download-btn:active { transform: scale(0.9); }
+        .download-btn i { font-size: 1.1rem; }
+
+        /* --- النوافذ المنبثقة (Modals & Overlays) GLASSMORPHISM --- */
         #pdf-viewer-overlay, #union-modal-overlay, #web-viewer-overlay, #upload-modal-overlay { 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             z-index: 9999; display: flex; flex-direction: column; 
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); /* تأثير الزجاج */
         }
-        #pdf-viewer-overlay, #web-viewer-overlay { background: #263238; }
+        #pdf-viewer-overlay, #web-viewer-overlay { background: rgba(15, 23, 42, 0.9); }
         #union-modal-overlay, #upload-modal-overlay { 
-            background: rgba(0,0,0,0.8); justify-content: center; align-items: center; padding: 20px;
+            background: rgba(0,0,0,0.6); justify-content: center; align-items: center; padding: 20px;
         }
 
         .union-content {
-            background: white; width: 100%; max-width: 500px; max-height: 80vh; overflow-y: auto;
-            border-radius: 20px; padding: 25px; text-align: center; position: relative;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3); border-top: 10px solid var(--primary-color);
+            background: white; width: 100%; max-width: 450px; max-height: 85vh; overflow-y: auto;
+            border-radius: var(--radius-lg); padding: 30px; text-align: center; position: relative;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); 
+            animation: modalPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
-        .viewer-header { background: #1b5e20; color: white; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; }
-        #pdf-render-area, .web-viewer-container { flex: 1; width: 100%; background: #333; position: relative; }
-        .web-viewer-container iframe { width: 100%; height: 100%; border: none; }
+        @keyframes modalPop {
+            0% { transform: scale(0.8) translateY(30px); opacity: 0; }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
 
-        .spinner { border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid #fff; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
+        .union-content h2 { color: var(--primary-color); margin-top: 0; font-weight: 800; }
+        .union-content .union-text { color: var(--text-secondary); font-size: 1.05rem; line-height: 1.8; margin-bottom: 25px; }
+
+        .viewer-header { 
+            background: rgba(15, 81, 50, 0.95); color: white; padding: 15px 20px; 
+            display: flex; justify-content: space-between; align-items: center; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2); backdrop-filter: blur(10px);
+        }
+        #pdf-render-area, .web-viewer-container { flex: 1; width: 100%; background: #f8fafc; position: relative; }
+        .web-viewer-container iframe { width: 100%; height: 100%; border: none; border-radius: 0 0 10px 10px; }
+
+        .spinner { border: 4px solid rgba(255,255,255,0.2); border-top: 4px solid var(--accent-color); border-radius: 50%; width: 45px; height: 45px; animation: spin 1s linear infinite; margin: 30px auto; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
         
-        /* === تعديلات القائمة لزر التحميل === */
-        #pdf-list { list-style: none; padding: 0; }
-        #pdf-list li { 
-            background: white; 
-            padding: 8px 12px; 
-            margin-bottom: 8px; 
-            border-radius: 12px; 
-            display: flex; 
-            justify-content: space-between;
-            align-items: center; 
-            border: 1px solid #eee; 
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        /* --- نموذج الرفع --- */
+        .upload-form-group { margin-bottom: 18px; text-align: right; }
+        .upload-form-group label { display: block; margin-bottom: 8px; font-weight: 800; color: var(--text-primary); font-size: 0.95rem; }
+        .upload-form-group select, .upload-form-group input { 
+            width: 100%; padding: 14px; border: 2px solid #e2e8f0; border-radius: 12px; 
+            font-family: inherit; font-size: 1rem; color: var(--text-primary); transition: var(--transition); background: #f8fafc;
         }
+        .upload-form-group select:focus, .upload-form-group input:focus { border-color: var(--secondary-color); outline: none; background: white; box-shadow: 0 0 0 4px rgba(25, 135, 84, 0.1); }
+        .upload-btn-submit { 
+            background: var(--primary-color); color: white; width: 100%; padding: 15px; border: none; 
+            border-radius: 12px; font-weight: 800; font-size: 1.1rem; cursor: pointer; margin-top: 10px; transition: var(--transition);
+        }
+        .upload-btn-submit:hover:not(:disabled) { background: var(--secondary-color); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        .upload-btn-submit:disabled { background: #94a3b8; cursor: not-allowed; }
+        .status-msg { margin-top: 15px; font-size: 1rem; font-weight: 800; text-align: center; }
+        .success { color: #16a34a; background: #dcfce7; padding: 10px; border-radius: 8px; } 
+        .error { color: #dc2626; background: #fee2e2; padding: 10px; border-radius: 8px; }
+
+        /* --- الفوتر --- */
+        .main-footer { 
+            background: var(--primary-color); color: white; 
+            padding: 40px 20px; text-align: center; border-radius: 40px 40px 0 0; 
+            margin-top: 40px; position: relative; overflow: hidden;
+            box-shadow: 0 -10px 25px rgba(0,0,0,0.1);
+        }
+        .motivational-text { 
+            font-size: 1.4rem; font-weight: 800; color: var(--accent-color); 
+            margin-bottom: 30px; display: inline-block; text-shadow: 0 4px 15px rgba(0,0,0,0.4); 
+            animation: floatText 3s ease-in-out infinite; background: rgba(0,0,0,0.2); padding: 10px 25px; border-radius: 50px;
+        }
+        @keyframes floatText { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
         
-        /* القسم الخاص بالاسم والأيقونة (للمعاينة) */
-        .file-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            cursor: pointer;
-            flex-grow: 1;
-            padding: 5px;
+        .social-buttons-container { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-bottom: 25px; }
+        .social-btn { 
+            display: inline-flex; align-items: center; justify-content: center; padding: 14px 25px; 
+            color: white; text-decoration: none; font-weight: 800; font-size: 1.05rem; border-radius: 50px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: var(--transition); min-width: 220px;
         }
-        .file-info span {
-            font-weight: 500;
-            color: #424242;
-            word-break: break-word;
-        }
-
-        /* زر التحميل */
-        .download-btn {
-            background: #e0f2f1;
-            color: #00695c;
-            border: none;
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            margin-right: 5px;
-            transition: all 0.2s ease;
-            flex-shrink: 0;
-        }
-        .download-btn:active {
-            transform: scale(0.95);
-            background: #b2dfdb;
-        }
-        .download-btn i { font-size: 1.1rem; }
-
-        /* ستايل نموذج الرفع الجديد */
-        .upload-form-group { margin-bottom: 15px; text-align: right; }
-        .upload-form-group label { display: block; margin-bottom: 5px; font-weight: bold; color: var(--primary-color); }
-        .upload-form-group select, .upload-form-group input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-family: inherit; font-size: 1rem; }
-        .upload-btn-submit { background: var(--primary-color); color: white; width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .upload-btn-submit:disabled { background: #ccc; }
-        .status-msg { margin-top: 10px; font-size: 0.9rem; font-weight: bold; }
-        .success { color: green; } .error { color: red; }
-
-        .main-footer { background: linear-gradient(180deg, #1b5e20 0%, #003300 100%); color: white; padding: 30px 20px; text-align: center; border-radius: 30px 30px 0 0; margin-top: 30px; position: relative; overflow: hidden; }
-        .motivational-text { font-size: 1.3rem; font-weight: 800; color: #ffeb3b; margin-bottom: 25px; display: inline-block; text-shadow: 0 2px 10px rgba(0,0,0,0.3); animation: floatText 3s ease-in-out infinite; }
-        @keyframes floatText { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px) scale(1.05); } }
-        .footer-divider { height: 1px; background: rgba(255,255,255,0.2); width: 80%; margin: 0 auto 20px; }
-        
-        .social-buttons-container { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-bottom: 20px; }
-        .social-btn { display: inline-flex; align-items: center; justify-content: center; padding: 10px 20px; color: white; text-decoration: none; font-weight: bold; border-radius: 50px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: transform 0.2s; min-width: 200px; }
+        .social-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.3); }
         .social-btn:active { transform: scale(0.95); }
-        .fb-btn { background: #1877F2; } .wa-btn { background: #25D366; }
-        .social-btn i { margin-left: 8px; font-size: 1.2rem; }
+        .fb-btn { background: linear-gradient(135deg, #1877F2, #0c56b9); } 
+        .wa-btn { background: linear-gradient(135deg, #25D366, #1da851); }
+        .social-btn i { margin-left: 10px; font-size: 1.3rem; }
 
-        .copyright { margin-top: 25px; font-size: 0.8rem; opacity: 0.7; }
-        .admin-trigger { display: none; }
+        .copyright { margin-top: 15px; font-size: 0.9rem; color: rgba(255,255,255,0.6); font-weight: 500;}
     </style>
 </head>
 <body>
@@ -256,12 +357,12 @@
 
         <div class="search-box">
             <input type="text" id="global-search" placeholder="ابحث عن مادة أو ملف (يكفي حرف واحد)..." oninput="handleGlobalSearch(this.value)">
-            <i class="fas fa-search" style="color:var(--primary-color)"></i>
+            <i class="fas fa-search" style="color:var(--secondary-color)"></i>
         </div>
 
         <!-- 1. القائمة الرئيسية -->
         <div id="main-menu" class="section-box">
-            <h2 class="section-title">القائمة الرئيسية</h2>
+            <h2 class="section-title">الخدمات والأقسام</h2>
             <div class="semesters-grid">
                 
                 <div class="semester-card" onclick="showSpecializationSelection()">
@@ -270,8 +371,15 @@
                     <p>جميع التخصصات (L1, L2, L3)</p>
                 </div>
 
+                <!-- إضافة بطاقة نتائج المعهد -->
+                <div class="semester-card" onclick="openWebViewer('https://resultat-iscae.vercel.app/', 'نتائج المعهد')">
+                    <div class="icon-box" style="color:#dc2626; background: rgba(220, 38, 38, 0.1);"><i class="fas fa-graduation-cap"></i></div>
+                    <h3>نتائج المعهد</h3>
+                    <p>الاستعلام عن النتائج (جديد)</p>
+                </div>
+
                 <div class="semester-card" onclick="openUnionModal()">
-                    <div class="icon-box" style="color:#2e7d32"><i class="fas fa-info-circle"></i></div>
+                    <div class="icon-box" style="color:#059669; background: rgba(5, 150, 105, 0.1);"><i class="fas fa-info-circle"></i></div>
                     <h3>عن الاتحاد</h3>
                     <p>نبذة تعريفية وتاريخية</p>
                 </div>
@@ -282,7 +390,7 @@
         <!-- 2. اختيار التخصص -->
         <div id="specialization-selection" class="section-box hidden">
             <div class="header-with-back">
-                <button class="back-btn" onclick="goBackToMainMenu()">القائمة</button>
+                <button class="back-btn" onclick="goBackToMainMenu()">الرئيسية</button>
                 <h2 class="section-title">اختر التخصص</h2>
             </div>
             <div class="semesters-grid">
@@ -298,7 +406,7 @@
         <!-- 3. اختيار المستوى -->
         <div id="level-selection" class="section-box hidden">
             <div class="header-with-back">
-                <button class="back-btn" onclick="goBackToSpecialization()">التخصص</button>
+                <button class="back-btn" onclick="goBackToSpecialization()">التخصصات</button>
                 <h2 class="section-title">المستوى الدراسي</h2>
             </div>
             <div class="semesters-grid">
@@ -312,7 +420,7 @@
         <div id="semesters-container" class="section-box hidden">
             <div class="header-with-back">
                 <button class="back-btn" onclick="goBackToLevels()">المستويات</button>
-                <h2 id="semesters-title" class="section-title">الفصول</h2>
+                <h2 id="semesters-title" class="section-title">الفصول الدراسية</h2>
             </div>
             <div id="semesters-grid-view" class="semesters-grid"></div>
         </div>
@@ -389,36 +497,29 @@
         <!-- NEW: حاوية اختيار نوع الملف (البطاقات) -->
         <div id="category-selection-container" class="section-box hidden">
             <div class="header-with-back">
-                <button class="back-btn" onclick="goBackToSubjects()">المواد</button>
+                <button class="back-btn" onclick="goBackToSubjects()">العودة</button>
                 <h2 class="section-title">اختر نوع الملف</h2>
             </div>
-            <h3 style="text-align:center; color:var(--primary-color); margin-bottom:20px;">
+            <h3 style="text-align:center; color:var(--primary-color); margin-bottom:25px; font-weight: 800;">
                 <span id="selected-subject-title-card"></span> 📂
             </h3>
             
             <div class="category-grid">
-                <!-- Card: Cours -->
                 <div class="category-card cat-cours" onclick="selectCategory('cours')">
                     <i class="fas fa-chalkboard-teacher"></i>
                     <h3>Cours</h3>
                     <p>الدروس</p>
                 </div>
-
-                <!-- Card: TD -->
                 <div class="category-card cat-td" onclick="selectCategory('td')">
                     <i class="fas fa-list-ol"></i>
                     <h3>TD</h3>
                     <p>الأعمال الموجهة</p>
                 </div>
-
-                <!-- Card: TP -->
                 <div class="category-card cat-tp" onclick="selectCategory('tp')">
                     <i class="fas fa-laptop-code"></i>
                     <h3>TP</h3>
                     <p>الأعمال التطبيقية</p>
                 </div>
-
-                <!-- Card: Archive -->
                 <div class="category-card cat-archive" onclick="selectCategory('archive')">
                     <i class="fas fa-archive"></i>
                     <h3>Archive</h3>
@@ -427,12 +528,11 @@
             </div>
         </div>
 
-        <!-- حاوية عرض الملفات (تم تعديلها لإخفاء التبويبات القديمة) -->
+        <!-- حاوية عرض الملفات -->
         <div id="file-list-container" class="section-box hidden">
-            <button class="back-btn" onclick="goBackToCategories()" style="width:100%; text-align:center; margin-bottom:15px; background:#ef9a9a; color:#b71c1c;">عودة للتصنيفات</button>
-            <h3 style="text-align:center;">📂 الملفات: <span id="selected-subject-name" style="color:var(--primary-color)"></span></h3>
+            <button class="back-btn" onclick="goBackToCategories()" style="width:100%; justify-content:center; margin-bottom:20px; background:#fee2e2; color:#ef4444; border: 1px solid #fecaca;">عودة للتصنيفات</button>
+            <h3 style="text-align:center; margin-bottom: 20px;">📂 <span id="selected-subject-name" style="color:var(--primary-color)"></span></h3>
             
-            <!-- التبويبات القديمة مخفية الآن لأننا نستخدم البطاقات -->
             <div class="tabs-container hidden">
                 <button class="tab-btn active" onclick="switchTab('cours')">📚 Cours</button>
                 <button class="tab-btn" onclick="switchTab('td')">📝 TD</button>
@@ -442,15 +542,18 @@
 
             <div id="loading-spinner" class="spinner hidden"></div>
             <ul id="pdf-list"></ul>
-            <p id="no-files-msg" class="hidden" style="text-align:center; color:#777; margin-top:20px;">⚠️ لا توجد ملفات في هذا القسم حالياً.</p>
+            <div id="no-files-msg" class="hidden" style="text-align:center; padding: 30px; background: #f8fafc; border-radius: 15px; margin-top: 20px;">
+                <i class="fas fa-folder-open" style="font-size: 3rem; color: #cbd5e1; margin-bottom: 10px;"></i>
+                <p style="color:#64748b; margin:0; font-weight: 600;">عذراً، لا توجد ملفات في هذا القسم حالياً.</p>
+            </div>
         </div>
     </div>
 
     <!-- متصفح داخلي -->
     <div id="web-viewer-overlay" class="hidden">
         <div class="viewer-header">
-            <button onclick="closeWebViewer()" style="background:none; border:none; color:white; font-size:1.1rem; font-weight:bold;">❌ إغلاق</button>
-            <span id="web-viewer-title" style="color:white; font-weight:bold;"></span>
+            <button onclick="closeWebViewer()" style="background:none; border:none; color:white; font-size:1.1rem; font-weight:800; cursor:pointer;"><i class="fas fa-times"></i> إغلاق</button>
+            <span id="web-viewer-title" style="color:white; font-weight:800; font-size: 1.1rem;"></span>
             <div style="width:30px"></div>
         </div>
         <div class="web-viewer-container">
@@ -461,29 +564,29 @@
     <!-- نافذة العرض -->
     <div id="pdf-viewer-overlay" class="hidden">
         <div class="viewer-header">
-            <button onclick="closePdfViewer()" style="background:none; border:none; color:white; font-size:1.1rem; font-weight:bold;">❌ إغلاق</button>
-            <span id="viewer-filename" style="max-width:150px; overflow:hidden; white-space:nowrap; color:#eee;">ملف</span>
-            <button id="viewer-action-btn" style="background:rgba(255,255,255,0.2); border:none; color:white; padding:5px 12px; border-radius:20px;">فتح خارجي</button>
+            <button onclick="closePdfViewer()" style="background:none; border:none; color:white; font-size:1.1rem; font-weight:800; cursor:pointer;"><i class="fas fa-times"></i> إغلاق</button>
+            <span id="viewer-filename" style="max-width:150px; overflow:hidden; white-space:nowrap; color:#f8fafc; font-weight:600;">ملف</span>
+            <button id="viewer-action-btn" style="background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.3); color:white; padding:6px 15px; border-radius:50px; cursor:pointer; font-weight: 600;"><i class="fas fa-external-link-alt"></i> فتح</button>
         </div>
         <div id="pdf-render-area"></div>
-        <div id="rendering-msg"><div class="spinner"></div><p style="color:white; text-align:center; margin-top:10px;">جاري جلب الملف...</p></div>
+        <div id="rendering-msg"><div class="spinner"></div><p style="color:white; text-align:center; margin-top:10px; font-weight:600;">جاري جلب الملف...</p></div>
     </div>
 
     <!-- نافذة عن الاتحاد -->
     <div id="union-modal-overlay" class="hidden">
-        <div class="union-content fade-in">
+        <div class="union-content">
             <h2>عن الاتحاد</h2>
             <div class="union-text">
                 <p>في الثالث عشر مايو عام ألفين ( 13/05/2000 ) كانت الحركة الطلابية الوطنية على موعد مع مرحلة جديدة في تاريخها ونقطة تحول محورية، حيث انطلق الاتحاد الوطني لطلبة موريتانيا، زاده عزيمة لا تستكين وشعاره: وعي، وحدة، بناء، مشيدا صرح النضال السديد ورافعا لواء القضية الطلابية بعزم لا يستكين، نابذا عهد الخمول والاستكانة وراء ظهره، فكان بحق صوت الطالب المعبر عن تطلعاته بصدق والمنافح عنه بقوة والمناضل المؤتمن على قضيته، فرفع الظلم ورد الحق وصان المكتسب.</p>
             </div>
-            <button onclick="closeUnionModal()" class="back-btn" style="width:100%; background: var(--primary-color); color:white;">إغلاق</button>
+            <button onclick="closeUnionModal()" class="upload-btn-submit" style="margin-top: 0;">إغلاق النافذة</button>
         </div>
     </div>
 
-    <!-- نافذة الرفع (تم التعديل لإضافة نوع الملف) -->
+    <!-- نافذة الرفع -->
     <div id="upload-modal-overlay" class="hidden">
-        <div class="union-content fade-in" style="max-width:400px;">
-            <h2>رفع ملف جديد</h2>
+        <div class="union-content" style="max-width:400px; padding: 25px;">
+            <h2 style="margin-bottom: 20px;">رفع ملف جديد</h2>
             <form id="upload-form">
                 <div class="upload-form-group">
                     <label>التخصص</label>
@@ -509,7 +612,6 @@
                     <select id="upload-subject" required><option value="">اختر التخصص والفصل أولاً...</option></select>
                 </div>
                 
-                <!-- إضافة نوع الملف -->
                 <div class="upload-form-group">
                     <label>نوع الملف</label>
                     <select id="upload-type" required>
@@ -522,12 +624,12 @@
 
                 <div class="upload-form-group">
                     <label>اختر ملف (PDF)</label>
-                    <input type="file" id="upload-file" accept="application/pdf" required>
+                    <input type="file" id="upload-file" accept="application/pdf" multiple required style="padding: 10px;">
                 </div>
                 <div id="upload-status" class="status-msg"></div>
-                <button type="submit" id="upload-submit-btn" class="upload-btn-submit">رفع الملف</button>
+                <button type="submit" id="upload-submit-btn" class="upload-btn-submit">رفع الملف الآن</button>
             </form>
-            <button onclick="closeUploadModal()" class="back-btn" style="width:100%; margin-top:10px; background: #e0e0e0; color:#333;">إلغاء</button>
+            <button onclick="closeUploadModal()" class="upload-btn-submit" style="background: #e2e8f0; color:#475569; margin-top: 10px;">إلغاء</button>
         </div>
     </div>
 
@@ -538,8 +640,7 @@
             <a href="https://www.facebook.com/share/1Ce3zTEpvC/" target="_blank" class="social-btn fb-btn"><i class="fab fa-facebook"></i> صفحتنا على فيسبوك</a>
             <a href="https://chat.whatsapp.com/DBg3bcBQP2q8ERsoHkRY6N" target="_blank" class="social-btn wa-btn"><i class="fab fa-whatsapp"></i> مجتمعنا على واتساب</a>
         </div>
-        <div class="footer-divider"></div>
-        <p class="copyright">جميع الحقوق محفوظة © <span id="copyright-year" style="cursor:pointer; user-select:none;">2026</span></p>
+        <p class="copyright">جميع الحقوق محفوظة © <span id="copyright-year" style="cursor:pointer; user-select:none;">2026</span> - UNEM ISCAE</p>
     </footer>
 
     <script>
@@ -585,10 +686,10 @@
         const repoName = "UNEM-ISCAE-"; 
         const branchMap = { 'ba': 'BA', 'fc': 'FC', 'tcm': 'TCM', 'grh': 'GRH', 'sae': 'SAE', 'ig': 'IG' };
 
-        let allFiles = []; let currentSpecialization = ''; let currentLevel = ''; let currentSemester = ''; let currentBranch = 'main'; 
-        let currentSubjectFiles = []; 
+        let allFiles =[]; let currentSpecialization = ''; let currentLevel = ''; let currentSemester = ''; let currentBranch = 'main'; 
+        let currentSubjectFiles =[]; 
         let currentTab = 'cours'; 
-        let isArchiveSpecialCase = false; // متغير للتحكم في حالة الأرشيف العام
+        let isArchiveSpecialCase = false;
 
         function hideAll() { document.querySelectorAll('.section-box').forEach(el => el.classList.add('hidden')); }
         function goBackToMainMenu() { hideAll(); document.getElementById('main-menu').classList.remove('hidden'); }
@@ -597,7 +698,6 @@
         
         function goBackToSemesters() { 
             hideAll(); 
-            // تأكد من أننا نرجع للفصل الصحيح
             if(currentLevel) {
                 document.getElementById('semesters-container').classList.remove('hidden');
             } else {
@@ -605,13 +705,11 @@
             }
         }
 
-        // دالة العودة الجديدة من شاشة البطاقات إلى المواد
         function goBackToSubjects() {
             hideAll();
             document.getElementById('subjects-container').classList.remove('hidden');
         }
 
-        // دالة العودة من قائمة الملفات إلى البطاقات
         function goBackToCategories() {
             hideAll();
             document.getElementById('category-selection-container').classList.remove('hidden');
@@ -621,12 +719,27 @@
         function closePdfViewer() { document.getElementById('pdf-viewer-overlay').classList.add('hidden'); document.getElementById('pdf-render-area').innerHTML = ""; }
         function openUnionModal() { document.getElementById('union-modal-overlay').classList.remove('hidden'); }
         function closeUnionModal() { document.getElementById('union-modal-overlay').classList.add('hidden'); }
+        
+        // دوال المتصفح الداخلي
+        function openWebViewer(url, title) {
+            document.getElementById('web-viewer-title').textContent = title;
+            const iframe = document.getElementById('web-frame');
+            iframe.src = url;
+            iframe.style.backgroundColor = "#ffffff";
+            document.getElementById('web-viewer-overlay').classList.remove('hidden');
+        }
+
+        function closeWebViewer() {
+            document.getElementById('web-viewer-overlay').classList.add('hidden');
+            document.getElementById('web-frame').src = '';
+        }
+
         function openUploadModal() { document.getElementById('upload-modal-overlay').classList.remove('hidden'); updateUploadSubjects(); }
         function closeUploadModal() { document.getElementById('upload-modal-overlay').classList.add('hidden'); document.getElementById('upload-status').textContent = ''; document.getElementById('upload-form').reset(); }
 
         function showSpecializationSelection() { hideAll(); document.getElementById('specialization-selection').classList.remove('hidden'); }
         function selectSpecialization(spec) {
-            currentSpecialization = spec; currentBranch = branchMap[spec] || 'main'; allFiles = []; 
+            currentSpecialization = spec; currentBranch = branchMap[spec] || 'main'; allFiles =[]; 
             hideAll(); document.getElementById('level-selection').classList.remove('hidden');
             fetchFilesFromGitHub(currentBranch);
         }
@@ -636,7 +749,7 @@
             let semesters = (level === 'l1') ? ['s1', 's2'] : (level === 'l2') ? ['s3', 's4'] : ['s5', 's6'];
             semesters.forEach(sem => {
                 const div = document.createElement('div'); div.className = 'semester-card';
-                div.innerHTML = `<div class="icon-box" style="font-size:2rem;color:var(--primary-color)">${sem.toUpperCase()}</div><h3>Semestre ${sem.replace('s','')}</h3>`;
+                div.innerHTML = `<div class="icon-box"><i class="fas fa-layer-group"></i></div><h3>Semestre ${sem.replace('s','')}</h3>`;
                 div.onclick = () => showSubjects(sem); grid.appendChild(div);
             });
         }
@@ -665,7 +778,7 @@
         function getSafeSubjectCode(name) { return name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "_").replace(/_+/g, "_"); }
         
         function isValidFile(filename) {
-            const forbidden = ['index.html', 'style.css', 'script.js', 'sw.js', 'manifest.json', 'icon-192.png', 'icon-512.png', 'favicon.ico', 'cname', 'readme.md', '.gitkeep', '.ds_store'];
+            const forbidden =['index.html', 'style.css', 'script.js', 'sw.js', 'manifest.json', 'icon-192.png', 'icon-512.png', 'favicon.ico', 'cname', 'readme.md', '.gitkeep', '.ds_store'];
             const lower = filename.toLowerCase();
             if (lower.includes('placeholder')) return false;
             if (filename === '.keep') return false;
@@ -674,18 +787,9 @@
             return true;
         }
 
-        // ============================================
-        // === منطق التبويبات والتصنيف الذكي ===
-        // ============================================
-
-        // دالة جديدة لاختيار التصنيف من البطاقات
         function selectCategory(categoryName) {
-            // إخفاء حاوية البطاقات
             document.getElementById('category-selection-container').classList.add('hidden');
-            // إظهار قائمة الملفات
             document.getElementById('file-list-container').classList.remove('hidden');
-            
-            // تفعيل التصنيف المطلوب
             currentTab = categoryName;
             renderFilteredFiles();
         }
@@ -706,20 +810,19 @@
             if (lowerName.includes('[tp]')) return 'tp';
             if (lowerName.includes('[cours]')) return 'cours';
 
-            const archiveKeywords = [
+            const archiveKeywords =[
                 'archive', 'examen', 'exam', 'sujet', 'rattrapage', 'devoir', 
                 'session', 'test', 'partiel', 'midterm', 'final', 'epreuve',
                 'exeman', 'examan', 'exl' 
             ];
             
             if (archiveKeywords.some(k => lowerName.includes(k))) return 'archive';
-
             if (/(^|[^a-z])(dev|dv|di)([^a-z]|$)/i.test(lowerName)) return 'archive';
 
-            const tdKeywords = ['td', 'serie', 'série', 'exercice', 'exo', 'travaux diriges'];
+            const tdKeywords =['td', 'serie', 'série', 'exercice', 'exo', 'travaux diriges'];
             if (tdKeywords.some(k => lowerName.includes(k))) return 'td';
 
-            const tpKeywords = ['tp', 'pratique', 'atelier', 'lab', 'travaux pratiques'];
+            const tpKeywords =['tp', 'pratique', 'atelier', 'lab', 'travaux pratiques'];
             if (tpKeywords.some(k => lowerName.includes(k))) return 'tp';
 
             return 'cours';
@@ -730,7 +833,6 @@
             pdfList.innerHTML = "";
             
             let filtered;
-            
             if (isArchiveSpecialCase) {
                 filtered = currentSubjectFiles;
             } else {
@@ -750,93 +852,102 @@
                                             .replace(/_/g, ' ')
                                             .replace('.pdf', '');
 
-                    // إنشاء عنصر المعلومات (أيقونة PDF + الاسم) - قابل للنقر للمعاينة
                     const infoDiv = document.createElement('div');
                     infoDiv.className = 'file-info';
-                    infoDiv.innerHTML = `<i class="fas fa-file-pdf" style="color:#d32f2f"></i> <span>${displayName}</span>`;
-                    infoDiv.onclick = () => openSmartViewer(file);
+                    infoDiv.innerHTML = `<i class="fas fa-file-pdf"></i> <span>${displayName}</span>`;
+                    infoDiv.onclick = () => openSmartViewer(file);// دالة المعاينة المحدثة لحل مشكلة الترميز
+function openSmartViewer(fileObj) {
+    const overlay = document.getElementById('pdf-viewer-overlay');
+    const area = document.getElementById('pdf-render-area');
+    const msg = document.getElementById('rendering-msg');
+    area.innerHTML = ''; overlay.classList.remove('hidden');
+    
+    // تنظيف اسم الملف للعرض
+    let cleanName = fileObj.name.replace(/^"|"$/g, '');
+    document.getElementById('viewer-filename').textContent = cleanName;
+    msg.style.display = 'block';
 
-                    // إنشاء زر التحميل - قابل للنقر للتحميل المباشر
+    let rawUrl = '';
+    if (fileObj.source === 'supabase') {
+        const { data } = supabaseClient.storage.from('pdf-files').getPublicUrl(fileObj.path);
+        rawUrl = data.publicUrl;
+    } else {
+        // تنظيف المسار لـ GitHub
+        let cleanPath = fileObj.path.replace(/^"|"$/g, '');
+        let encodedPath = cleanPath.split('/').map(part => encodeURIComponent(part)).join('/');
+        rawUrl = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/${currentBranch}/${encodedPath}`;
+    }
+
+    const googleViewerLink = `https://docs.google.com/viewer?url=${encodeURIComponent(rawUrl)}`;
+    document.getElementById('viewer-action-btn').onclick = () => window.open(googleViewerLink, '_blank');
+    
+    const iframe = document.createElement('iframe');
+    iframe.style.width = "100%"; iframe.style.height = "100%"; iframe.style.border = "none";
+    iframe.src = `https://docs.google.com/gview?url=${encodeURIComponent(rawUrl)}&embedded=true`;
+    iframe.onload = () => msg.style.display = 'none';
+    area.appendChild(iframe);
+}
+
                     const dlBtn = document.createElement('button');
                     dlBtn.className = 'download-btn';
-                    dlBtn.innerHTML = `<i class="fas fa-download"></i>`;
+                    dlBtn.innerHTML = `<i class="fas fa-arrow-down"></i>`;
                     dlBtn.title = "تحميل الملف";
                     dlBtn.onclick = (e) => {
-                        e.stopPropagation(); // منع فتح المعاينة عند الضغط على التحميل
+                        e.stopPropagation(); 
                         triggerDownload(file);
                     };
 
-                    // إضافة العناصر للقائمة
-                    li.appendChild(dlBtn); // الزر يساراً (بسبب RTL سيظهر يميناً في الكود لكن يساراً في العرض) - حسب الترتيب في HTML
-                    // لضبط الترتيب الصحيح مع flex و RTL:
-                    // الترتيب في الـ DOM: زر التحميل أولاً ثم المعلومات
-                    // مع space-between: الزر سيكون على اليمين والمعلومات على اليسار (في LTR)
-                    // في RTL: الزر سيكون على اليسار والمعلومات على اليمين. 
-                    // لنعكس الترتيب في الـ DOM ليكون الاسم أولاً ثم الزر، ليظهر الاسم يمين والزر يسار في RTL.
-                    
-                    li.innerHTML = ''; // تفريغ المحتوى السابق
-                    li.appendChild(infoDiv); // الاسم يمين
-                    li.appendChild(dlBtn);   // الزر يسار
+                    li.appendChild(infoDiv); 
+                    li.appendChild(dlBtn);   
                     
                     pdfList.appendChild(li);
                 });
             }
         }
 
-        // دالة التحميل المباشر الجديدة
         function triggerDownload(fileObj) {
             let downloadUrl = '';
             if (fileObj.source === 'supabase') {
                 const { data } = supabaseClient.storage.from('pdf-files').getPublicUrl(fileObj.path);
                 downloadUrl = data.publicUrl;
             } else {
-                // رابط GitHub الخام
                 downloadUrl = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/${currentBranch}/${encodeURIComponent(fileObj.path)}`;
             }
 
-            // إنشاء رابط مخفي والضغط عليه
             const link = document.createElement('a');
             link.href = downloadUrl;
-            link.target = '_blank'; // فتح في تبويب جديد لضمان التحميل في بعض المتصفحات
-            link.download = fileObj.name; // محاولة اقتراح اسم الملف
+            link.target = '_blank'; 
+            link.download = fileObj.name; 
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
         }
 
-        // --- دالة العرض الرئيسية (تم تعديلها لفتح شاشة البطاقات أولاً) ---
         async function loadFiles(subjectName) {
-            // حفظ اسم المادة
             document.getElementById('selected-subject-name').textContent = subjectName;
             document.getElementById('selected-subject-title-card').textContent = subjectName;
 
             const cleanSubject = normalizeText(subjectName);
             
-            // تحديد إذا كانت "Archive S1" - حالة خاصة تبقى كما هي
             if (cleanSubject.includes("archive") && cleanSubject.match(/s[1-6]/)) {
                 isArchiveSpecialCase = true;
-                // في حالة الأرشيف العام، نذهب مباشرة للملفات لأن لا يوجد تصنيف فرعي
                 document.getElementById('file-list-container').classList.remove('hidden');
                 document.getElementById('category-selection-container').classList.add('hidden');
                 hideAll();
                 document.getElementById('file-list-container').classList.remove('hidden');
-                // تغيير زر العودة ليرجع للمواد
                 document.querySelector('#file-list-container .back-btn').setAttribute('onclick', 'goBackToSubjects()');
                 document.querySelector('.tabs-container').classList.add('hidden'); 
             } else {
                 isArchiveSpecialCase = false;
-                // الحالة العادية: نفتح شاشة اختيار التصنيف (البطاقات)
                 hideAll();
                 document.getElementById('category-selection-container').classList.remove('hidden');
-                // إعادة ضبط زر العودة في قائمة الملفات ليرجع للبطاقات
                 document.querySelector('#file-list-container .back-btn').setAttribute('onclick', 'goBackToCategories()');
             }
             
-            // البدء في جلب الملفات في الخلفية
             if(allFiles.length === 0) await fetchFilesFromGitHub(currentBranch);
             let githubFiles = allFiles.map(f => ({...f, source: 'github'}));
 
-            let supabaseFiles = [];
+            let supabaseFiles =[];
             if(supabaseClient && currentSpecialization && currentLevel && currentSemester) {
                 const subjectFolder = getSafeSubjectCode(subjectName);
                 const folderPath = `${currentSpecialization.toUpperCase()}/${currentLevel.toUpperCase()}/${currentSemester.toUpperCase()}/${subjectFolder}`;
@@ -904,7 +1015,7 @@
                     if (fileHasRoman) return false; 
                 }
 
-                const stopWords = ['de', 'du', 'des', 'la', 'le', 'les', 'et', 'en', 'a', 'au', 'aux', 'l'];
+                const stopWords =['de', 'du', 'des', 'la', 'le', 'les', 'et', 'en', 'a', 'au', 'aux', 'l'];
                 const distinctKeywords = keywords.filter(w => !stopWords.includes(w) && w.length > 2);
 
                 if (distinctKeywords.length > 0) {
@@ -919,9 +1030,8 @@
                 return fName.includes(cleanSubject);
             });
 
-            currentSubjectFiles = [...filteredGithub, ...supabaseFiles];
+            currentSubjectFiles =[...filteredGithub, ...supabaseFiles];
 
-            // إذا كنا في حالة الأرشيف الخاص، اعرض النتائج فوراً
             if(isArchiveSpecialCase) {
                 renderFilteredFiles();
             }
@@ -956,10 +1066,8 @@
             if(query.length === 0) { closeSearch(); return; }
             hideAll();
             const listContainer = document.getElementById('file-list-container'); listContainer.classList.remove('hidden');
-            // إخفاء حاوية البطاقات والتبويبات عند البحث
             document.getElementById('category-selection-container').classList.add('hidden');
             document.querySelector('.tabs-container').classList.add('hidden');
-            // تعديل زر العودة للرجوع للقائمة الرئيسية
             document.querySelector('#file-list-container .back-btn').setAttribute('onclick', 'closeSearch()');
 
             document.getElementById('selected-subject-name').textContent = "نتائج البحث: " + query;
@@ -978,12 +1086,12 @@
                     
                     const infoDiv = document.createElement('div');
                     infoDiv.className = 'file-info';
-                    infoDiv.innerHTML = `<i class="fas fa-file-pdf" style="color:#d32f2f"></i> <span>${file.name}</span>`;
+                    infoDiv.innerHTML = `<i class="fas fa-file-pdf"></i> <span>${file.name}</span>`;
                     infoDiv.onclick = () => openSmartViewer({...file, source: 'github'});
 
                     const dlBtn = document.createElement('button');
                     dlBtn.className = 'download-btn';
-                    dlBtn.innerHTML = `<i class="fas fa-download"></i>`;
+                    dlBtn.innerHTML = `<i class="fas fa-arrow-down"></i>`;
                     dlBtn.onclick = (e) => {
                         e.stopPropagation();
                         triggerDownload({...file, source: 'github'});
@@ -996,60 +1104,18 @@
             }
         }
         
-        // تعديل دالة الإغلاق لترجع للقائمة الصحيحة
         function closeSearch() { 
             hideAll();
             document.getElementById('main-menu').classList.remove('hidden'); 
         }
 
         const subjectsData = {
-            "BA": {
-                "S1": ["Principe de gestion", "Comptabilité financière I", "Statistique descriptive I", "Mathématique", "Anglais I", "Méthodologie du travail universitaire", "MS office", "Introduction à l’économie", "Introduction au droit", "Technique de communication", "Archive S1"],
-                "S2": ["Comptabilité financière II", "Micro-finance", "Economie d’entreprise", "Statistique descriptive II", "Mathématiques financières", "Anglais II", "Aptitudes en TIC", "Développement personnel", "Microéconomie", "Droit des affaires", "Archive S2"],
-                "S3": ["Technique Bancaire", "Système financier mauritanien", "Gestion Financière", "Comptabilité des Sociétés", "Anglais des affaires", "Logiciels Bancaire", "Marketing", "Droit administrative", "Macroéconomie", "Méthodes d’aide à la décision", "Archive S3"],
-                "S4": ["Comptabilité des Société assurance", "Assurances des biens", "Comptabilité Bancaire", "Comptabilité de Gestion", "Finance des marchés", "Analyse Financière", "Gestion de la trésorerie", "GRH", "Droit des assurances", "Commerce international", "Archive S4"],
-                "S5": ["Gestion de portefeuille", "Comptabilité bancaire II", "Gestion des risques", "Finance islamique", "Stratégie d’entreprise", "Gestion de patrimoine", "Fiscalité", "Politiques et choix d’investissement", "Droit bancaire et financier", "Rapport de stage de la 2ème année", "Archive S5"],
-                "S6": ["Méthodologie de recherche", "Séminaire sur l'entrepreneuriat", "Mémoire de fin d'études", "Archive S6"]
-            },
-            "FC": {
-                "S1": ["Principe de gestion", "Comptabilité financière I", "Statistique descriptive I", "Mathématique", "Anglais I", "Méthodologie du travail universitaire", "MS office", "Introduction à l’économie", "Introduction au droit", "Technique de communication", "Archive S1"],
-                "S2": ["Comptabilité financière II", "Micro-finance", "Economie d’entreprise", "Statistique descriptive II", "Mathématiques financières", "Anglais II", "Aptitudes en TIC", "Développement personnel", "Microéconomie", "Droit des affaires", "Archive S2"],
-                "S3": ["Technique Bancaire", "Système financier mauritanien", "Gestion Financière", "Comptabilité des Sociétés", "Anglais des affaires", "Logiciels Comptables", "Marketing", "Droit administrative", "Macroéconomie", "Méthodes d’aide à la décision", "Archive S3"],
-                "S4": ["Analyse financière", "Comptabilité de gestion", "Comptabilité des Sociétés II", "Finance islamique", "Gestion de portefeuilles", "Finance des marchés", "Droit du travail", "GRH", "Fiscalité", "Les instruments de Crédits", "Archive S4"],
-                "S5": ["Gestion de Trésorerie", "Contrôle de Gestion", "Analyse financière Approfondie", "Méthodes d'évaluation de l'entreprise", "Marchés financiers", "Audit financier", "Normes Comptables Internationnales", "Choix d'investissement", "Droit bancaire et financier", "Rapport de stage de la 2ème année", "Archive S5"],
-                "S6": ["Méthodologie de recherche", "Séminaire sur l'entrepreneuriat", "Mémoire de fin d'études", "Archive S6"]
-            },
-            "TCM": {
-                "S1": ["Initiation à la gestion commerciale", "Principe de gestion", "Comptabilité financière I", "Introduction à l’économie", "Anglais I", "Techniques de communication", "MS office", "Statistique descriptive I", "Mathématique", "Introduction au droit", "Archive S1"],
-                "S2": ["Gestion commerciale de la relation client", "Economie d'entreprise", "Comptabilité financière II", "Gestion financière", "Anglais II", "Aptitudes en TIC", "Développement personnel", "Microéconomie", "Macro-économie", "Statistique descriptive II", "Archive S2"],
-                "S3": ["Marketing I", "Commerce international I", "Business Intelligence", "Gestion financière II", "Anglais des affaires", "Gestion de production", "Logiciels de gestion commerciale", "Droit administratif", "Droit des affaires", "GRH", "Archive S3"],
-                "S4": ["Marketing II", "Commerce international II", "Commerce électronique", "Finance Internationale", "Techniques Douanières et Transit", "Analyse financière", "Stratégie d’entreprise", "Techniques de sondage", "Droit des assurances", "Recherche opérationnelle", "Archive S4"],
-                "S5": ["Communication Marketing et commerciale", "Planification Marketing", "Techniques de Négociations Commerciales", "Fiscalité", "E-Marketing", "Finance des Marchés", "Etude des marchés", "Logistique du commerce international", "Management des projets", "Rapport de stage de la 2ème année", "Archive S5"],
-                "S6": ["Méthodologie de recherche", "Séminaire sur l'entrepreneuriat", "Mémoire de fin d'études", "Archive S6"]
-            },
-            "GRH": {
-                "S1": ["Initiation à la gestion des RH", "Principes de gestion", "Comptabilité financière I", "Introduction à l’économie", "Anglais I", "MS Office", "Techniques de Communication", "Statistique descriptive I", "Mathématiques", "Introduction au droit", "Archive S1"],
-                "S2": ["Evaluation des compétences", "Gestion Administrative des RH I", "Comptabilité financière II", "Gestion financière I", "Anglais II", "Aptitudes en TIC", "Développement personnel", "Rédaction administrative I", "Droit de travail I", "Statistiques descriptives II", "Archive S2"],
-                "S3": ["Gestion de la paie", "Recrutement", "Sécurité sociale I", "Gestion financière II", "Plan et ingénierie de formation", "Logiciels paie", "Anglais des affaires", "Rédaction administrative II", "Droit de travail II", "Droit des obligations", "Archive S3"],
-                "S4": ["GPEC", "Sécurité sociale II", "Stratégie d'entreprise", "Macroéconomie", "Microéconomie", "Analyse financière", "Communication interne", "Système d'information RH", "Gestion des conflits et négociations", "Droit Administratif", "Archive S4"],
-                "S5": ["Sources de motivation du personnel", "Politique de rémunération", "Audit des Ressources Humaines", "Droit pénal général", "Passation des marchés", "Sociologie des organisations", "Rapport de stage de la 2ème année", "Outils pilotage RH", "Management des projets", "Gestion des connaissances", "Archive S5"],
-                "S6": ["Méthodologie de recherche", "Séminaire sur l'entrepreneuriat", "Mémoire de fin d'études", "Archive S6"]
-            },
-            "SAE": {
-                "S1": ["Introduction à l’économie", "Principe de gestion", "Calcul intégral I", "Calcul matricielle I", "Probabilité I", "Statistique descriptive", "Anglais technique", "Méthodologie de travail universitaire", "Introduction au droit", "MS office I", "Archive S1"],
-                "S2": ["Macro-économie", "Microéconomie", "Calcul intégral II", "Calcul matricielle II", "Probabilité II", "Statistique descriptive II", "Anglais technique II", "MS office II", "Comptabilité générale", "Technique de communication", "Archive S2"],
-                "S3": ["Statistique inferential", "Technique de sondage", "Programmation linéaire", "Comptabilité nationale", "Microeconomie 2", "Macro-économie 2", "Marketing", "Mangement", "Monnaies et crédit", "Logiciel (spss ou R)", "Archive S3"],
-                "S4": ["Finance public", "GRH", "Econometrie", "Commerce extérieur", "Optimisation", "Analyse des données", "Logiciel statistique", "Gestion des projets", "Finance des marchés", "Économie Mauritanienne", "Archive S4"],
-                "S5": [], "S6": []
-            },
-            "IG": {
-                "S1": ["Introduction à l’économie", "Introduction au droit", "Comptabilité financière", "Algorithmiques", "Architecture des ordinateurs", "MS office", "Anglais technique", "Méthodologie du travail universitaire", "Logique mathématique", "Analyse I", "Archive S1"],
-                "S2": ["Comptabilité financière II", "principe de gestion", "Langage C", "Système d'exploitation", "Programation Web", "Python", "Anglais technique", "Technique de communication", "Algèbre linéaire", "Analyse II", "Archive S2"],
-                "S3": ["Comptabilité analytique I", "Stratégie d’entreprise", "Java I", "PHP-My SQL", "Conception des bases de données I", "Réseaux informatiques", "Modélisation (UML/MERISE)", "Calcul multi-variables", "Logiciel de Calcul Scientifique", "probabilités et Statistiques", "Archive S3"],
-                "S4": ["Comptabilité analytique II", "Gestion des ressources humaines", "Java II", "C#", "PHP Frameworks", "Gestion de projet informatique", "Théories des Graphes", "Bases de données", "Réseaux informatique II", "Compilations", "Archive S4"],
-                "S5": ["Contrôle de gestion", "Gestion financière", "Technologie DotNet", "JEE Framework", "Programmation Mobile", "Intelligence artificielle", "Bases des données avancées", "Administration des Systèmes", "Système d'Informations Géographique", "Rapport de stage de la 2ème année", "Archive S5"],
-                "S6": ["Méthodologie de recherche", "Séminaire sur l'entrepreneuriat", "Mémoire de fin d'études", "Archive S6"]
-            }
+            "BA": { "S1":["Principe de gestion", "Comptabilité financière I", "Statistique descriptive I", "Mathématique", "Anglais I", "Méthodologie du travail universitaire", "MS office", "Introduction à l’économie", "Introduction au droit", "Technique de communication", "Archive S1"], "S2":["Comptabilité financière II", "Micro-finance", "Economie d’entreprise", "Statistique descriptive II", "Mathématiques financières", "Anglais II", "Aptitudes en TIC", "Développement personnel", "Microéconomie", "Droit des affaires", "Archive S2"], "S3":["Technique Bancaire", "Système financier mauritanien", "Gestion Financière", "Comptabilité des Sociétés", "Anglais des affaires", "Logiciels Bancaire", "Marketing", "Droit administrative", "Macroéconomie", "Méthodes d’aide à la décision", "Archive S3"], "S4":["Comptabilité des Société assurance", "Assurances des biens", "Comptabilité Bancaire", "Comptabilité de Gestion", "Finance des marchés", "Analyse Financière", "Gestion de la trésorerie", "GRH", "Droit des assurances", "Commerce international", "Archive S4"], "S5":["Gestion de portefeuille", "Comptabilité bancaire II", "Gestion des risques", "Finance islamique", "Stratégie d’entreprise", "Gestion de patrimoine", "Fiscalité", "Politiques et choix d’investissement", "Droit bancaire et financier", "Rapport de stage de la 2ème année", "Archive S5"], "S6":["Méthodologie de recherche", "Séminaire sur l'entrepreneuriat", "Mémoire de fin d'études", "Archive S6"] },
+            "FC": { "S1":["Principe de gestion", "Comptabilité financière I", "Statistique descriptive I", "Mathématique", "Anglais I", "Méthodologie du travail universitaire", "MS office", "Introduction à l’économie", "Introduction au droit", "Technique de communication", "Archive S1"], "S2":["Comptabilité financière II", "Comptabilité financière II", "Micro-finance", "Economie d’entreprise", "Statistique descriptive II", "Mathématiques financières", "Anglais II", "Aptitudes en TIC", "Développement personnel", "Microéconomie", "Droit des affaires", "Archive S2"], "S3":["Technique Bancaire", "Système financier mauritanien", "Gestion Financière", "Comptabilité des Sociétés", "Anglais des affaires", "Logiciels Comptables", "Marketing", "Droit administrative", "Macroéconomie", "Méthodes d’aide à la décision", "Archive S3"], "S4":["Analyse financière", "Comptabilité de gestion", "Comptabilité des Sociétés II", "Finance islamique", "Gestion de portefeuilles", "Finance des marchés", "Droit du travail", "GRH", "Fiscalité", "Les instruments de Crédits", "Archive S4"], "S5":["Gestion de Trésorerie", "Gestion de Trésorerie", "Contrôle de Gestion", "Analyse financière Approfondie", "Méthodes d'évaluation de l'entreprise", "Marchés financiers", "Audit financier", "Normes Comptables Internationnales", "Choix d'investissement", "Droit bancaire et financier", "Rapport de stage de la 2ème année", "Archive S5"], "S6":["Méthodologie de recherche", "Séminaire sur l'entrepreneuriat", "Mémoire de fin d'études", "Archive S6"] },
+            "TCM": { "S1":["Initiation à la gestion commerciale", "Principe de gestion", "Comptabilité financière I", "Introduction à l’économie", "Anglais I", "Techniques de communication", "MS office", "Statistique descriptive I", "Mathématique", "Introduction au droit", "Archive S1"], "S2":["Gestion commerciale de la relation client", "Economie d'entreprise", "Comptabilité financière II", "Gestion financière", "Anglais II", "Aptitudes en TIC", "Développement personnel", "Microéconomie", "Macro-économie", "Statistique descriptive II", "Archive S2"], "S3":["Marketing I", "Commerce international I", "Business Intelligence", "Gestion financière II", "Anglais des affaires", "Gestion de production", "Logiciels de gestion commerciale", "Droit administratif", "Droit des affaires", "GRH", "Archive S3"], "S4":["Marketing II", "Commerce international II", "Commerce électronique", "Finance Internationale", "Techniques Douanières et Transit", "Analyse financière", "Stratégie d’entreprise", "Techniques de sondage", "Droit des assurances", "Recherche opérationnelle", "Archive S4"], "S5":["Communication Marketing et commerciale", "Planification Marketing", "Techniques de Négociations Commerciales", "Fiscalité", "E-Marketing", "Finance des Marchés", "Etude des marchés", "Logistique du commerce international", "Management des projets", "Rapport de stage de la 2ème année", "Archive S5"], "S6":["Méthodologie de recherche", "Séminaire sur l'entrepreneuriat", "Mémoire de fin d'études", "Archive S6"] },
+            "GRH": { "S1":["Initiation à la gestion des RH", "Principes de gestion", "Comptabilité financière I", "Introduction à l’économie", "Anglais I", "MS Office", "Techniques de Communication", "Statistique descriptive I", "Mathématiques", "Introduction au droit", "Archive S1"], "S2":["Evaluation des compétences", "Gestion Administrative des RH I", "Comptabilité financière II", "Gestion financière I", "Anglais II", "Aptitudes en TIC", "Développement personnel", "Rédaction administrative I", "Droit de travail I", "Statistiques descriptives II", "Archive S2"], "S3":["Gestion de la paie", "Recrutement", "Sécurité sociale I", "Gestion financière II", "Plan et ingénierie de formation", "Logiciels paie", "Anglais des affaires", "Rédaction administrative II", "Droit de travail II", "Droit des obligations", "Archive S3"], "S4":["GPEC", "Sécurité sociale II", "Stratégie d'entreprise", "Macroéconomie", "Microéconomie", "Analyse financière", "Communication interne", "Système d'information RH", "Gestion des conflits et négociations", "Droit Administratif", "Archive S4"], "S5":["Sources de motivation du personnel", "Politique de rémunération", "Audit des Ressources Humaines", "Droit pénal général", "Passation des marchés", "Sociologie des organisations", "Rapport de stage de la 2ème année", "Outils pilotage RH", "Management des projets", "Gestion des connaissances", "Archive S5"], "S6":["Méthodologie de recherche", "Séminaire sur l'entrepreneuriat", "Mémoire de fin d'études", "Archive S6"] },
+            "SAE": { "S1":["Introduction à l’économie", "Principe de gestion", "Calcul intégral I", "Calcul matricielle I", "Probabilité I", "Statistique descriptive", "Anglais technique", "Méthodologie de travail universitaire", "Introduction au droit", "MS office I", "Archive S1"], "S2":["Macro-économie", "Microéconomie", "Calcul intégral II", "Calcul matricielle II", "Probabilité II", "Statistique descriptive II", "Anglais technique II", "MS office II", "Comptabilité générale", "Technique de communication", "Archive S2"], "S3":["Statistique inferential", "Technique de sondage", "Programmation linéaire", "Comptabilité nationale", "Microeconomie 2", "Macro-économie 2", "Marketing", "Mangement", "Monnaies et crédit", "Logiciel (spss ou R)", "Archive S3"], "S4":["Finance public", "GRH", "Econometrie", "Commerce extérieur", "Optimisation", "Analyse des données", "Logiciel statistique", "Gestion des projets", "Finance des marchés", "Économie Mauritanienne", "Archive S4"], "S5": [], "S6": [] },
+            "IG": { "S1":["Introduction à l’économie", "Introduction au droit", "Comptabilité financière", "Algorithmiques", "Architecture des ordinateurs", "MS office", "Anglais technique", "Méthodologie du travail universitaire", "Logique mathématique", "Analyse I", "Archive S1"], "S2":["Comptabilité financière II", "principe de gestion", "Langage C", "Système d'exploitation", "Programation Web", "Python", "Anglais technique", "Technique de communication", "Algèbre linéaire", "Analyse II", "Archive S2"], "S3":["Comptabilité analytique I", "Stratégie d’entreprise", "Java I", "PHP-My SQL", "Conception des bases de données I", "Réseaux informatiques", "Modélisation (UML/MERISE)", "Calcul multi-variables", "Logiciel de Calcul Scientifique", "probabilités et Statistiques", "Archive S3"], "S4":["Comptabilité analytique II", "Gestion des ressources humaines", "Java II", "C#", "PHP Frameworks", "Gestion de projet informatique", "Théories des Graphes", "Bases de données", "Réseaux informatique II", "Compilations", "Archive S4"], "S5":["Contrôle de gestion", "Gestion financière", "Technologie DotNet", "JEE Framework", "Programmation Mobile", "Intelligence artificielle", "Bases des données avancées", "Administration des Systèmes", "Système d'Informations Géographique", "Rapport de stage de la 2ème année", "Archive S5"], "S6":["Méthodologie de recherche", "Séminaire sur l'entrepreneuriat", "Mémoire de fin d'études", "Archive S6"] }
         };
 
         function updateUploadSubjects() {
@@ -1068,90 +1134,88 @@
             } else { subjectSelect.innerHTML = '<option value="">لا توجد بيانات</option>'; }
         }
 
-        const uploadForm = document.getElementById('upload-form');
-        const statusDiv = document.getElementById('upload-status');
-        const submitBtn = document.getElementById('upload-submit-btn');
-
         uploadForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            if (!supabaseClient) { statusDiv.textContent = 'خطأ في النظام'; statusDiv.className = 'status-msg error'; return; }
+            if (!supabaseClient) { statusDiv.textContent = 'خطأ في اتصال قاعدة البيانات'; statusDiv.className = 'status-msg error'; return; }
+            
             const spec = document.getElementById('upload-spec').value;
             const level = document.getElementById('upload-level').value;
             const semester = document.getElementById('upload-semester').value;
             const subject = document.getElementById('upload-subject').value;
             const type = document.getElementById('upload-type').value; 
             const fileInput = document.getElementById('upload-file');
-            const file = fileInput.files[0];
+            const files = fileInput.files;
 
-            if (!file || !subject) { statusDiv.textContent = 'يرجى اختيار المادة والملف'; statusDiv.className = 'status-msg error'; return; }
-            statusDiv.textContent = 'جاري الرفع...'; statusDiv.className = 'status-msg'; submitBtn.disabled = true;
-
-            try {
-                const timestamp = new Date().getTime();
-                const subjectFolder = getSafeSubjectCode(subject);
-                
-                let safeFileName = file.name
-                                   .normalize("NFD").replace(/[\u0300-\u036f]/g, "") 
-                                   .replace(/[^a-zA-Z0-9.\-_]/g, "_");
-
-                const taggedFileName = `${type}_${timestamp}_${safeFileName}`;
-                
-                const filePath = `${spec}/${level}/${semester}/${subjectFolder}/${taggedFileName}`;
-
-                const { data, error } = await supabaseClient.storage.from('pdf-files').upload(filePath, file, { cacheControl: '3600', upsert: false });
-                if (error) throw error;
-
-                statusDiv.textContent = '✅ تم رفع الملف بنجاح!'; statusDiv.className = 'status-msg success';
-                setTimeout(() => {
-                    uploadForm.reset(); document.getElementById('upload-subject').innerHTML = '<option value="">اختر التخصص والفصل أولاً...</option>';
-                    statusDiv.textContent = ''; submitBtn.disabled = false;
-                }, 3000);
-            } catch (error) {
-                console.error('Upload Error:', error);
-                statusDiv.textContent = '❌ فشل الرفع: ' + error.message; statusDiv.className = 'status-msg error'; submitBtn.disabled = false;
+            if (files.length === 0 || !subject) { 
+                statusDiv.textContent = 'يرجى اختيار المادة والملف(ات)'; 
+                statusDiv.className = 'status-msg error'; 
+                return; 
             }
+
+            submitBtn.disabled = true;
+            let successCount = 0;
+            let errorCount = 0;
+
+            // حلقة تكرارية لرفع كل ملف على حدة
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                
+                // إظهار حالة الرفع للإدارة
+                statusDiv.textContent = `⏳ جاري رفع الملف (${i + 1} من ${files.length})...`; 
+                statusDiv.className = 'status-msg';
+
+                try {
+                    const timestamp = new Date().getTime();
+                    const subjectFolder = getSafeSubjectCode(subject);
+                    
+                    // تنظيف اسم الملف
+                    let safeFileName = file.name
+                                       .normalize("NFD").replace(/[\u0300-\u036f]/g, "") 
+                                       .replace(/[^a-zA-Z0-9.\-_]/g, "_");
+
+                    // إضافة المتغير i لضمان عدم تطابق الأسماء إذا رُفعت في نفس اللحظة
+                    const taggedFileName = `${type}_${timestamp}_${i}_${safeFileName}`;
+                    const filePath = `${spec}/${level}/${semester}/${subjectFolder}/${taggedFileName}`;
+
+                    const { data, error } = await supabaseClient.storage.from('pdf-files').upload(filePath, file, { cacheControl: '3600', upsert: false });
+                    if (error) throw error;
+                    
+                    successCount++;
+                } catch (error) {
+                    console.error('Upload Error:', error);
+                    errorCount++;
+                }
+            }
+
+            // عرض النتيجة النهائية بعد انتهاء الرفع
+            if (errorCount === 0) {
+                statusDiv.textContent = `✅ تم رفع ${successCount} ملف(ات) بنجاح!`; 
+                statusDiv.className = 'status-msg success';
+            } else {
+                statusDiv.textContent = `⚠️ تم رفع ${successCount} بنجاح، وفشل ${errorCount}`; 
+                statusDiv.className = 'status-msg error';
+            }
+
+            // إعادة ضبط النموذج بعد 4 ثوانٍ
+            setTimeout(() => {
+                uploadForm.reset(); 
+                document.getElementById('upload-subject').innerHTML = '<option value="">اختر التخصص والفصل أولاً...</option>';
+                statusDiv.textContent = ''; 
+                submitBtn.disabled = false;
+            }, 4000);
         });
     </script>
-
-    <!-- Protection -->
-    <script>
-    (function() {
-        document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
-        document.onkeydown = function(e) { if(e.keyCode == 123 || (e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0) || e.keyCode == 'C'.charCodeAt(0))) || (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0))) return false; }
-    })();
-    </script>
-
 
     <!-- START PROTECTION CODE -->
     <script>
     (function() {
-        // منع الزر الأيمن
-        document.addEventListener('contextmenu', function(e) {
-            e.preventDefault();
-        });
-
-        // منع اختصارات لوحة المفاتيح
+        document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
         document.onkeydown = function(e) {
-            // F12
-            if(e.keyCode == 123) {
-                return false;
-            }
-            // Ctrl+I (DevTools)
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) {
-                return false;
-            }
-            // Ctrl+J (Console)
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) {
-                return false;
-            }
-            // Ctrl+C (Inspect)
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) {
-                return false;
-            }
-            // Ctrl+U (View Source)
-            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) {
-                return false;
-            }
+            if(e.keyCode == 123) return false;
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) return false;
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) return false;
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) return false;
+            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false;
         }
     })();
     </script>
