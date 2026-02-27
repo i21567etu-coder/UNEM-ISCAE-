@@ -764,16 +764,29 @@
         }
 
         async function fetchFilesFromGitHub(branch) {
-            const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/?ref=${branch}`;
+            // خدعة ذكية لتخطي الكاش في كروم (Chrome) بدون إثارة حماية GitHub
+            const randomVersion = new Date().getTime();
+            const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/?ref=${branch}&v=${randomVersion}`;
+            
             try {
+                // طلب عادي آمن تقبله جميع المتصفحات بدون مشاكل
                 const res = await fetch(apiUrl);
+                
                 if(res.ok) {
                     const data = await res.json();
-                    if(Array.isArray(data)) allFiles = data;
+                    if(Array.isArray(data)) {
+                        allFiles = data;
+                    }
+                } else if (res.status === 403 || res.status === 429) {
+                    // تنبيه هام في حال كثرة التحديثات
+                    alert("تنبيه من الخادم: تم تجاوز الحد الأقصى للطلبات المجانية من GitHub (60 طلب في الساعة). يرجى الانتظار بعض الوقت ثم المحاولة.");
+                } else {
+                    console.error("خطأ من الخادم: ", res.status);
                 }
-            } catch(err) { console.log("Waiting..."); }
+            } catch(err) { 
+                console.error("مشكلة في الاتصال بالإنترنت أو الخادم: ", err); 
+            }
         }
-
         function normalizeText(text) { return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim(); }
         function getSafeSubjectCode(name) { return name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "_").replace(/_+/g, "_"); }
         
