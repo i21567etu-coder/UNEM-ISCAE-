@@ -936,11 +936,16 @@ function openSmartViewer(fileObj) {
             document.body.removeChild(link);
         }
 
-        async function loadFiles(subjectName) {
+       async function loadFiles(subjectName) {
             document.getElementById('selected-subject-name').textContent = subjectName;
             document.getElementById('selected-subject-title-card').textContent = subjectName;
 
+            // 1. تنظيف اسم المادة من الحركات (é, à, ù)
             const cleanSubject = normalizeText(subjectName);
+            // 2. الفلتر الذكي: تحويل النص إلى حروف وأرقام فقط (مسح الأقواس، الشرطات، الرموز)
+            const sanitizedSubject = cleanSubject.replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ').trim();
+            // 3. استخراج الكلمات المفتاحية للمادة
+            const subjectKeywords = sanitizedSubject.split(' ');
             
             if (cleanSubject.includes("archive") && cleanSubject.match(/s[1-6]/)) {
                 isArchiveSpecialCase = true;
@@ -978,14 +983,14 @@ function openSmartViewer(fileObj) {
                 }
             }
 
-            const keywords = cleanSubject.split(' ').filter(w => w.length > 0);
-            
             const filteredGithub = githubFiles.filter(file => {
                 if(file.type !== "file") return false;
                 if(!isValidFile(file.name)) return false; 
                 
+                // تنظيف اسم الملف من الحركات
                 const fName = normalizeText(file.name);
-                const fNameSpaced = fName.replace(/[^a-z0-9]/g, ' '); 
+                // الفلتر الذكي: مسح كل الرموز والأقواس من اسم الملف المرفوع لتوحيد المقارنة
+                const sanitizedFile = fName.replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ').trim();
 
                 if (isArchiveSpecialCase) {
                     if (!fName.includes("archive")) return false;
@@ -1010,6 +1015,7 @@ function openSmartViewer(fileObj) {
                 
                 if (fName.startsWith("archive s")) return false;
 
+                // استثناء خاص بمادة C
                 if (cleanSubject === 'langage c') {
                     if (!fName.includes('langage')) return false;
                     if (!fName.match(/\bc\b/)) return false;
@@ -1017,9 +1023,10 @@ function openSmartViewer(fileObj) {
                     return true;
                 }
 
-                const subjectRoman = cleanSubject.match(/\b(i|ii|iii|iv|v|vi)\b/); 
+                // التأكد من الأرقام الرومانية (I, II, III...)
+                const subjectRoman = sanitizedSubject.match(/\b(i|ii|iii|iv|v|vi)\b/); 
                 const subjectHasRoman = subjectRoman ? subjectRoman[0] : null;
-                const fileRomanMatch = fNameSpaced.match(/\b(i|ii|iii|iv|v|vi)\b/);
+                const fileRomanMatch = sanitizedFile.match(/\b(i|ii|iii|iv|v|vi)\b/);
                 const fileHasRoman = fileRomanMatch ? fileRomanMatch[0] : null;
 
                 if (subjectHasRoman) {
@@ -1028,28 +1035,31 @@ function openSmartViewer(fileObj) {
                     if (fileHasRoman) return false; 
                 }
 
-                const stopWords =['de', 'du', 'des', 'la', 'le', 'les', 'et', 'en', 'a', 'au', 'aux', 'l'];
-                const distinctKeywords = keywords.filter(w => !stopWords.includes(w) && w.length > 2);
+                // تجاهل الكلمات الشائعة التي لا تفيد في البحث (تم إضافة المزيد)
+                const stopWords =['de', 'du', 'des', 'la', 'le', 'les', 'et', 'en', 'a', 'au', 'aux', 'l', 'd', 'pour', 'sur', 'dans'];
+                const distinctKeywords = subjectKeywords.filter(w => !stopWords.includes(w) && w.length > 1);
 
+                // البحث الذكي: يجب أن يحتوي الملف على كل الكلمات المفتاحية الأساسية للمادة بغض النظر عن ترتيبها أو الرموز
                 if (distinctKeywords.length > 0) {
                     return distinctKeywords.every(k => {
+                        // إذا كانت الكلمة قصيرة جداً (مثل C أو IG) نطلب أن تكون مستقلة
                         if (k.length <= 3) {
-                            return new RegExp(`\\b${k}\\b`).test(fNameSpaced);
+                            return new RegExp(`\\b${k}\\b`).test(sanitizedFile);
                         }
-                        return fName.includes(k);
+                        return sanitizedFile.includes(k);
                     });
                 }
 
-                return fName.includes(cleanSubject);
+                return sanitizedFile.includes(sanitizedSubject);
             });
 
             currentSubjectFiles =[...filteredGithub, ...supabaseFiles];
 
+            // عرض الملفات فوراً إذا كنا في أرشيف عام
             if(isArchiveSpecialCase) {
                 renderFilteredFiles();
             }
         }
-
         function openSmartViewer(fileObj) {
             const overlay = document.getElementById('pdf-viewer-overlay');
             const area = document.getElementById('pdf-render-area');
