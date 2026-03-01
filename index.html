@@ -815,37 +815,41 @@
             renderFilteredFiles();
         }
 function getFileCategory(filename) {
-            // تحويل الاسم لحروف صغيرة وإزالة الحركات لتسهيل البحث
+            // 1. تنظيف الاسم من الحركات وتوحيد الحروف لتسهيل البحث
             let lowerName = filename.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
             
-            // 1. الأولوية القصوى للتصنيف الصريح (إذا رفعته الإدارة باختيار النوع)
+            // 2. الأولوية القصوى للتصنيف الصريح من الإدارة
             if (lowerName.includes('[archive]') || lowerName.includes('- archive -') || lowerName.includes('_archive_')) return 'archive';
             if (lowerName.includes('[td]') || lowerName.includes('- td -') || lowerName.includes('_td_')) return 'td';
             if (lowerName.includes('[tp]') || lowerName.includes('- tp -') || lowerName.includes('_tp_')) return 'tp';
             if (lowerName.includes('[cours]') || lowerName.includes('- cours -') || lowerName.includes('_cours_')) return 'cours';
 
-            // 2. فحص كلمات الامتحانات الصريحة
+            // 3. فحص الأرشيف والامتحانات
             const archiveKeywords =['archive', 'examen', 'exam', 'sujet', 'rattrapage', 'devoir', 'session', 'test', 'partiel', 'epreuve'];
             if (archiveKeywords.some(k => lowerName.includes(k))) return 'archive';
-            
-            // فحص كلمة Controle فقط إذا كان بعدها رقم (مثل Control2) أو متبوعة بـ continu
             if (/control(e)?[ \-_]*\d+/.test(lowerName) || lowerName.includes('controle continu')) return 'archive';
-
-            // فحص الاختصارات الخاصة بالامتحانات مثل dev, dv 
             if (/(^|[^a-z0-9])(dev|dv|di)([^a-z0-9]|$)/.test(lowerName)) return 'archive';
 
-            // 3. فحص كلمات التطبيقات TP
-            const tpKeywords =['tp', 'pratique', 'atelier', 'lab', 'travaux pratiques'];
-            if (tpKeywords.some(k => new RegExp(`\\b${k}\\b`).test(lowerName))) return 'tp';
+            // 4. فحص التطبيقات (TP)
+            // يصطاد: tp مستقلة، أو tp1, tp2...
+            if (/(^|[^a-z])tp([^a-z]|$)/.test(lowerName) || /tp[ \-_]*\d+/.test(lowerName)) return 'tp';
+            if (['pratique', 'atelier', 'travaux pratiques'].some(k => lowerName.includes(k))) return 'tp';
 
-            // 4. فحص كلمات التمارين TD
-            const tdKeywords =['td', 'serie', 'exercice', 'exo', 'travaux diriges'];
-            if (tdKeywords.some(k => new RegExp(`\\b${k}\\b`).test(lowerName))) return 'td';
+            // 5. فحص التمارين (TD)
+            // يصطاد: td مستقلة، أو td1, td2...
+            if (/(^|[^a-z])td([^a-z]|$)/.test(lowerName) || /td[ \-_]*\d+/.test(lowerName)) return 'td';
+            
+            // يصطاد كلمات: السلسلة، التمارين، والتصحيح (حتى لو كانت ملتصقة بكلمات أخرى)
+            const tdKeywords =['serie', 'exercice', 'exo', 'travaux diriges', 'corrige', 'correction'];
+            if (tdKeywords.some(k => lowerName.includes(k))) return 'td';
+            
+            // يصطاد كلمة cas (دراسة حالة) بشرط أن تكون كلمة مستقلة
+            if (/\bcas\b/.test(lowerName)) return 'td';
 
-            // 5. فحص كلمة Cours 
-            if (lowerName.includes('cours')) return 'cours';
+            // 6. فحص الدروس (Cours)
+            if (lowerName.includes('cours') || lowerName.includes('chapitre') || lowerName.includes('resume')) return 'cours';
 
-            // 6. الخيار الافتراضي: إذا لم يجد أي شيء مما سبق، فهو درس (Cours)
+            // 7. الخيار الافتراضي
             return 'cours';
         }
 
