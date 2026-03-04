@@ -859,7 +859,16 @@
             setTimeout(() => { uploadForm.reset(); document.getElementById('upload-subject').innerHTML = '<option value="">اختر التخصص والفصل أولاً...</option>'; statusDiv.textContent = ''; submitBtn.disabled = false; }, 4000);
         });
     </script>
-
+<!-- تشغيل Service Worker لضمان اعتماده كتطبيق PWA آمن -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('sw.js')
+            .then(reg => console.log('تم تسجيل Service Worker بنجاح'))
+            .catch(err => console.error('خطأ في تسجيل Service Worker:', err));
+        });
+      }
+    </script>
     <!-- START PROTECTION CODE -->
     <script>
     (function() {

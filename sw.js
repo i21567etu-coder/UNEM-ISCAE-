@@ -1,37 +1,19 @@
-const CACHE_NAME = 'unem-iscae-v16';
-const assetsToCache = [
-  './',
-  './index.html',
-  './manifest.json',
-  './icon-192.png'
-];
+// ملف Service Worker بسيط لجعل الموقع تطبيقاً تقدمياً (PWA)
+const CACHE_NAME = 'unem-pwa-v1';
 
-self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(assetsToCache);
-    })
-  );
+self.addEventListener('install', (event) => {
+    console.log('[Service Worker] تم التثبيت بنجاح');
+    self.skipWaiting();
 });
 
-self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
-  );
+self.addEventListener('activate', (event) => {
+    console.log('[Service Worker] تم التفعيل');
+    event.waitUntil(clients.claim());
 });
 
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request).then(response => {
-      return response || fetch(event.request);
-    })
-  );
+self.addEventListener('fetch', (event) => {
+    // ترك الاتصال بالإنترنت يعمل بشكل طبيعي (لجلب الملفات من جيتهاب وقاعدة البيانات)
+    event.respondWith(fetch(event.request).catch(() => {
+        return new Response('عذراً، أنت غير متصل بالإنترنت.');
+    }));
 });
