@@ -86,7 +86,7 @@
         .main-header { background: linear-gradient(135deg, #0f5132 0%, #198754 100%); color: white; padding: 40px 20px 50px; border-radius: 0 0 40px 40px; text-align: center; box-shadow: 0 10px 30px rgba(25, 135, 84, 0.3); margin-bottom: -30px; position: relative; overflow: hidden; }
         body.dark-mode .main-header { background: linear-gradient(135deg, #064e3b 0%, #047857 100%); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         
-        /* إعادة الشعار الداخلي إلى شكله الأصلي كما طلبت */
+        /* الشعار الداخلي دائري بخلفية بيضاء */
         .logo-container { background: white; width: 90px; height: 90px; border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px rgba(255, 255, 255, 0.4); border: 4px solid rgba(255,255,255,0.2); overflow: hidden; position: relative; z-index: 2; }
         .logo-img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; padding: 2px;}
         
@@ -117,7 +117,7 @@
         .semester-card h3 { margin: 0 0 5px; font-weight: 800; font-size: 1.2rem; color: var(--text-primary); }
         .semester-card p { margin: 0; color: var(--text-secondary); font-size: 0.9rem; font-weight: 500;}
 
-        /* بطاقات التصنيفات */
+        /* بطاقات التصنيفات وألوانها المحدثة */
         .category-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .category-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 25px 15px; text-align: center; cursor: pointer; transition: var(--transition); }
         .category-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-md); }
@@ -126,7 +126,7 @@
         .category-card h3 { margin: 0 0 5px; font-weight: 800; font-size: 1.1rem; color: var(--text-primary); }
         .category-card p { margin: 0; color: var(--text-secondary); font-size: 0.85rem; }
 
-        .cat-cours i { color: #3b82f6; } .cat-td i { color: #f59e0b; } .cat-tp i { color: #14b8a6; } .cat-archive i { color: #ef4444; }
+        .cat-cours i { color: #3b82f6; } .cat-td-tp i { color: #059669; } .cat-devoir i { color: #f59e0b; } .cat-examen i { color: #ef4444; }
 
         .buttons-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
         .buttons-grid button { background: var(--card-bg); border: 1px solid var(--border-color); border-right: 5px solid var(--primary-color); padding: 16px; border-radius: 12px; text-align: right; font-weight: 700; font-size: 1rem; color: var(--text-primary); cursor: pointer; transition: var(--transition); box-shadow: var(--shadow-sm); font-family: inherit; }
@@ -187,8 +187,6 @@
 
         .main-footer { background: var(--primary-color); color: white; padding: 40px 20px; text-align: center; border-radius: 40px 40px 0 0; margin-top: 40px; position: relative; overflow: hidden; box-shadow: 0 -10px 25px rgba(0,0,0,0.1); }
         body.dark-mode .main-footer { background: #064e3b; }
-        .motivational-text { font-size: 1.4rem; font-weight: 800; color: var(--accent-color); margin-bottom: 30px; display: inline-block; text-shadow: 0 4px 15px rgba(0,0,0,0.4); animation: floatText 3s ease-in-out infinite; background: rgba(0,0,0,0.2); padding: 10px 25px; border-radius: 50px; }
-        @keyframes floatText { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
         
         .social-btn { display: inline-flex; align-items: center; justify-content: center; padding: 14px 25px; color: white; text-decoration: none; font-weight: 800; font-size: 1.05rem; border-radius: 50px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: var(--transition); min-width: 220px; margin: 5px; }
         .social-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.3); }
@@ -298,11 +296,10 @@
                 <button class="back-btn" onclick="goBackToSemesters()">الفصول</button>
                 <h2 id="current-semester-title" class="section-title">المواد</h2>
             </div>
-            <!-- الحاوية التي ستتولد فيها أزرار المواد تلقائياً -->
             <div id="dynamic-subjects-list" class="buttons-grid hidden"></div>
         </div>
 
-        <!-- 6. اختيار التصنيف -->
+        <!-- 6. اختيار التصنيف المحدث (Cours, TD et TP, Devoir, Examen) -->
         <div id="category-selection-container" class="section-box hidden">
             <div class="header-with-back">
                 <button class="back-btn" onclick="goBackToSubjects()">العودة</button>
@@ -310,10 +307,10 @@
             </div>
             <h3 style="text-align:center; color:var(--primary-color); margin-bottom:25px; font-weight: 800;"><span id="selected-subject-title-card"></span> 📂</h3>
             <div class="category-grid">
-                <div class="category-card cat-cours" onclick="selectCategory('cours')"><i class="fas fa-chalkboard-teacher"></i><h3>Cours</h3><p>الدروس</p></div>
-                <div class="category-card cat-td" onclick="selectCategory('td')"><i class="fas fa-list-ol"></i><h3>TD</h3><p>الأعمال الموجهة</p></div>
-                <div class="category-card cat-tp" onclick="selectCategory('tp')"><i class="fas fa-laptop-code"></i><h3>TP</h3><p>الأعمال التطبيقية</p></div>
-                <div class="category-card cat-archive" onclick="selectCategory('archive')"><i class="fas fa-archive"></i><h3>Archive</h3><p>أرشيف الامتحانات</p></div>
+                <div class="category-card cat-cours" onclick="selectCategory('cours')"><i class="fas fa-chalkboard-teacher"></i><h3>Cours</h3><p>الدروس والملخصات</p></div>
+                <div class="category-card cat-td-tp" onclick="selectCategory('td_tp')"><i class="fas fa-laptop-code"></i><h3>TD et TP</h3><p>أعمال موجهة وتطبيقية</p></div>
+                <div class="category-card cat-devoir" onclick="selectCategory('devoir')"><i class="fas fa-file-signature"></i><h3>Devoir</h3><p>الاختبارات والواجبات</p></div>
+                <div class="category-card cat-examen" onclick="selectCategory('examen')"><i class="fas fa-file-alt"></i><h3>Examen</h3><p>الامتحانات والأرشيف</p></div>
             </div>
         </div>
 
@@ -379,7 +376,7 @@
         </div>
     </div>
 
-    <!-- نافذة الرفع المتعدد -->
+    <!-- نافذة الرفع المتعدد المحدثة -->
     <div id="upload-modal-overlay" class="modal-overlay hidden">
         <div class="modal-content" style="padding: 25px;">
             <h2 style="margin-bottom: 20px;">رفع ملفات جديدة</h2>
@@ -388,7 +385,7 @@
                 <div class="form-group"><label>المستوى</label><select id="upload-level" required><option value="L1">L1</option><option value="L2">L2</option><option value="L3">L3</option></select></div>
                 <div class="form-group"><label>الفصل</label><select id="upload-semester" required onchange="updateUploadSubjects()"><option value="S1">S1</option><option value="S2">S2</option><option value="S3">S3</option><option value="S4">S4</option><option value="S5">S5</option><option value="S6">S6</option></select></div>
                 <div class="form-group"><label>المادة</label><select id="upload-subject" required><option value="">اختر التخصص والفصل أولاً...</option></select></div>
-                <div class="form-group"><label>نوع الملف</label><select id="upload-type" required><option value="Cours">Cours (درس/ملخص)</option><option value="TD">TD (تمارين)</option><option value="TP">TP (تطبيق)</option><option value="Archive">Archive (إمتحان)</option></select></div>
+                <div class="form-group"><label>نوع الملف</label><select id="upload-type" required><option value="Cours">Cours (درس/ملخص)</option><option value="TD_TP">TD et TP (أعمال موجهة/تطبيقية)</option><option value="Devoir">Devoir (اختبار/واجب)</option><option value="Examen">Examen (إمتحان/أرشيف)</option></select></div>
                 <div class="form-group"><label>اختر ملفات (PDF)</label><input type="file" id="upload-file" accept="application/pdf" multiple required></div>
                 <div id="upload-status" class="status-msg"></div>
                 <button type="submit" id="upload-submit-btn" class="btn-submit">بدء الرفع</button>
@@ -398,7 +395,6 @@
     </div>
 
     <footer class="main-footer">
-        <div class="motivational-text">✨ اتدورو تفاليدو إن شاء الله ✨</div>
         <div class="social-buttons-container">
             <a href="https://www.facebook.com/share/1Ce3zTEpvC/" target="_blank" class="social-btn fb-btn"><i class="fab fa-facebook"></i> صفحتنا على فيسبوك</a>
             <a href="https://chat.whatsapp.com/DBg3bcBQP2q8ERsoHkRY6N" target="_blank" class="social-btn wa-btn"><i class="fab fa-whatsapp"></i> مجتمعنا على واتساب</a>
@@ -428,9 +424,9 @@
         const subjectsData = {
             "BA": { "S1":["Principe de gestion", "Comptabilité financière I", "Statistique descriptive I", "Mathématique", "Anglais I", "Méthodologie du travail universitaire", "MS office", "Introduction à l’économie", "Introduction au droit", "Technique de communication", "Archive S1"], "S2":["Comptabilité financière II", "Micro-finance", "Economie d’entreprise", "Statistique descriptive II", "Mathématiques financières", "Anglais II", "Aptitudes en TIC", "Développement personnel", "Microéconomie", "Droit des affaires", "Archive S2"], "S3":["Technique Bancaire", "Système financier mauritanien", "Gestion Financière", "Comptabilité des Sociétés", "Anglais des affaires", "Logiciels Bancaire", "Marketing", "Droit administrative", "Macroéconomie", "Méthodes d’aide à la décision", "Archive S3"], "S4":["Comptabilité des Société assurance", "Assurances des biens", "Comptabilité Bancaire", "Comptabilité de Gestion", "Finance des marchés", "Analyse Financière", "Gestion de la trésorerie", "GRH", "Droit des assurances", "Commerce international", "Archive S4"], "S5":["Gestion de portefeuille", "Comptabilité bancaire II", "Gestion des risques", "Finance islamique", "Stratégie d’entreprise", "Gestion de patrimoine", "Fiscalité", "Politiques et choix d’investissement", "Droit bancaire et financier", "Rapport de stage de la 2ème année", "Archive S5"], "S6":["Méthodologie de recherche", "Séminaire sur l'entrepreneuriat", "Mémoire de fin d'études", "Archive S6"] },
             "FC": { "S1":["Principe de gestion", "Comptabilité financière I", "Statistique descriptive I", "Mathématique", "Anglais I", "Méthodologie du travail universitaire", "MS office", "Introduction à l’économie", "Introduction au droit", "Technique de communication", "Archive S1"], "S2":["Comptabilité financière II", "Comptabilité financière II", "Micro-finance", "Economie d’entreprise", "Statistique descriptive II", "Mathématiques financières", "Anglais II", "Aptitudes en TIC", "Développement personnel", "Microéconomie", "Droit des affaires", "Archive S2"], "S3":["Technique Bancaire", "Système financier mauritanien", "Gestion Financière", "Comptabilité des Sociétés", "Anglais des affaires", "Logiciels Comptables", "Marketing", "Droit administrative", "Macroéconomie", "Méthodes d’aide à la décision", "Archive S3"], "S4":["Analyse financière", "Comptabilité de gestion", "Comptabilité des Sociétés II", "Finance islamique", "Gestion de portefeuilles", "Finance des marchés", "Droit du travail", "GRH", "Fiscalité", "Les instruments de Crédits", "Archive S4"], "S5":["Gestion de Trésorerie", "Contrôle de Gestion", "Analyse financière Approfondie", "Méthodes d'évaluation de l'entreprise", "Marchés financiers", "Audit financier", "Normes Comptables Internationnales", "Choix d'investissement", "Droit bancaire et financier", "Rapport de stage de la 2ème année", "Archive S5"], "S6":["Méthodologie de recherche", "Séminaire sur l'entrepreneuriat", "Mémoire de fin d'études", "Archive S6"] },
-            "TCM": { "S1":["Initiation à la gestion commerciale", "Principe de gestion", "Comptabilité financière I", "Introduction à l’économie", "Anglais I", "Techniques de communication", "MS office", "Statistique descriptive I", "Mathématique", "Introduction au droit", "Archive S1"], "S2":["Gestion commerciale de la relation client", "Economie d'entreprise", "Comptabilité financière II", "Gestion financière", "Anglais II", "Aptitudes en TIC", "Développement personnel", "Microéconomie", "Macro-économie", "Statistique descriptive II", "Archive S2"], "S3":["Marketing I", "Commerce international I", "Business Intelligence", "Gestion financière II", "Anglais des affaires", "Gestion de production", "Logiciels de gestion commerciale", "Droit administratif", "Droit des affaires", "GRH", "Archive S3"], "S4":["Marketing II", "Commerce international II", "Commerce électronique", "Finance Internationale", "Techniques Douanières et Transit", "Analyse financière", "Stratégie d’entreprise", "Techniques de sondage", "Droit des assurances", "Recherche opérationnelle", "Archive S4"], "S5":["Communication Marketing et commerciale", "Planification Marketing", "Techniques de Négociations Commerciales", "Fiscalité", "E-Marketing", "Finance des Marchés", "Etude des marchés", "Logistique du commerce international", "Management des projets", "Rapport de stage de la 2ème année", "Archive S5"], "S6":["Méthodologie de recherche", "Séminaire sur l'entrepreneuriat", "Mémoire de fin d'études", "Archive S6"] },
+            "TCM": { "S1":["Initiation à la gestion commerciale", "Principe de gestion", "Comptabilité financière I", "Introduction à l’économie", "Anglais I", "Techniques de communication", "MS office", "Statistique descriptive I", "Mathématique", "Introduction au droit", "Archive S1"], "S2":["Gestion commerciale de la relation client", "Economie d'entreprise", "Comptabilité financière II", "Gestion financière", "Anglais II", "Aptitudes en TIC", "Développement personnel", "Microéconomie", "Macro-économie", "Statistique descriptive II", "Archive S2"], "S3":["Marketing I", "Commerce international I", "Business Intelligence", "Gestion financière II", "Anglais des affaires", "Gestion de production", "Logiciels de gestion commerciale", "Droit administratif", "Droit des affaires", "GRH", "Archive S3"], "S4":["Marketing II", "Commerce international II", "Commerce électronique", "Finance Internationale", "Techniques Douanières et Transit", "Analyse financière", "Stratégie d’entreprise", "Techniques de sondage", "Droit des assurances", "Recherche opérationnelle", "Archive S4"], "S5":["Communication Marketing et commerciale", "Planification Marketing", "Techniques de Négociations Commerciales", "Fiscalité", "E-Marketing", "Finance des Marchés", "Etude des marchés", "Logistique du commerce international", "Management des projects", "Rapport de stage de la 2ème année", "Archive S5"], "S6":["Méthodologie de recherche", "Séminaire sur l'entrepreneuriat", "Mémoire de fin d'études", "Archive S6"] },
             "GRH": { "S1":["Initiation à la gestion des RH", "Principes de gestion", "Comptabilité financière I", "Introduction à l’économie", "Anglais I", "MS Office", "Techniques de Communication", "Statistique descriptive I", "Mathématiques", "Introduction au droit", "Archive S1"], "S2":["Evaluation des compétences", "Gestion Administrative des RH I", "Comptabilité financière II", "Gestion financière I", "Anglais II", "Aptitudes en TIC", "Développement personnel", "Rédaction administrative I", "Droit de travail I", "Statistiques descriptives II", "Archive S2"], "S3":["Gestion de la paie", "Recrutement", "Sécurité sociale I", "Gestion financière II", "Plan et ingénierie de formation", "Logiciels paie", "Anglais des affaires", "Rédaction administrative II", "Droit de travail II", "Droit des obligations", "Archive S3"], "S4":["GPEC", "Sécurité sociale II", "Stratégie d'entreprise", "Macroéconomie", "Microéconomie", "Analyse financière", "Communication interne", "Système d'information RH", "Gestion des conflits et négociations", "Droit Administratif", "Archive S4"], "S5":["Sources de motivation du personnel", "Politique de rémunération", "Audit des Ressources Humaines", "Droit pénal général", "Passation des marchés", "Sociologie des organisations", "Rapport de stage de la 2ème année", "Outils pilotage RH", "Management des projets", "Gestion des connaissances", "Archive S5"], "S6":["Méthodologie de recherche", "Séminaire sur l'entrepreneuriat", "Mémoire de fin d'études", "Archive S6"] },
-            "SAE": { "S1":["Introduction à l’économie", "Principe de gestion", "Calcul intégral I", "Calcul matricielle I", "Probabilité I", "Statistique descriptive", "Anglais technique", "Méthodologie de travail universitaire", "Introduction au droit", "MS office I", "Archive S1"], "S2":["Macro-économie", "Microéconomie", "Calcul intégral II", "Calcul matricielle II", "Probabilité II", "Statistique descriptive II", "Anglais technique II", "MS office II", "Comptabilité générale", "Technique de communication", "Archive S2"], "S3":["Statistique inferential", "Technique de sondage", "Programmation linéaire", "Comptabilité nationale", "Microeconomie 2", "Macro-économie 2", "Marketing", "Mangement", "Monnaies et crédit", "Logiciel (spss ou R)", "Archive S3"], "S4":["Finance public", "GRH", "Econometrie", "Commerce extérieur", "Optimisation", "Analyse des données", "Logiciel statistique", "Gestion des projects", "Finance des marchés", "Économie Mauritanienne", "Archive S4"], "S5":["Analyse Démographique", "Analyse des données II", "Chaîne de Markov", "Econométrie II", "Economie Monétaire", "Modélisation Macroéconomique", "Séries temporelles", "Sujet", "Théorie de croissance", "Théorie de décision", "Archive S5"], "S6":["Méthodologie de recherche", "Séminaire sur l'entrepreneuriat", "Mémoire de fin d'études", "Archive S6"] },
+            "SAE": { "S1":["Introduction à l’économie", "Principe de gestion", "Calcul intégral I", "Calcul matricielle I", "Probabilité I", "Statistique descriptive", "Anglais technique", "Méthodologie de travail universitaire", "Introduction au droit", "MS office I", "Archive S1"], "S2":["Macro-économie", "Microéconomie", "Calcul intégral II", "Calcul matricielle II", "Probabilité II", "Statistique descriptive II", "Anglais technique II", "MS office II", "Comptabilité générale", "Technique de communication", "Archive S2"], "S3":["Statistique inferential", "Technique de sondage", "Programmation linéaire", "Comptabilité nationale", "Microeconomie 2", "Macro-économie 2", "Marketing", "Mangement", "Monnaies et crédit", "Logiciel (spss ou R)", "Archive S3"], "S4":["Finance public", "GRH", "Econometrie", "Commerce extérieur", "Optimisation", "Analyse des données", "Logiciel statistique", "Gestion des projets", "Finance des marchés", "Économie Mauritanienne", "Archive S4"], "S5":["Analyse Démographique", "Analyse des données II", "Chaîne de Markov", "Econométrie II", "Economie Monétaire", "Modélisation Macroéconomique", "Séries temporelles", "Sujet", "Théorie de croissance", "Théorie de décision", "Archive S5"], "S6":["Méthodologie de recherche", "Séminaire sur l'entrepreneuriat", "Mémoire de fin d'études", "Archive S6"] },
             "IG": { "S1":["Introduction à l’économie", "Introduction au droit", "Comptabilité financière", "Algorithmiques", "Architecture des ordinateurs", "MS office", "Anglais technique", "Méthodologie du travail universitaire", "Logique mathématique", "Analyse I", "Archive S1"], "S2":["Comptabilité financière II", "principe de gestion", "Langage C", "Système d'exploitation", "Programation Web", "Python", "Anglais technique", "Technique de communication", "Algèbre linéaire", "Analyse II", "Archive S2"], "S3":["Comptabilité analytique I", "Stratégie d’entreprise", "Java I", "PHP-My SQL", "Conception des bases de données I", "Réseaux informatiques", "Modélisation UML MERISE", "Calcul multi-variables", "Logiciel de Calcul Scientifique", "probabilités et Statistiques", "Archive S3"], "S4":["Comptabilité analytique II", "Gestion des ressources humaines", "Java II", "C#", "PHP Frameworks", "Gestion de projet informatique", "Théories des Graphes", "Bases de données", "Réseaux informatique II", "Compilations", "Archive S4"], "S5":["Contrôle de gestion", "Gestion financière", "Technologie DotNet", "JEE Framework", "Programmation Mobile", "Intelligence artificielle", "Bases des données avancées", "Administration des Systèmes", "Système d'Informations Géographique", "Rapport de stage de la 2ème année", "Archive S5"], "S6":["Méthodologie de recherche", "Séminaire sur l'entrepreneuriat", "Mémoire de fin d'études", "Archive S6"] }
         };
 
@@ -584,21 +580,49 @@
             return true;
         }
 
+        // خوارزمية فرز الملفات المحدثة للتقسيم الجديد
         function getFileCategory(filename) {
+            // 1. الأولوية لملفات الإدارة المرفوعة عبر المنصة
+            if (filename.startsWith('Cours_')) return 'cours';
+            if (filename.startsWith('TD_TP_')) return 'td_tp';
+            if (filename.startsWith('Devoir_')) return 'devoir';
+            if (filename.startsWith('Examen_') || filename.startsWith('Archive_')) return 'examen';
+
             let lowerName = filename.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-            if (lowerName.includes('[archive]') || lowerName.includes('- archive -') || lowerName.includes('_archive_')) return 'archive';
-            if (lowerName.includes('[td]') || lowerName.includes('- td -') || lowerName.includes('_td_')) return 'td';
-            if (lowerName.includes('[tp]') || lowerName.includes('- tp -') || lowerName.includes('_tp_')) return 'tp';
+
+            // 2. العلامات المباشرة بين أقواس (إضافة exeman)
+            if (lowerName.includes('[archive]') || lowerName.includes('- archive -') || lowerName.includes('_archive_') || lowerName.includes('[examen]') || lowerName.includes('[exemen]') || lowerName.includes('[exeman]')) return 'examen';
+            if (lowerName.includes('[td]') || lowerName.includes('- td -') || lowerName.includes('_td_') || lowerName.includes('[tp]') || lowerName.includes('- tp -') || lowerName.includes('_tp_')) return 'td_tp';
+            if (lowerName.includes('[devoir]') || lowerName.includes('- devoir -') || lowerName.includes('_devoir_') || lowerName.includes('[test]')) return 'devoir';
             if (lowerName.includes('[cours]') || lowerName.includes('- cours -') || lowerName.includes('_cours_')) return 'cours';
-            const archiveKeywords =['archive', 'examen', 'exam', 'sujet', 'rattrapage', 'devoir', 'session', 'test', 'partiel', 'epreuve'];
-            if (archiveKeywords.some(k => lowerName.includes(k))) return 'archive';
-            if (/control(e)?[ \-_]*\d+/.test(lowerName) || lowerName.includes('controle continu')) return 'archive';
-            if (/(^|[^a-z0-9])(dev|dv|di)([^a-z0-9]|$)/.test(lowerName)) return 'archive';
-            if (/(^|[^a-z])tp([^a-z]|$)/.test(lowerName) || /tp[ \-_]*\d+/.test(lowerName) || ['pratique', 'atelier', 'travaux pratiques'].some(k => lowerName.includes(k))) return 'tp';
-            if (/(^|[^a-z])td([^a-z]|$)/.test(lowerName) || /td[ \-_]*\d+/.test(lowerName)) return 'td';
-            if (['serie', 'exercice', 'exo', 'travaux diriges', 'corrige', 'correction'].some(k => lowerName.includes(k))) return 'td';
-            if (/\bcas\b/.test(lowerName)) return 'td';
-            if (lowerName.includes('cours') || lowerName.includes('chapitre') || lowerName.includes('resume')) return 'cours';
+
+            // ----------------------------------------------------
+            // 3. قواعد استثنائية (لضمان دقة الكلمات المركبة حسب طلبك)
+            // ----------------------------------------------------
+            // تم إضافة exeman هنا أيضاً لضمان دقة التصحيحات
+            if (lowerName.includes('correction examen') || lowerName.includes('correction exemen') || lowerName.includes('correction exeman') || lowerName.includes('corrige examen') || lowerName.includes('corrige exemen') || lowerName.includes('corrige exeman') || lowerName.includes('correction de l\'examen')) return 'examen';
+            if (lowerName.includes('correction dv') || lowerName.includes('corrige dv') || lowerName.includes('correction devoir') || lowerName.includes('corrige devoir')) return 'devoir';
+
+            // 4. الاختبارات والواجبات (نُقلت قبل الامتحانات لكي تتغلب كلمة devoir على rattrapage)
+            const devoirKeywords = ['devoir', 'test'];
+            if (devoirKeywords.some(k => lowerName.includes(k))) return 'devoir';
+            if (/control(e)?[ \-_]*\d+/.test(lowerName) || lowerName.includes('controle continu')) return 'devoir';
+            if (/(^|[^a-z0-9])(dev|dv|di)([^a-z0-9]|$)/.test(lowerName)) return 'devoir';
+
+            // 5. الامتحانات والأرشيف (تم إضافة exeman للكلمات الدالة)
+            const examenKeywords =['archive', 'examen', 'exemen', 'exeman', 'exam', 'sujet', 'rattrapage', 'session', 'partiel', 'epreuve'];
+            if (examenKeywords.some(k => lowerName.includes(k))) return 'examen';
+
+            // 6. الأعمال الموجهة والتطبيقية
+            if (/(^|[^a-z])tp([^a-z]|$)/.test(lowerName) || /tp[ \-_]*\d+/.test(lowerName) ||['pratique', 'atelier', 'travaux pratiques'].some(k => lowerName.includes(k))) return 'td_tp';
+            if (/(^|[^a-z])td([^a-z]|$)/.test(lowerName) || /td[ \-_]*\d+/.test(lowerName)) return 'td_tp';
+            if (['serie', 'exercice', 'exo', 'travaux diriges', 'corrige', 'correction'].some(k => lowerName.includes(k))) return 'td_tp';
+            if (/\bcas\b/.test(lowerName)) return 'td_tp';
+
+            // 7. الدروس والملخصات
+            if (lowerName.includes('cours') || lowerName.includes('chapitre') || lowerName.includes('resume') || lowerName.includes('partie')) return 'cours';
+
+            // الافتراضي
             return 'cours';
         }
 
@@ -859,7 +883,8 @@
             setTimeout(() => { uploadForm.reset(); document.getElementById('upload-subject').innerHTML = '<option value="">اختر التخصص والفصل أولاً...</option>'; statusDiv.textContent = ''; submitBtn.disabled = false; }, 4000);
         });
     </script>
-<!-- تشغيل Service Worker لضمان اعتماده كتطبيق PWA آمن -->
+
+    <!-- تشغيل Service Worker لضمان اعتماده كتطبيق PWA آمن -->
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
@@ -869,6 +894,7 @@
         });
       }
     </script>
+
     <!-- START PROTECTION CODE -->
     <script>
     (function() {
