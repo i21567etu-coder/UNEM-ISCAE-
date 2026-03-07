@@ -784,7 +784,27 @@
                 const distinctKeywords = subjectKeywords.filter(w => !stopWords.includes(w) && w.length > 1);
 
                 if (distinctKeywords.length > 0) {
-                    return distinctKeywords.every(k => k.length <= 3 ? new RegExp(`\\b${k}\\b`).test(sanitizedFile) : sanitizedFile.includes(k));
+                    // 1. معالجة المفرد والجمع (حذف حرف s للبحث المرن)
+                    const baseKeywords = distinctKeywords.map(w => w.endsWith('s') ? w.slice(0, -1) : w);
+
+                    // 2. يجب أن يحتوي الملف على كل الكلمات الأساسية
+                    const hasAllWords = baseKeywords.every(k => sanitizedFile.includes(k));
+                    if (!hasAllWords) return false;
+
+                    // 3. منع التشتت (لحل مشكلة الصورة الأولى)
+                    // يجب أن تكون الكلمات قريبة من بعضها (بحد أقصى 35 حرف)
+                    const distanceRegex = new RegExp(baseKeywords.join('.{0,35}'));
+                    if (!distanceRegex.test(sanitizedFile)) return false;
+
+                    // 4. منع التداخل (لحل مشكلة الصورة الثانية الخاصة بـ assurance وغيرها)
+                    // كلمات تميز مواد أخرى، إذا وُجدت في الملف والمادة الحالية لا تحتويها، يتم الرفض
+                    const collisionBlockers =['assurance', 'approfondie', 'bancaire', 'international', 'internationale', 'islamique', 'portefeuille', 'tresorerie', 'patrimoine'];
+                    for (let word of collisionBlockers) {
+                        if (sanitizedFile.includes(word) && !sanitizedSubject.includes(word)) {
+                            return false;
+                        }
+                    }
+                    return true;
                 }
                 return sanitizedFile.includes(sanitizedSubject);
             });
