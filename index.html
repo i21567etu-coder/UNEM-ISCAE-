@@ -356,10 +356,27 @@
 
     <!-- عن الاتحاد -->
     <div id="union-modal-overlay" class="modal-overlay hidden">
-        <div class="modal-content">
-            <h2>عن الاتحاد</h2>
-            <p style="text-align: justify; text-justify: inter-word;">في الثالث عشر مايو عام ألفين ( 13/05/2000 ) كانت الحركة الطلابية الوطنية على موعد مع مرحلة جديدة في تاريخها ونقطة تحول محورية، حيث انطلق الاتحاد الوطني لطلبة موريتانيا، زاده عزيمة لا تستكين وشعاره: وعي، وحدة، بناء، مشيدا صرح النضال السديد ورافعا لواء القضية الطلابية بعزم لا يستكين، نابذا عهد الخمول والاستكانة وراء ظهره، فكان بحق صوت الطالب المعبر عن تطلعاته بصدق والمنافح عنه بقوة والمناضل المؤتمن على قضيته، فرفع الظلم ورد الحق وصان المكتسب.</p>
-            <button onclick="closeUnionModal()" class="btn-submit" style="margin-top: 20px;">إغلاق النافذة</button>
+        <div class="modal-content" style="text-align: right;">
+            <h2 style="text-align: center;">عن الاتحاد</h2>
+            
+            <p style="text-align: center; font-weight: 800; color: var(--primary-color); margin-bottom: 20px; font-size: 1.1rem;">يرحب بالطلبة الجدد ويتمنى لهم مسارا جامعيا موفقا وعاما مليئا بالإنجاز والتميز.</p>
+            
+            <h3 style="background: #e85d22; color: white; padding: 5px 15px; border-radius: 5px; display: inline-block; margin-bottom: 10px;">من نحن ؟</h3>
+            <p style="text-align: justify; margin-bottom: 20px;">أكبر نقابة طلابية وطنية، تأسست في 13 مايو سنة 2000م، تنشط في الوسط الجامعي وتسعى إلى الدفاع عن الحقوق المادية والمعنوية للطلاب.</p>
+            
+            <h3 style="background: #e85d22; color: white; padding: 5px 15px; border-radius: 5px; display: inline-block; margin-bottom: 10px;">رؤيتنا:</h3>
+            <p style="text-align: justify; margin-bottom: 20px;">تقوم رؤية الاتحاد الوطني على عدة أسس من أهمها: تطوير النضال الطلابي لتوفير جميع متطلبات المسار الجامعي الناجح للطلاب الموريتانيين في الداخل والخارج، والإسهام في تكوينهم وتأطيرهم لبناء وعي معرفي حول القضايا والإشكالات الوطنية والمساهمة الفعالة في بناء الوطن ورفع التحديات.</p>
+            
+            <h3 style="background: #e85d22; color: white; padding: 5px 15px; border-radius: 5px; display: inline-block; margin-bottom: 10px;">من أهدافنا:</h3>
+            <ul style="list-style: none; padding: 0; margin: 0; text-align: right;">
+                <li style="margin-bottom: 10px;"><i class="fas fa-square" style="color: #e85d22; margin-left: 8px; font-size: 0.7rem;"></i> النضال من أجل تحسين أوضاع الطالب الموريتاني</li>
+                <li style="margin-bottom: 10px;"><i class="fas fa-square" style="color: #e85d22; margin-left: 8px; font-size: 0.7rem;"></i> الدفاع عن الحقوق المادية والمعنوية للطلاب وصيانة مكتسباتهم</li>
+                <li style="margin-bottom: 10px;"><i class="fas fa-square" style="color: #e85d22; margin-left: 8px; font-size: 0.7rem;"></i> إرساء منظومة جامعية متطورة تنتج المعرفة وتواكب التطور العلمي والابتكار</li>
+                <li style="margin-bottom: 10px;"><i class="fas fa-square" style="color: #e85d22; margin-left: 8px; font-size: 0.7rem;"></i> دمقرطة المجال الجامعي وتعزيز الوحدة الوطنية</li>
+                <li style="margin-bottom: 10px;"><i class="fas fa-square" style="color: #e85d22; margin-left: 8px; font-size: 0.7rem;"></i> تعزيز الوعي الطلابي حول مختلف القضايا الوطنية</li>
+            </ul>
+            
+            <button onclick="closeUnionModal()" class="btn-submit" style="margin-top: 25px;">إغلاق النافذة</button>
         </div>
     </div>
 
@@ -604,7 +621,7 @@
             if (lowerName.includes('correction dv') || lowerName.includes('corrige dv') || lowerName.includes('correction devoir') || lowerName.includes('corrige devoir')) return 'devoir';
 
             // 4. الاختبارات والواجبات (نُقلت قبل الامتحانات لكي تتغلب كلمة devoir على rattrapage)
-            const devoirKeywords = ['devoir', 'test'];
+            const devoirKeywords =['devoir', 'test'];
             if (devoirKeywords.some(k => lowerName.includes(k))) return 'devoir';
             if (/control(e)?[ \-_]*\d+/.test(lowerName) || lowerName.includes('controle continu')) return 'devoir';
             if (/(^|[^a-z0-9])(dev|dv|di)([^a-z0-9]|$)/.test(lowerName)) return 'devoir';
