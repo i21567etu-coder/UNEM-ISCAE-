@@ -1,5 +1,5 @@
 // ملف Service Worker بسيط لجعل الموقع تطبيقاً تقدمياً (PWA)
-const CACHE_NAME = 'unem-pwa-v3';
+const CACHE_NAME = 'unem-pwa-v4';
 
 self.addEventListener('install', (event) => {
     console.log('[Service Worker] تم التثبيت بنجاح');
