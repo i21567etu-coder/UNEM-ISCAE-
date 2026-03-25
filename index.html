@@ -920,16 +920,19 @@
         });
     </script>
 
-    <!-- نظام Service Worker مع تحديث PWA الذكي -->
+ <!-- نظام Service Worker مع تحديث PWA الذكي (النسخة المصححة) -->
     <script>
       let newWorker;
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('sw.js?v=' + new Date().getTime()).then(reg => {
+          // تسجيل الـ Service Worker بالطريقة الصحيحة بدون وقت عشوائي لمنع التحديث الوهمي المستمر
+          navigator.serviceWorker.register('sw.js').then(reg => {
             console.log('SW Registered');
+            
             reg.addEventListener('updatefound', () => {
               newWorker = reg.installing;
               newWorker.addEventListener('statechange', () => {
+                // يظهر الإشعار فقط إذا كان هناك نسخة قديمة تعمل وتم جلب نسخة جديدة (بتغيير رقم الإصدار في sw.js)
                 if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                   document.getElementById('update-toast').classList.add('show');
                 }
@@ -945,8 +948,18 @@
           });
         });
 
+        // عند الضغط على زر التحديث
         document.getElementById('update-btn').addEventListener('click', () => {
-          if (newWorker) newWorker.postMessage({ action: 'skipWaiting' });
+          // 1. إخفاء الإشعار فوراً لكي لا يبقى معلقاً
+          document.getElementById('update-toast').classList.remove('show');
+          
+          // 2. تفعيل التحديث وإعادة تحميل الصفحة
+          if (newWorker) {
+            newWorker.postMessage({ action: 'skipWaiting' });
+          } else {
+            // كإجراء احتياطي في حال فشل الـ worker
+            window.location.reload();
+          }
         });
       }
     </script>
