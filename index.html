@@ -18,7 +18,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-        /* ==================== MODERN STYLE.CSS (With Dark Mode) ==================== */
+        /* ==================== MODERN STYLE.CSS (With Dark Mode & RTL/LTR Support) ==================== */
         :root {
             --primary-color: #0f5132;    
             --secondary-color: #198754;  
@@ -36,7 +36,6 @@
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* --- متغيرات الوضع الليلي (Dark Mode) --- */
         body.dark-mode {
             --primary-color: #10b981;    
             --secondary-color: #059669;  
@@ -74,19 +73,21 @@
             display: inline-block; margin-top: 3px;
         }
         
-        .theme-btn { 
+        /* أزرار الثيم واللغة */
+        .theme-btn, .lang-btn { 
             background: rgba(255,255,255,0.2); border: none; color: white; 
             border-radius: 50px; width: 38px; height: 38px; 
             display: flex; align-items: center; justify-content: center; 
-            font-size: 1.1rem; cursor: pointer; transition: var(--transition); 
-            position: absolute; left: 15px; top: 50%; transform: translateY(-50%); 
+            font-size: 1.1rem; font-weight: 800; cursor: pointer; transition: var(--transition); 
+            position: absolute; top: 50%; transform: translateY(-50%); 
         }
-        .theme-btn:hover { background: rgba(255,255,255,0.3); transform: translateY(-50%) rotate(15deg); }
+        .theme-btn { inset-inline-start: 15px; }
+        .lang-btn { inset-inline-end: 15px; font-size: 0.95rem; }
+        .theme-btn:hover, .lang-btn:hover { background: rgba(255,255,255,0.3); transform: translateY(-50%) scale(1.1); }
 
         .main-header { background: linear-gradient(135deg, #0f5132 0%, #198754 100%); color: white; padding: 40px 20px 50px; border-radius: 0 0 40px 40px; text-align: center; box-shadow: 0 10px 30px rgba(25, 135, 84, 0.3); margin-bottom: -30px; position: relative; overflow: hidden; }
         body.dark-mode .main-header { background: linear-gradient(135deg, #064e3b 0%, #047857 100%); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         
-        /* الشعار الداخلي دائري بخلفية بيضاء */
         .logo-container { background: white; width: 90px; height: 90px; border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px rgba(255, 255, 255, 0.4); border: 4px solid rgba(255,255,255,0.2); overflow: hidden; position: relative; z-index: 2; }
         .logo-img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; padding: 2px;}
         
@@ -101,7 +102,7 @@
         .search-box { background: var(--card-bg); border-radius: 50px; padding: 15px 25px; display: flex; align-items: center; box-shadow: var(--shadow-md); margin-bottom: 25px; border: 2px solid var(--border-color); transition: var(--transition); }
         .search-box:focus-within { border-color: var(--secondary-color); box-shadow: var(--shadow-lg); }
         .search-box input { flex: 1; border: none; outline: none; background: transparent; font-size: 1.05rem; font-family: inherit; color: var(--text-primary); }
-        .search-box i { font-size: 1.2rem; color: var(--text-secondary); }
+        .search-box i { font-size: 1.2rem; color: var(--text-secondary); margin-inline-start: 10px;}
 
         .semesters-grid { display: grid; grid-template-columns: 1fr; gap: 18px; }
         @media (min-width: 600px) { .semesters-grid { grid-template-columns: 1fr 1fr; } }
@@ -117,7 +118,6 @@
         .semester-card h3 { margin: 0 0 5px; font-weight: 800; font-size: 1.2rem; color: var(--text-primary); }
         .semester-card p { margin: 0; color: var(--text-secondary); font-size: 0.9rem; font-weight: 500;}
 
-        /* بطاقات التصنيفات وألوانها المحدثة */
         .category-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .category-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 25px 15px; text-align: center; cursor: pointer; transition: var(--transition); }
         .category-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-md); }
@@ -129,13 +129,15 @@
         .cat-cours i { color: #3b82f6; } .cat-td-tp i { color: #059669; } .cat-devoir i { color: #f59e0b; } .cat-examen i { color: #ef4444; }
 
         .buttons-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
-        .buttons-grid button { background: var(--card-bg); border: 1px solid var(--border-color); border-right: 5px solid var(--primary-color); padding: 16px; border-radius: 12px; text-align: right; font-weight: 700; font-size: 1rem; color: var(--text-primary); cursor: pointer; transition: var(--transition); box-shadow: var(--shadow-sm); font-family: inherit; }
-        .buttons-grid button:hover { transform: translateX(-5px); box-shadow: var(--shadow-md); border-color: var(--secondary-color); }
-        
+        .buttons-grid button { background: var(--card-bg); border: 1px solid var(--border-color); border-inline-start: 5px solid var(--primary-color); padding: 16px; border-radius: 12px; text-align: start; font-weight: 700; font-size: 1rem; color: var(--text-primary); cursor: pointer; transition: var(--transition); box-shadow: var(--shadow-sm); font-family: inherit; }
+        .buttons-grid button:hover { transform: translateX(calc(-5px * var(--dir-sign, 1))); box-shadow: var(--shadow-md); border-color: var(--secondary-color); }
+        html[dir="ltr"] .buttons-grid button:hover { transform: translateX(5px); }
+
         .header-with-back { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
         .back-btn { background: rgba(15, 81, 50, 0.08); border: none; padding: 10px 20px; border-radius: 50px; font-weight: 800; cursor: pointer; color: var(--primary-color); transition: var(--transition); display: flex; align-items: center; gap: 8px; font-family: inherit; }
         body.dark-mode .back-btn { background: rgba(16, 185, 129, 0.15); }
         .back-btn::before { content: '\f0da'; font-family: 'Font Awesome 6 Free'; font-weight: 900; } 
+        html[dir="ltr"] .back-btn::before { content: '\f0d9'; }
         .back-btn:hover { background: var(--primary-color); color: white; }
         .hidden { display: none !important; }
 
@@ -143,7 +145,7 @@
         #pdf-list li { background: var(--card-bg); padding: 12px 15px; margin-bottom: 12px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); transition: var(--transition); }
         #pdf-list li:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--secondary-color); }
         
-        .file-info { display: flex; align-items: center; gap: 15px; cursor: pointer; flex-grow: 1; padding: 5px; }
+        .file-info { display: flex; align-items: center; gap: 15px; cursor: pointer; flex-grow: 1; padding: 5px; text-align: start; }
         .file-info i.fa-file-pdf { font-size: 1.5rem; color: #ef4444; background: rgba(239, 68, 68, 0.1); padding: 10px; border-radius: 12px; }
         .file-info span { font-weight: 600; color: var(--text-primary); word-break: break-word; font-size: 1rem; }
 
@@ -153,10 +155,7 @@
         .action-btn.fav-active { color: #f59e0b; background: rgba(245, 158, 11, 0.1); border-color: #f59e0b; }
         .action-btn.fav-active:hover { background: #f59e0b; color: white; }
 
-        /* النوافذ المنبثقة */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; display: flex; flex-direction: column; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); justify-content: center; align-items: center; padding: 20px; }
-        
-        /* جعل المتصفح الداخلي ملء الشاشة بالكامل */
         #web-viewer-overlay { background: #0f172a; padding: 0 !important; }
         #pdf-viewer-overlay { background: rgba(15, 23, 42, 0.95); justify-content: flex-start; padding: 0; }
         
@@ -171,7 +170,7 @@
         .web-viewer-container iframe { width: 100%; height: 100%; border: none; }
         .spinner { border: 4px solid rgba(255,255,255,0.2); border-top: 4px solid var(--accent-color); border-radius: 50%; width: 45px; height: 45px; animation: spin 1s linear infinite; margin: 30px auto; }
         
-        .form-group { margin-bottom: 18px; text-align: right; }
+        .form-group { margin-bottom: 18px; text-align: start; }
         .form-group label { display: block; margin-bottom: 8px; font-weight: 800; color: var(--text-primary); font-size: 0.95rem; }
         .form-group select, .form-group input { width: 100%; padding: 14px; border: 2px solid var(--border-color); border-radius: 12px; font-family: inherit; font-size: 1rem; color: var(--text-primary); transition: var(--transition); background: var(--bg-color); }
         .form-group select:focus, .form-group input:focus { border-color: var(--secondary-color); outline: none; box-shadow: 0 0 0 4px rgba(25, 135, 84, 0.1); }
@@ -193,60 +192,79 @@
         .fb-btn { background: linear-gradient(135deg, #1877F2, #0c56b9); } 
         .wa-btn { background: linear-gradient(135deg, #25D366, #1da851); }
         .copyright { margin-top: 25px; font-size: 0.9rem; color: rgba(255,255,255,0.6); font-weight: 500;}
+
+        /* --- تصميم إشعار التحديث الجديد --- */
+        #update-toast {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(150px);
+            background: var(--card-bg); border: 2px solid var(--accent-color);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3); padding: 12px 20px;
+            border-radius: 50px; display: flex; align-items: center; gap: 15px;
+            z-index: 10000; transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s;
+            opacity: 0; width: 90%; max-width: 400px; justify-content: space-between;
+        }
+        #update-toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        #update-toast span { font-weight: 800; color: var(--text-primary); font-size: 0.95rem; }
+        #update-toast button {
+            background: var(--primary-color); color: white; border: none;
+            padding: 8px 18px; border-radius: 20px; font-weight: 800;
+            cursor: pointer; transition: var(--transition); font-family: inherit;
+        }
+        #update-toast button:hover { background: var(--secondary-color); transform: scale(1.05); }
+
     </style>
 </head>
 <body>
 
-    <div class="top-slogan">الوطني يد تبني و أخرى تناضل</div>
+    <div class="top-slogan" data-i18n="slogan">الوطني يد تبني و أخرى تناضل</div>
 
     <nav class="top-nav">
-        <div>الاتحاد الوطني لطلبة موريتانيا - <span class="unem-badge">UNEM/ISCAE</span></div>
+        <div><span data-i18n="nav_title">الاتحاد الوطني لطلبة موريتانيا - </span><span class="unem-badge">UNEM/ISCAE</span></div>
         <button id="theme-toggle" class="theme-btn"><i class="fas fa-moon"></i></button>
+        <button id="lang-toggle" class="lang-btn">FR</button>
     </nav>
 
     <header class="main-header">
         <div class="logo-container">
             <img src="logo.png" alt="شعار الاتحاد" class="logo-img">
         </div>
-        <h1>UNEM ISCAE</h1>
-        <p>منصة الاتحاد الوطني لطلبة موريتانيا</p>
+        <h1 data-i18n="header_title">UNEM ISCAE</h1>
+        <p data-i18n="header_subtitle">منصة الاتحاد الوطني لطلبة موريتانيا</p>
     </header>
 
     <div class="container">
         
         <div class="search-box">
-            <input type="text" id="global-search" placeholder="ابحث عن مادة أو ملف (يكفي حرف واحد)..." oninput="handleGlobalSearch(this.value)">
+            <input type="text" id="global-search" data-i18n="search_placeholder" placeholder="ابحث عن مادة أو ملف (يكفي حرف واحد)..." oninput="handleGlobalSearch(this.value)">
             <i class="fas fa-search"></i>
         </div>
 
         <!-- 1. القائمة الرئيسية -->
         <div id="main-menu" class="section-box">
-            <h2 class="section-title">الخدمات والأقسام</h2>
+            <h2 class="section-title" data-i18n="section_services">الخدمات والأقسام</h2>
             <div class="semesters-grid">
                 
                 <div class="semester-card" onclick="showSpecializationSelection()">
                     <div class="icon-box"><i class="fas fa-book-reader"></i></div>
-                    <h3>الملخصات والأرشيف</h3>
-                    <p>جميع التخصصات (L1, L2, L3)</p>
+                    <h3 data-i18n="card_summaries">الملخصات والأرشيف</h3>
+                    <p data-i18n="card_summaries_desc">جميع التخصصات (L1, L2, L3)</p>
                 </div>
 
-                <!-- المحفظة -->
                 <div class="semester-card" onclick="showFavorites()">
                     <div class="icon-box" style="color:#f59e0b; background: rgba(245, 158, 11, 0.1);"><i class="fas fa-star"></i></div>
-                    <h3>محفظتي (المفضلة)</h3>
-                    <p>ملفاتي المحفوظة للوصول السريع</p>
+                    <h3 data-i18n="card_fav">محفظتي (المفضلة)</h3>
+                    <p data-i18n="card_fav_desc">ملفاتي المحفوظة للوصول السريع</p>
                 </div>
 
-                <div class="semester-card" onclick="openWebViewer('https://resultat-iscae.vercel.app/', 'نتائج المعهد')">
+                <div class="semester-card" onclick="openWebViewer('https://resultat-iscae.vercel.app/', i18n[currentLang]['card_results'])">
                     <div class="icon-box" style="color:#dc2626; background: rgba(220, 38, 38, 0.1);"><i class="fas fa-graduation-cap"></i></div>
-                    <h3>نتائج المعهد</h3>
-                    <p>الاستعلام عن النتائج (جديد)</p>
+                    <h3 data-i18n="card_results">نتائج المعهد</h3>
+                    <p data-i18n="card_results_desc">الاستعلام عن النتائج (جديد)</p>
                 </div>
 
                 <div class="semester-card" onclick="openUnionModal()">
                     <div class="icon-box" style="color:#059669; background: rgba(5, 150, 105, 0.1);"><i class="fas fa-info-circle"></i></div>
-                    <h3>عن الاتحاد</h3>
-                    <p>نبذة تعريفية وتاريخية</p>
+                    <h3 data-i18n="card_about">عن الاتحاد</h3>
+                    <p data-i18n="card_about_desc">نبذة تعريفية وتاريخية</p>
                 </div>
 
             </div>
@@ -255,74 +273,86 @@
         <!-- 2. اختيار التخصص -->
         <div id="specialization-selection" class="section-box hidden">
             <div class="header-with-back">
-                <button class="back-btn" onclick="goBackToMainMenu()">الرئيسية</button>
-                <h2 class="section-title">اختر التخصص</h2>
+                <button class="back-btn" onclick="goBackToMainMenu()" data-i18n="btn_home">الرئيسية</button>
+                <h2 class="section-title" data-i18n="section_specs">اختر التخصص</h2>
             </div>
             <div class="semesters-grid">
                 <div class="semester-card card-ba" onclick="selectSpecialization('ba')"><div class="icon-box"><i class="fas fa-university"></i></div><h3>BA</h3><p>Banques et Assurances</p></div>
                 <div class="semester-card card-fc" onclick="selectSpecialization('fc')"><div class="icon-box"><i class="fas fa-calculator"></i></div><h3>FC</h3><p>Finance Comptabilité</p></div>
-                <div class="semester-card card-tcm" onclick="selectSpecialization('tcm')"><div class="icon-box"><i class="fas fa-bullhorn"></i></div><h3>TCM</h3><p>Technique Marketing</p></div>
-                <div class="semester-card card-grh" onclick="selectSpecialization('grh')"><div class="icon-box"><i class="fas fa-users-cog"></i></div><h3>GRH</h3><p>Ressources Humaines</p></div>
-                <div class="semester-card card-sae" onclick="selectSpecialization('sae')"><div class="icon-box"><i class="fas fa-chart-pie"></i></div><h3>SAE</h3><p>Statistique Appliquée</p></div>
-                <div class="semester-card card-ig" onclick="selectSpecialization('ig')"><div class="icon-box"><i class="fas fa-laptop-code"></i></div><h3>IG</h3><p>Informatique Gestion</p></div>
+                <div class="semester-card card-tcm" onclick="selectSpecialization('tcm')"><div class="icon-box"><i class="fas fa-bullhorn"></i></div><h3>TCM</h3><p>Technique Commerciales et Marketing</p></div>
+                <div class="semester-card card-grh" onclick="selectSpecialization('grh')"><div class="icon-box"><i class="fas fa-users-cog"></i></div><h3>GRH</h3><p>Gestion de Ressource humaine</p></div>
+                <div class="semester-card card-sae" onclick="selectSpecialization('sae')"><div class="icon-box"><i class="fas fa-chart-pie"></i></div><h3>SAE</h3><p>Statistique appliquée à l'Economie</p></div>
+                
+                <!-- أيقونة IG المحدثة والتي تدمج بين الدرع والمعلوماتية والمخطط البياني لتتطابق مع الصورة -->
+                <div class="semester-card card-ig" onclick="selectSpecialization('ig')">
+                    <div class="icon-box">
+                        <span class="fa-stack" style="font-size: 0.85em;">
+                            <i class="fas fa-shield-halved fa-stack-2x"></i>
+                            <i class="fas fa-chart-line fa-stack-1x fa-inverse" style="transform: scale(0.9) translateX(1px);"></i>
+                        </span>
+                    </div>
+                    <h3>IG</h3>
+                    <p>Informatique Gestion</p>
+                </div>
+
             </div>
         </div>
 
         <!-- 3. اختيار المستوى -->
         <div id="level-selection" class="section-box hidden">
             <div class="header-with-back">
-                <button class="back-btn" onclick="goBackToSpecialization()">التخصصات</button>
-                <h2 class="section-title">المستوى الدراسي</h2>
+                <button class="back-btn" onclick="goBackToSpecialization()" data-i18n="btn_specs">التخصصات</button>
+                <h2 class="section-title" data-i18n="section_levels">المستوى الدراسي</h2>
             </div>
             <div class="semesters-grid">
-                <div class="semester-card" onclick="showSemesters('l1')"><h3>L1</h3><p>السنة الأولى</p></div>
-                <div class="semester-card" onclick="showSemesters('l2')"><h3>L2</h3><p>السنة الثانية</p></div>
-                <div class="semester-card" onclick="showSemesters('l3')"><h3>L3</h3><p>السنة الثالثة</p></div>
+                <div class="semester-card" onclick="showSemesters('l1')"><h3>L1</h3><p data-i18n="level_1">السنة الأولى</p></div>
+                <div class="semester-card" onclick="showSemesters('l2')"><h3>L2</h3><p data-i18n="level_2">السنة الثانية</p></div>
+                <div class="semester-card" onclick="showSemesters('l3')"><h3>L3</h3><p data-i18n="level_3">السنة الثالثة</p></div>
             </div>
         </div>
 
         <!-- 4. الفصول -->
         <div id="semesters-container" class="section-box hidden">
             <div class="header-with-back">
-                <button class="back-btn" onclick="goBackToLevels()">المستويات</button>
-                <h2 id="semesters-title" class="section-title">الفصول الدراسية</h2>
+                <button class="back-btn" onclick="goBackToLevels()" data-i18n="btn_levels">المستويات</button>
+                <h2 id="semesters-title" class="section-title" data-i18n="section_sems">الفصول الدراسية</h2>
             </div>
             <div id="semesters-grid-view" class="semesters-grid"></div>
         </div>
 
-        <!-- 5. قائمة المواد (التوليد التلقائي) -->
+        <!-- 5. قائمة المواد -->
         <div id="subjects-container" class="section-box hidden">
             <div class="header-with-back">
-                <button class="back-btn" onclick="goBackToSemesters()">الفصول</button>
-                <h2 id="current-semester-title" class="section-title">المواد</h2>
+                <button class="back-btn" onclick="goBackToSemesters()" data-i18n="btn_sems">الفصول</button>
+                <h2 id="current-semester-title" class="section-title" data-i18n="section_subjects">المواد</h2>
             </div>
             <div id="dynamic-subjects-list" class="buttons-grid hidden"></div>
         </div>
 
-        <!-- 6. اختيار التصنيف المحدث (Cours, TD et TP, Devoir, Examen) -->
+        <!-- 6. التصنيفات -->
         <div id="category-selection-container" class="section-box hidden">
             <div class="header-with-back">
-                <button class="back-btn" onclick="goBackToSubjects()">العودة</button>
-                <h2 class="section-title">اختر نوع الملف</h2>
+                <button class="back-btn" onclick="goBackToSubjects()" data-i18n="btn_back">العودة</button>
+                <h2 class="section-title" data-i18n="section_file_type">اختر نوع الملف</h2>
             </div>
             <h3 style="text-align:center; color:var(--primary-color); margin-bottom:25px; font-weight: 800;"><span id="selected-subject-title-card"></span> 📂</h3>
             <div class="category-grid">
-                <div class="category-card cat-cours" onclick="selectCategory('cours')"><i class="fas fa-chalkboard-teacher"></i><h3>Cours</h3><p>الدروس والملخصات</p></div>
-                <div class="category-card cat-td-tp" onclick="selectCategory('td_tp')"><i class="fas fa-laptop-code"></i><h3>TD et TP</h3><p>أعمال موجهة وتطبيقية</p></div>
-                <div class="category-card cat-devoir" onclick="selectCategory('devoir')"><i class="fas fa-file-signature"></i><h3>Devoir</h3><p>الاختبارات والواجبات</p></div>
-                <div class="category-card cat-examen" onclick="selectCategory('examen')"><i class="fas fa-file-alt"></i><h3>Examen</h3><p>الامتحانات والأرشيف</p></div>
+                <div class="category-card cat-cours" onclick="selectCategory('cours')"><i class="fas fa-chalkboard-teacher"></i><h3 data-i18n="cat_cours">Cours</h3><p data-i18n="cat_cours_desc">الدروس والملخصات</p></div>
+                <div class="category-card cat-td-tp" onclick="selectCategory('td_tp')"><i class="fas fa-laptop-code"></i><h3 data-i18n="cat_td">TD et TP</h3><p data-i18n="cat_td_desc">أعمال موجهة وتطبيقية</p></div>
+                <div class="category-card cat-devoir" onclick="selectCategory('devoir')"><i class="fas fa-file-signature"></i><h3 data-i18n="cat_devoir">Devoir</h3><p data-i18n="cat_devoir_desc">الاختبارات والواجبات</p></div>
+                <div class="category-card cat-examen" onclick="selectCategory('examen')"><i class="fas fa-file-alt"></i><h3 data-i18n="cat_examen">Examen</h3><p data-i18n="cat_examen_desc">الامتحانات والأرشيف</p></div>
             </div>
         </div>
 
         <!-- عرض الملفات -->
         <div id="file-list-container" class="section-box hidden">
-            <button class="back-btn" id="file-list-back-btn" onclick="goBackToCategories()" style="width:100%; justify-content:center; margin-bottom:20px;">عودة للخلف</button>
+            <button class="back-btn" id="file-list-back-btn" onclick="goBackToCategories()" style="width:100%; justify-content:center; margin-bottom:20px;" data-i18n="btn_back_files">عودة للخلف</button>
             <h3 style="text-align:center; margin-bottom: 20px;">📂 <span id="selected-subject-name" style="color:var(--primary-color)"></span></h3>
             <div id="loading-spinner" class="spinner hidden"></div>
             <ul id="pdf-list"></ul>
             <div id="no-files-msg" class="hidden" style="text-align:center; padding: 30px; border-radius: 15px; margin-top: 20px; background: rgba(0,0,0,0.02);">
                 <i class="fas fa-folder-open" style="font-size: 3rem; color: var(--text-secondary); margin-bottom: 10px;"></i>
-                <p style="color:var(--text-secondary); margin:0; font-weight: 600;">عذراً، لا توجد ملفات هنا حالياً.</p>
+                <p style="color:var(--text-secondary); margin:0; font-weight: 600;" data-i18n="no_files">عذراً، لا توجد ملفات هنا حالياً.</p>
             </div>
         </div>
     </div>
@@ -331,7 +361,7 @@
     <div id="web-viewer-overlay" class="modal-overlay hidden">
         <div style="width: 100%; height: 100%; display: flex; flex-direction: column;">
             <div class="viewer-header">
-                <button onclick="closeWebViewer()" style="background:none; border:none; color:white; font-size:1.1rem; font-weight:800; cursor:pointer;"><i class="fas fa-times"></i> إغلاق</button>
+                <button onclick="closeWebViewer()" style="background:none; border:none; color:white; font-size:1.1rem; font-weight:800; cursor:pointer;"><i class="fas fa-times"></i> <span data-i18n="btn_close">إغلاق</span></button>
                 <span id="web-viewer-title" style="color:white; font-weight:800; font-size: 1.1rem;"></span>
                 <div style="width:30px"></div>
             </div>
@@ -345,99 +375,275 @@
     <div id="pdf-viewer-overlay" class="modal-overlay hidden">
         <div style="width: 100%; height: 100%; display: flex; flex-direction: column;">
             <div class="viewer-header">
-                <button onclick="closePdfViewer()" style="background:none; border:none; color:white; font-size:1.1rem; font-weight:800; cursor:pointer;"><i class="fas fa-times"></i> إغلاق</button>
+                <button onclick="closePdfViewer()" style="background:none; border:none; color:white; font-size:1.1rem; font-weight:800; cursor:pointer;"><i class="fas fa-times"></i> <span data-i18n="btn_close">إغلاق</span></button>
                 <span id="viewer-filename" style="max-width:150px; overflow:hidden; white-space:nowrap; color:#f8fafc; font-weight:600;">ملف</span>
-                <button id="viewer-action-btn" style="background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.3); color:white; padding:6px 15px; border-radius:50px; cursor:pointer; font-weight: 600;"><i class="fas fa-external-link-alt"></i> تحميل</button>
+                <button id="viewer-action-btn" style="background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.3); color:white; padding:6px 15px; border-radius:50px; cursor:pointer; font-weight: 600;"><i class="fas fa-external-link-alt"></i> <span data-i18n="btn_download">تحميل</span></button>
             </div>
             <div id="pdf-render-area"></div>
-            <div id="rendering-msg"><div class="spinner"></div><p style="color:white; text-align:center; margin-top:10px; font-weight:600;">جاري فتح الملف...<br><span style="font-size:0.8rem; font-weight:normal;">إذا تأخر الفتح، اضغط على زر تحميل أعلاه</span></p></div>
+            <div id="rendering-msg"><div class="spinner"></div><p style="color:white; text-align:center; margin-top:10px; font-weight:600;" data-i18n="loading_file">جاري فتح الملف...<br><span style="font-size:0.8rem; font-weight:normal;">إذا تأخر الفتح، اضغط على زر تحميل أعلاه</span></p></div>
         </div>
     </div>
 
     <!-- عن الاتحاد -->
     <div id="union-modal-overlay" class="modal-overlay hidden">
-        <div class="modal-content" style="text-align: right;">
-            <h2 style="text-align: center;">عن الاتحاد</h2>
+        <div class="modal-content" style="text-align: start;">
+            <h2 style="text-align: center;" data-i18n="about_title">عن الاتحاد</h2>
             
-            <p style="text-align: center; font-weight: 800; color: var(--primary-color); margin-bottom: 20px; font-size: 1.1rem;">يرحب بالطلبة الجدد ويتمنى لهم مسارا جامعيا موفقا وعاما مليئا بالإنجاز والتميز.</p>
+            <p style="text-align: center; font-weight: 800; color: var(--primary-color); margin-bottom: 20px; font-size: 1.1rem;" data-i18n="about_welcome">يرحب بالطلبة الجدد ويتمنى لهم مسارا جامعيا موفقا وعاما مليئا بالإنجاز والتميز.</p>
             
-            <h3 style="background: #e85d22; color: white; padding: 5px 15px; border-radius: 5px; display: inline-block; margin-bottom: 10px;">من نحن ؟</h3>
-            <p style="text-align: justify; margin-bottom: 20px;">أكبر نقابة طلابية وطنية، تأسست في 13 مايو سنة 2000م، تنشط في الوسط الجامعي وتسعى إلى الدفاع عن الحقوق المادية والمعنوية للطلاب.</p>
+            <h3 style="background: #e85d22; color: white; padding: 5px 15px; border-radius: 5px; display: inline-block; margin-bottom: 10px;" data-i18n="about_who">من نحن ؟</h3>
+            <p style="text-align: justify; margin-bottom: 20px;" data-i18n="about_who_desc">أكبر نقابة طلابية وطنية، تأسست في 13 مايو سنة 2000م، تنشط في الوسط الجامعي وتسعى إلى الدفاع عن الحقوق المادية والمعنوية للطلاب.</p>
             
-            <h3 style="background: #e85d22; color: white; padding: 5px 15px; border-radius: 5px; display: inline-block; margin-bottom: 10px;">رؤيتنا:</h3>
-            <p style="text-align: justify; margin-bottom: 20px;">تقوم رؤية الاتحاد الوطني على عدة أسس من أهمها: تطوير النضال الطلابي لتوفير جميع متطلبات المسار الجامعي الناجح للطلاب الموريتانيين في الداخل والخارج، والإسهام في تكوينهم وتأطيرهم لبناء وعي معرفي حول القضايا والإشكالات الوطنية والمساهمة الفعالة في بناء الوطن ورفع التحديات.</p>
+            <h3 style="background: #e85d22; color: white; padding: 5px 15px; border-radius: 5px; display: inline-block; margin-bottom: 10px;" data-i18n="about_vision">رؤيتنا:</h3>
+            <p style="text-align: justify; margin-bottom: 20px;" data-i18n="about_vision_desc">تقوم رؤية الاتحاد الوطني على عدة أسس من أهمها: تطوير النضال الطلابي لتوفير جميع متطلبات المسار الجامعي الناجح للطلاب الموريتانيين في الداخل والخارج، والإسهام في تكوينهم وتأطيرهم لبناء وعي معرفي حول القضايا والإشكالات الوطنية والمساهمة الفعالة في بناء الوطن ورفع التحديات.</p>
             
-            <h3 style="background: #e85d22; color: white; padding: 5px 15px; border-radius: 5px; display: inline-block; margin-bottom: 10px;">من أهدافنا:</h3>
-            <ul style="list-style: none; padding: 0; margin: 0; text-align: right;">
-                <li style="margin-bottom: 10px;"><i class="fas fa-square" style="color: #e85d22; margin-left: 8px; font-size: 0.7rem;"></i> النضال من أجل تحسين أوضاع الطالب الموريتاني</li>
-                <li style="margin-bottom: 10px;"><i class="fas fa-square" style="color: #e85d22; margin-left: 8px; font-size: 0.7rem;"></i> الدفاع عن الحقوق المادية والمعنوية للطلاب وصيانة مكتسباتهم</li>
-                <li style="margin-bottom: 10px;"><i class="fas fa-square" style="color: #e85d22; margin-left: 8px; font-size: 0.7rem;"></i> إرساء منظومة جامعية متطورة تنتج المعرفة وتواكب التطور العلمي والابتكار</li>
-                <li style="margin-bottom: 10px;"><i class="fas fa-square" style="color: #e85d22; margin-left: 8px; font-size: 0.7rem;"></i> دمقرطة المجال الجامعي وتعزيز الوحدة الوطنية</li>
-                <li style="margin-bottom: 10px;"><i class="fas fa-square" style="color: #e85d22; margin-left: 8px; font-size: 0.7rem;"></i> تعزيز الوعي الطلابي حول مختلف القضايا الوطنية</li>
+            <h3 style="background: #e85d22; color: white; padding: 5px 15px; border-radius: 5px; display: inline-block; margin-bottom: 10px;" data-i18n="about_goals">من أهدافنا:</h3>
+            <ul style="list-style: none; padding: 0; margin: 0; text-align: start;">
+                <li style="margin-bottom: 10px;"><i class="fas fa-square" style="color: #e85d22; margin-inline-end: 8px; font-size: 0.7rem;"></i> <span data-i18n="goal_1">النضال من أجل تحسين أوضاع الطالب الموريتاني</span></li>
+                <li style="margin-bottom: 10px;"><i class="fas fa-square" style="color: #e85d22; margin-inline-end: 8px; font-size: 0.7rem;"></i> <span data-i18n="goal_2">الدفاع عن الحقوق المادية والمعنوية للطلاب وصيانة مكتسباتهم</span></li>
+                <li style="margin-bottom: 10px;"><i class="fas fa-square" style="color: #e85d22; margin-inline-end: 8px; font-size: 0.7rem;"></i> <span data-i18n="goal_3">إرساء منظومة جامعية متطورة تنتج المعرفة وتواكب التطور العلمي والابتكار</span></li>
+                <li style="margin-bottom: 10px;"><i class="fas fa-square" style="color: #e85d22; margin-inline-end: 8px; font-size: 0.7rem;"></i> <span data-i18n="goal_4">دمقرطة المجال الجامعي وتعزيز الوحدة الوطنية</span></li>
+                <li style="margin-bottom: 10px;"><i class="fas fa-square" style="color: #e85d22; margin-inline-end: 8px; font-size: 0.7rem;"></i> <span data-i18n="goal_5">تعزيز الوعي الطلابي حول مختلف القضايا الوطنية</span></li>
             </ul>
             
-            <button onclick="closeUnionModal()" class="btn-submit" style="margin-top: 25px;">إغلاق النافذة</button>
+            <button onclick="closeUnionModal()" class="btn-submit" style="margin-top: 25px;" data-i18n="btn_close_window">إغلاق النافذة</button>
         </div>
     </div>
 
-    <!-- نافذة تسجيل دخول الإدارة -->
+    <!-- نافذة الإدارة -->
     <div id="admin-login-overlay" class="modal-overlay hidden">
         <div class="modal-content" style="max-width:350px;">
-            <h2>تسجيل دخول الإدارة</h2>
-            <p style="font-size: 0.9rem; margin-bottom: 20px;">يرجى إدخال بيانات حساب Supabase</p>
-            <input type="email" id="admin-email" placeholder="البريد الإلكتروني" class="form-group input" style="width: 100%; padding: 12px; margin-bottom: 10px;">
-            <input type="password" id="admin-pass" placeholder="كلمة المرور" class="form-group input" style="width: 100%; padding: 12px; margin-bottom: 10px;">
+            <h2 data-i18n="admin_login_title">تسجيل دخول الإدارة</h2>
+            <p style="font-size: 0.9rem; margin-bottom: 20px;" data-i18n="admin_login_desc">يرجى إدخال بيانات حساب Supabase</p>
+            <input type="email" id="admin-email" data-i18n="email_placeholder" placeholder="البريد الإلكتروني" class="form-group input" style="width: 100%; padding: 12px; margin-bottom: 10px;">
+            <input type="password" id="admin-pass" data-i18n="pass_placeholder" placeholder="كلمة المرور" class="form-group input" style="width: 100%; padding: 12px; margin-bottom: 10px;">
             <div id="admin-error" class="status-msg error hidden"></div>
-            <button onclick="adminLogin()" id="admin-login-btn" class="btn-submit">دخول للوحة الرفع</button>
-            <button onclick="closeAdminLogin()" class="btn-submit btn-cancel" style="margin-top: 10px;">إلغاء</button>
+            <button onclick="adminLogin()" id="admin-login-btn" class="btn-submit" data-i18n="btn_login">دخول للوحة الرفع</button>
+            <button onclick="closeAdminLogin()" class="btn-submit btn-cancel" style="margin-top: 10px;" data-i18n="btn_cancel">إلغاء</button>
         </div>
     </div>
 
-    <!-- نافذة الرفع المتعدد المحدثة -->
+    <!-- نافذة الرفع المتعدد -->
     <div id="upload-modal-overlay" class="modal-overlay hidden">
         <div class="modal-content" style="padding: 25px;">
-            <h2 style="margin-bottom: 20px;">رفع ملفات جديدة</h2>
+            <h2 style="margin-bottom: 20px;" data-i18n="upload_title">رفع ملفات جديدة</h2>
             <form id="upload-form">
-                <div class="form-group"><label>التخصص</label><select id="upload-spec" required onchange="updateUploadSubjects()"><option value="BA">BA</option><option value="FC">FC</option><option value="TCM">TCM</option><option value="GRH">GRH</option><option value="SAE">SAE</option><option value="IG">IG</option></select></div>
-                <div class="form-group"><label>المستوى</label><select id="upload-level" required><option value="L1">L1</option><option value="L2">L2</option><option value="L3">L3</option></select></div>
-                <div class="form-group"><label>الفصل</label><select id="upload-semester" required onchange="updateUploadSubjects()"><option value="S1">S1</option><option value="S2">S2</option><option value="S3">S3</option><option value="S4">S4</option><option value="S5">S5</option><option value="S6">S6</option></select></div>
-                <div class="form-group"><label>المادة</label><select id="upload-subject" required><option value="">اختر التخصص والفصل أولاً...</option></select></div>
-                <div class="form-group"><label>نوع الملف</label><select id="upload-type" required><option value="Cours">Cours (درس/ملخص)</option><option value="TD_TP">TD et TP (أعمال موجهة/تطبيقية)</option><option value="Devoir">Devoir (اختبار/واجب)</option><option value="Examen">Examen (إمتحان/أرشيف)</option></select></div>
-                <div class="form-group"><label>اختر ملفات (PDF)</label><input type="file" id="upload-file" accept="application/pdf" multiple required></div>
+                <div class="form-group"><label data-i18n="lbl_spec">التخصص</label><select id="upload-spec" required onchange="updateUploadSubjects()"><option value="BA">BA</option><option value="FC">FC</option><option value="TCM">TCM</option><option value="GRH">GRH</option><option value="SAE">SAE</option><option value="IG">IG</option></select></div>
+                <div class="form-group"><label data-i18n="lbl_level">المستوى</label><select id="upload-level" required><option value="L1">L1</option><option value="L2">L2</option><option value="L3">L3</option></select></div>
+                <div class="form-group"><label data-i18n="lbl_sem">الفصل</label><select id="upload-semester" required onchange="updateUploadSubjects()"><option value="S1">S1</option><option value="S2">S2</option><option value="S3">S3</option><option value="S4">S4</option><option value="S5">S5</option><option value="S6">S6</option></select></div>
+                <div class="form-group"><label data-i18n="lbl_sub">المادة</label><select id="upload-subject" required><option value="">---</option></select></div>
+                <div class="form-group"><label data-i18n="lbl_type">نوع الملف</label><select id="upload-type" required><option value="Cours">Cours</option><option value="TD_TP">TD et TP</option><option value="Devoir">Devoir</option><option value="Examen">Examen</option></select></div>
+                <div class="form-group"><label data-i18n="lbl_file">اختر ملفات (PDF)</label><input type="file" id="upload-file" accept="application/pdf" multiple required></div>
                 <div id="upload-status" class="status-msg"></div>
-                <button type="submit" id="upload-submit-btn" class="btn-submit">بدء الرفع</button>
+                <button type="submit" id="upload-submit-btn" class="btn-submit" data-i18n="btn_upload">بدء الرفع</button>
             </form>
-            <button onclick="closeUploadModal()" class="btn-submit btn-cancel" style="margin-top: 10px;">إغلاق</button>
+            <button onclick="closeUploadModal()" class="btn-submit btn-cancel" style="margin-top: 10px;" data-i18n="btn_close">إغلاق</button>
         </div>
+    </div>
+
+    <!-- إشعار التحديث الجديد -->
+    <div id="update-toast">
+        <span><i class="fas fa-sync-alt" style="color: var(--accent-color); margin-inline-end: 8px;"></i> <span data-i18n="update_msg">يتوفر تحديث جديد!</span></span>
+        <button id="update-btn" data-i18n="update_btn">تحديث الآن</button>
     </div>
 
     <footer class="main-footer">
         <div class="social-buttons-container">
-            <a href="https://www.facebook.com/share/1Ce3zTEpvC/" target="_blank" class="social-btn fb-btn"><i class="fab fa-facebook"></i> صفحتنا على فيسبوك</a>
-            <a href="https://chat.whatsapp.com/DBg3bcBQP2q8ERsoHkRY6N" target="_blank" class="social-btn wa-btn"><i class="fab fa-whatsapp"></i> مجتمعنا على واتساب</a>
+            <a href="https://www.facebook.com/share/1Ce3zTEpvC/" target="_blank" class="social-btn fb-btn"><i class="fab fa-facebook"></i> <span data-i18n="fb_link">صفحتنا على فيسبوك</span></a>
+            <a href="https://chat.whatsapp.com/DBg3bcBQP2q8ERsoHkRY6N" target="_blank" class="social-btn wa-btn"><i class="fab fa-whatsapp"></i> <span data-i18n="wa_link">مجتمعنا على واتساب</span></a>
         </div>
-        <p class="copyright">جميع الحقوق محفوظة © <span id="copyright-year" style="cursor:pointer; user-select:none;">2026</span> - UNEM ISCAE</p>
+        <p class="copyright" data-i18n="copyright">جميع الحقوق محفوظة © <span id="copyright-year" style="cursor:pointer; user-select:none;">2026</span> - UNEM ISCAE</p>
     </footer>
+
+    <!-- سكربت الترجمة (عربي / فرنسي) -->
+    <script>
+        const i18n = {
+            ar: {
+                slogan: "الوطني يد تبني و أخرى تناضل",
+                nav_title: "الاتحاد الوطني لطلبة موريتانيا - ",
+                header_title: "UNEM ISCAE",
+                header_subtitle: "منصة الاتحاد الوطني لطلبة موريتانيا",
+                search_placeholder: "ابحث عن مادة أو ملف (يكفي حرف واحد)...",
+                section_services: "الخدمات والأقسام",
+                card_summaries: "الملخصات والأرشيف",
+                card_summaries_desc: "جميع التخصصات (L1, L2, L3)",
+                card_fav: "محفظتي (المفضلة)",
+                card_fav_desc: "ملفاتي المحفوظة للوصول السريع",
+                card_results: "نتائج المعهد",
+                card_results_desc: "الاستعلام عن النتائج (جديد)",
+                card_about: "عن الاتحاد",
+                card_about_desc: "نبذة تعريفية وتاريخية",
+                btn_home: "الرئيسية",
+                section_specs: "اختر التخصص",
+                btn_specs: "التخصصات",
+                section_levels: "المستوى الدراسي",
+                level_1: "السنة الأولى",
+                level_2: "السنة الثانية",
+                level_3: "السنة الثالثة",
+                btn_levels: "المستويات",
+                section_sems: "الفصول الدراسية",
+                btn_sems: "الفصول",
+                section_subjects: "المواد",
+                btn_back: "العودة",
+                section_file_type: "اختر نوع الملف",
+                cat_cours: "Cours",
+                cat_cours_desc: "الدروس والملخصات",
+                cat_td: "TD et TP",
+                cat_td_desc: "أعمال موجهة وتطبيقية",
+                cat_devoir: "Devoir",
+                cat_devoir_desc: "الاختبارات والواجبات",
+                cat_examen: "Examen",
+                cat_examen_desc: "الامتحانات والأرشيف",
+                btn_back_files: "عودة للخلف",
+                no_files: "عذراً، لا توجد ملفات هنا حالياً.",
+                btn_close: "إغلاق",
+                btn_download: "تحميل",
+                loading_file: "جاري فتح الملف...<br><span style='font-size:0.8rem; font-weight:normal;'>إذا تأخر الفتح، اضغط على زر تحميل أعلاه</span>",
+                about_title: "عن الاتحاد",
+                about_welcome: "يرحب بالطلبة الجدد ويتمنى لهم مسارا جامعيا موفقا وعاما مليئا بالإنجاز والتميز.",
+                about_who: "من نحن ؟",
+                about_who_desc: "أكبر نقابة طلابية وطنية، تأسست في 13 مايو سنة 2000م، تنشط في الوسط الجامعي وتسعى إلى الدفاع عن الحقوق المادية والمعنوية للطلاب.",
+                about_vision: "رؤيتنا:",
+                about_vision_desc: "تقوم رؤية الاتحاد الوطني على عدة أسس من أهمها: تطوير النضال الطلابي لتوفير جميع متطلبات المسار الجامعي الناجح للطلاب الموريتانيين في الداخل والخارج، والإسهام في تكوينهم وتأطيرهم لبناء وعي معرفي حول القضايا والإشكالات الوطنية والمساهمة الفعالة في بناء الوطن ورفع التحديات.",
+                about_goals: "من أهدافنا:",
+                goal_1: "النضال من أجل تحسين أوضاع الطالب الموريتاني",
+                goal_2: "الدفاع عن الحقوق المادية والمعنوية للطلاب وصيانة مكتسباتهم",
+                goal_3: "إرساء منظومة جامعية متطورة تنتج المعرفة وتواكب التطور العلمي والابتكار",
+                goal_4: "دمقرطة المجال الجامعي وتعزيز الوحدة الوطنية",
+                goal_5: "تعزيز الوعي الطلابي حول مختلف القضايا الوطنية",
+                btn_close_window: "إغلاق النافذة",
+                admin_login_title: "تسجيل دخول الإدارة",
+                admin_login_desc: "يرجى إدخال بيانات حساب Supabase",
+                email_placeholder: "البريد الإلكتروني",
+                pass_placeholder: "كلمة المرور",
+                btn_login: "دخول للوحة الرفع",
+                btn_cancel: "إلغاء",
+                upload_title: "رفع ملفات جديدة",
+                lbl_spec: "التخصص",
+                lbl_level: "المستوى",
+                lbl_sem: "الفصل",
+                lbl_sub: "المادة",
+                lbl_type: "نوع الملف",
+                lbl_file: "اختر ملفات (PDF)",
+                btn_upload: "بدء الرفع",
+                fb_link: " صفحتنا على فيسبوك",
+                wa_link: " مجتمعنا على واتساب",
+                copyright: "جميع الحقوق محفوظة © <span id='copyright-year' style='cursor:pointer; user-select:none;'>2026</span> - UNEM ISCAE",
+                update_msg: "يتوفر تحديث جديد!",
+                update_btn: "تحديث الآن",
+                no_subjects: "لا توجد مواد مضافة حالياً"
+            },
+            fr: {
+                slogan: "L'UNEM, une main qui construit et une autre qui lutte",
+                nav_title: "Union Nationale des Étudiants de Mauritanie - ",
+                header_title: "UNEM ISCAE",
+                header_subtitle: "Plateforme de l'Union Nationale des Étudiants",
+                search_placeholder: "Rechercher une matière ou un fichier...",
+                section_services: "Services et Sections",
+                card_summaries: "Résumés et Archives",
+                card_summaries_desc: "Toutes les filières (L1, L2, L3)",
+                card_fav: "Mon Portefeuille",
+                card_fav_desc: "Fichiers favoris pour accès rapide",
+                card_results: "Résultats de l'Institut",
+                card_results_desc: "Consulter les résultats (Nouveau)",
+                card_about: "À propos de l'Union",
+                card_about_desc: "Aperçu historique et présentation",
+                btn_home: "Accueil",
+                section_specs: "Choisir la filière",
+                btn_specs: "Filières",
+                section_levels: "Niveau d'étude",
+                level_1: "Première Année",
+                level_2: "Deuxième Année",
+                level_3: "Troisième Année",
+                btn_levels: "Niveaux",
+                section_sems: "Semestres",
+                btn_sems: "Semestres",
+                section_subjects: "Matières",
+                btn_back: "Retour",
+                section_file_type: "Type de fichier",
+                cat_cours: "Cours",
+                cat_cours_desc: "Cours et Résumés",
+                cat_td: "TD et TP",
+                cat_td_desc: "Travaux Dirigés et Pratiques",
+                cat_devoir: "Devoir",
+                cat_devoir_desc: "Tests et Devoirs",
+                cat_examen: "Examen",
+                cat_examen_desc: "Examens et Archives",
+                btn_back_files: "Retour",
+                no_files: "Désolé, aucun fichier trouvé ici.",
+                btn_close: "Fermer",
+                btn_download: "Télécharger",
+                loading_file: "Ouverture du fichier en cours...<br><span style='font-size:0.8rem; font-weight:normal;'>Si cela tarde, cliquez sur télécharger ci-dessus</span>",
+                about_title: "À propos de l'Union",
+                about_welcome: "Souhaite la bienvenue aux nouveaux étudiants et leur désire un parcours réussi et une année d'excellence.",
+                about_who: "Qui sommes-nous ?",
+                about_who_desc: "Le plus grand syndicat étudiant national, fondé le 13 mai 2000, actif pour défendre les droits matériels et moraux des étudiants.",
+                about_vision: "Notre Vision :",
+                about_vision_desc: "La vision de l'Union repose sur le développement de la lutte étudiante pour assurer un parcours universitaire réussi aux étudiants mauritaniens, les former et renforcer leur conscience sur les enjeux nationaux.",
+                about_goals: "Nos objectifs :",
+                goal_1: "Lutter pour l'amélioration des conditions de l'étudiant",
+                goal_2: "Défendre les droits matériels et moraux et préserver les acquis",
+                goal_3: "Établir un système universitaire moderne favorisant l'innovation",
+                goal_4: "Démocratiser l'espace universitaire et renforcer l'unité nationale",
+                goal_5: "Éveiller la conscience étudiante sur les questions nationales",
+                btn_close_window: "Fermer la fenêtre",
+                admin_login_title: "Connexion Administration",
+                admin_login_desc: "Veuillez saisir les identifiants Supabase",
+                email_placeholder: "Adresse E-mail",
+                pass_placeholder: "Mot de passe",
+                btn_login: "Se connecter au panneau",
+                btn_cancel: "Annuler",
+                upload_title: "Ajouter de nouveaux fichiers",
+                lbl_spec: "Filière",
+                lbl_level: "Niveau",
+                lbl_sem: "Semestre",
+                lbl_sub: "Matière",
+                lbl_type: "Type de fichier",
+                lbl_file: "Choisir les fichiers (PDF)",
+                btn_upload: "Démarrer le téléversement",
+                fb_link: " Notre page Facebook",
+                wa_link: " Notre communauté WhatsApp",
+                copyright: "Tous droits réservés © <span id='copyright-year' style='cursor:pointer; user-select:none;'>2026</span> - UNEM ISCAE",
+                update_msg: "Mise à jour disponible !",
+                update_btn: "Mettre à jour",
+                no_subjects: "Aucune matière n'a été ajoutée pour le moment"
+            }
+        };
+
+        let currentLang = localStorage.getItem('unem_lang') || 'ar';
+        function setLanguage(lang) {
+            currentLang = lang; localStorage.setItem('unem_lang', lang);
+            document.documentElement.lang = lang; document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (i18n[lang][key]) {
+                    if (el.tagName === 'INPUT') el.placeholder = i18n[lang][key];
+                    else el.innerHTML = i18n[lang][key];
+                }
+            });
+            document.getElementById('lang-toggle').textContent = lang === 'ar' ? 'FR' : 'AR';
+            if(!document.getElementById('subjects-container').classList.contains('hidden') && currentSemester && currentSpecialization) {
+                document.getElementById('current-semester-title').textContent = `${i18n[currentLang]['section_subjects']} (${currentSpecialization.toUpperCase()} - ${currentSemester.toUpperCase()})`;
+            }
+        }
+        document.getElementById('lang-toggle').addEventListener('click', () => setLanguage(currentLang === 'ar' ? 'fr' : 'ar'));
+    </script>
 
     <script>
         document.getElementById('copyright-year').textContent = new Date().getFullYear();
+        setLanguage(currentLang);
 
-        // إعداد Supabase
         const SUPABASE_URL = 'https://rcdaxtretxskeyghxugm.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_OupfdnKe5eQmqULV46O0wQ_xUglAncv'; 
-        let supabaseClient;
-        try { supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } catch (e) { console.error("Supabase init error:", e); }
+        let supabaseClient; try { supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } catch (e) {}
 
         const repoOwner = "i21567etu-coder"; 
         const repoName = "UNEM-ISCAE-"; 
         const branchMap = { 'ba': 'BA', 'fc': 'FC', 'tcm': 'TCM', 'grh': 'GRH', 'sae': 'SAE', 'ig': 'IG' };
 
         let allFiles =[]; let currentSpecialization = ''; let currentLevel = ''; let currentSemester = ''; let currentBranch = 'main'; 
-        let currentSubjectFiles =[]; let currentTab = 'cours'; let isArchiveSpecialCase = false;
-        
-        let isAdminLoggedIn = false; // متغير لمعرفة هل الإدارة مسجلة الدخول
+        let currentSubjectFiles =[]; let currentTab = 'cours'; let isArchiveSpecialCase = false; let isAdminLoggedIn = false; 
 
-        // قاعدة بيانات المواد
         const subjectsData = {
             "BA": { "S1":["Principe de gestion", "Comptabilité financière I", "Statistique descriptive I", "Mathématique", "Anglais I", "Méthodologie du travail universitaire", "MS office", "Introduction à l’économie", "Introduction au droit", "Technique de communication", "Archive S1"], "S2":["Comptabilité financière II", "Micro-finance", "Economie d’entreprise", "Statistique descriptive II", "Mathématiques financières", "Anglais II", "Aptitudes en TIC", "Développement personnel", "Microéconomie", "Droit des affaires", "Archive S2"], "S3":["Technique Bancaire", "Système financier mauritanien", "Gestion Financière", "Comptabilité des Sociétés", "Anglais des affaires", "Logiciels Bancaire", "Marketing", "Droit administrative", "Macroéconomie", "Méthodes d’aide à la décision", "Archive S3"], "S4":["Comptabilité des Société assurance", "Assurances des biens", "Comptabilité Bancaire", "Comptabilité de Gestion", "Finance des marchés", "Analyse Financière", "Gestion de la trésorerie", "GRH", "Droit des assurances", "Commerce international", "Archive S4"], "S5":["Gestion de portefeuille", "Comptabilité bancaire II", "Gestion des risques", "Finance islamique", "Stratégie d’entreprise", "Gestion de patrimoine", "Fiscalité", "Politiques et choix d’investissement", "Droit bancaire et financier", "Rapport de stage de la 2ème année", "Archive S5"], "S6":["Méthodologie de recherche", "Séminaire sur l'entrepreneuriat", "Mémoire de fin d'études", "Archive S6"] },
             "FC": { "S1":["Principe de gestion", "Comptabilité financière I", "Statistique descriptive I", "Mathématique", "Anglais I", "Méthodologie du travail universitaire", "MS office", "Introduction à l’économie", "Introduction au droit", "Technique de communication", "Archive S1"], "S2":["Comptabilité financière II", "Comptabilité financière II", "Micro-finance", "Economie d’entreprise", "Statistique descriptive II", "Mathématiques financières", "Anglais II", "Aptitudes en TIC", "Développement personnel", "Microéconomie", "Droit des affaires", "Archive S2"], "S3":["Technique Bancaire", "Système financier mauritanien", "Gestion Financière", "Comptabilité des Sociétés", "Anglais des affaires", "Logiciels Comptables", "Marketing", "Droit administrative", "Macroéconomie", "Méthodes d’aide à la décision", "Archive S3"], "S4":["Analyse financière", "Comptabilité de gestion", "Comptabilité des Sociétés II", "Finance islamique", "Gestion de portefeuilles", "Finance des marchés", "Droit du travail", "GRH", "Fiscalité", "Les instruments de Crédits", "Archive S4"], "S5":["Gestion de Trésorerie", "Contrôle de Gestion", "Reporting financier", "Méthodes d'évaluation de l'entreprise", "Stratégie d'entreprise", "Audit financier", "Normes Comptables Internationnales", "Choix d'investissement", "Droit bancaire et financier", "Rapport de stage de la 2ème année", "Archive S5"], "S6":["Méthodologie de recherche", "Séminaire sur l'entrepreneuriat", "Mémoire de fin d'études", "Archive S6"] },
@@ -447,31 +653,21 @@
             "IG": { "S1":["Introduction à l’économie", "Introduction au droit", "Comptabilité financière", "Algorithmiques", "Architecture des ordinateurs", "MS office", "Anglais technique", "Méthodologie du travail universitaire", "Logique mathématique", "Analyse I", "Archive S1"], "S2":["Comptabilité financière II", "principe de gestion", "Langage C", "Système d'exploitation", "Programation Web", "Python", "Anglais technique", "Technique de communication", "Algèbre linéaire", "Analyse II", "Archive S2"], "S3":["Comptabilité analytique I", "Stratégie d’entreprise", "Java I", "PHP-My SQL", "Conception des bases de données I", "Réseaux informatiques", "Modélisation UML MERISE", "Calcul multi-variables", "Logiciel de Calcul Scientifique", "probabilités et Statistiques", "Archive S3"], "S4":["Comptabilité analytique II", "Gestion des ressources humaines", "Java II", "C#", "PHP Frameworks", "Gestion de projet informatique", "Théories des Graphes", "Bases de données", "Réseaux informatique II", "Compilations", "Archive S4"], "S5":["Contrôle de gestion", "Gestion financière", "Technologie DotNet", "JEE Framework", "Programmation Mobile", "Intelligence artificielle", "Bases des données avancées", "Administration des Systèmes", "Système d'Informations Géographique", "Rapport de stage de la 2ème année", "Archive S5"], "S6":["Méthodologie de recherche", "Séminaire sur l'entrepreneuriat", "Mémoire de fin d'études", "Archive S6"] }
         };
 
-        // ميزة المحفظة (المفضلة)
         let favorites = JSON.parse(localStorage.getItem('unem_favorites')) ||[];
-
-        // ميزة الوضع الليلي
         const themeToggle = document.getElementById('theme-toggle');
-        const currentTheme = localStorage.getItem('unem_theme');
-        if (currentTheme === 'dark') {
-            document.body.classList.add('dark-mode');
-            themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+        if (localStorage.getItem('unem_theme') === 'dark') {
+            document.body.classList.add('dark-mode'); themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
             document.getElementById('theme-color-meta').setAttribute('content', '#064e3b');
         }
         themeToggle.addEventListener('click', () => {
             document.body.classList.toggle('dark-mode');
             if (document.body.classList.contains('dark-mode')) {
-                localStorage.setItem('unem_theme', 'dark');
-                themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
-                document.getElementById('theme-color-meta').setAttribute('content', '#064e3b');
+                localStorage.setItem('unem_theme', 'dark'); themeToggle.innerHTML = '<i class="fas fa-sun"></i>'; document.getElementById('theme-color-meta').setAttribute('content', '#064e3b');
             } else {
-                localStorage.setItem('unem_theme', 'light');
-                themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
-                document.getElementById('theme-color-meta').setAttribute('content', '#0f5132');
+                localStorage.setItem('unem_theme', 'light'); themeToggle.innerHTML = '<i class="fas fa-moon"></i>'; document.getElementById('theme-color-meta').setAttribute('content', '#0f5132');
             }
         });
 
-        // حماية الإدارة (Supabase Auth)
         let tapCount = 0; let tapTimer;
         document.getElementById('copyright-year').addEventListener('click', () => {
             tapCount++; clearTimeout(tapTimer); 
@@ -480,29 +676,16 @@
         });
 
         async function adminLogin() {
-            const email = document.getElementById('admin-email').value;
-            const pass = document.getElementById('admin-pass').value;
-            const errorMsg = document.getElementById('admin-error');
-            const loginBtn = document.getElementById('admin-login-btn');
-            
+            const email = document.getElementById('admin-email').value; const pass = document.getElementById('admin-pass').value;
+            const errorMsg = document.getElementById('admin-error'); const loginBtn = document.getElementById('admin-login-btn');
             if(!email || !pass) { errorMsg.textContent = "أدخل البيانات"; errorMsg.classList.remove('hidden'); return; }
-            loginBtn.textContent = "جاري الدخول..."; loginBtn.disabled = true;
-
-            const { data, error } = await supabaseClient.auth.signInWithPassword({ email: email, password: pass });
-            if (error) {
-                errorMsg.textContent = "بيانات غير صحيحة!"; errorMsg.classList.remove('hidden');
-                loginBtn.textContent = "دخول للوحة الرفع"; loginBtn.disabled = false;
-            } else {
-                isAdminLoggedIn = true; // تفعيل صلاحية الحذف
-                document.getElementById('admin-login-overlay').classList.add('hidden');
-                document.getElementById('admin-email').value = ''; document.getElementById('admin-pass').value = '';
-                errorMsg.classList.add('hidden'); loginBtn.textContent = "دخول للوحة الرفع"; loginBtn.disabled = false;
-                openUploadModal();
-            }
+            loginBtn.textContent = "⏳..."; loginBtn.disabled = true;
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
+            if (error) { errorMsg.textContent = "بيانات غير صحيحة!"; errorMsg.classList.remove('hidden'); loginBtn.textContent = i18n[currentLang]['btn_login']; loginBtn.disabled = false; } 
+            else { isAdminLoggedIn = true; document.getElementById('admin-login-overlay').classList.add('hidden'); errorMsg.classList.add('hidden'); loginBtn.textContent = i18n[currentLang]['btn_login']; loginBtn.disabled = false; openUploadModal(); }
         }
         function closeAdminLogin() { document.getElementById('admin-login-overlay').classList.add('hidden'); }
 
-        // التوجيه (Navigation)
         function hideAll() { document.querySelectorAll('.section-box').forEach(el => el.classList.add('hidden')); }
         function goBackToMainMenu() { hideAll(); document.getElementById('main-menu').classList.remove('hidden'); }
         function goBackToSpecialization() { hideAll(); document.getElementById('specialization-selection').classList.remove('hidden'); }
@@ -524,68 +707,30 @@
             });
         }
         
-        // توليد الأزرار تلقائياً
         function showSubjects(semester) {
             currentSemester = semester; hideAll(); document.getElementById('subjects-container').classList.remove('hidden');
-            
-            const container = document.getElementById('dynamic-subjects-list');
-            container.innerHTML = ''; 
-            container.classList.remove('hidden');
-
-            const specUpper = currentSpecialization.toUpperCase();
-            const semUpper = semester.toUpperCase();
-            
+            const container = document.getElementById('dynamic-subjects-list'); container.innerHTML = ''; container.classList.remove('hidden');
+            const specUpper = currentSpecialization.toUpperCase(); const semUpper = semester.toUpperCase();
             if(subjectsData[specUpper] && subjectsData[specUpper][semUpper]) {
-                const subjects = subjectsData[specUpper][semUpper];
-                subjects.forEach(sub => {
+                subjectsData[specUpper][semUpper].forEach(sub => {
                     const btn = document.createElement('button');
-                    if(sub.toLowerCase().includes('archive')) {
-                        btn.className = 'archive-btn';
-                        btn.innerHTML = `<i class="fas fa-archive"></i> ${sub}`;
-                    } else {
-                        btn.textContent = sub;
-                    }
-                    btn.onclick = () => loadFiles(sub);
-                    container.appendChild(btn);
+                    if(sub.toLowerCase().includes('archive')) { btn.className = 'archive-btn'; btn.innerHTML = `<i class="fas fa-archive"></i> ${sub}`; } 
+                    else { btn.textContent = sub; }
+                    btn.onclick = () => loadFiles(sub); container.appendChild(btn);
                 });
-            } else {
-                 container.innerHTML = '<p style="text-align:center;">لا توجد مواد مضافة حالياً</p>';
-            }
-            document.getElementById('current-semester-title').textContent = `المواد (${specUpper} - ${semUpper})`;
+            } else { container.innerHTML = `<p style="text-align:center;">${i18n[currentLang]['no_subjects']}</p>`; }
+            document.getElementById('current-semester-title').textContent = `${i18n[currentLang]['section_subjects']} (${specUpper} - ${semUpper})`;
         }
 
-        // التخزين المؤقت الذكي لـ GitHub
         async function fetchFilesFromGitHub(branch) {
-            const cacheKey = `github_cache_${branch}`;
-            const cacheTimeKey = `github_cache_time_${branch}`;
-            const cachedData = localStorage.getItem(cacheKey);
-            const cachedTime = localStorage.getItem(cacheTimeKey);
-            const now = new Date().getTime();
-
-            // استخدام الكاش إذا لم يمر عليه 6 ساعات (21600000 مللي ثانية)
-            if (cachedData && cachedTime && (now - cachedTime < 21600000)) {
-                allFiles = JSON.parse(cachedData);
-                return;
-            }
-
-            const randomVersion = new Date().getTime();
-            const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/?ref=${branch}&v=${randomVersion}`;
-            
+            const cacheKey = `github_cache_${branch}`; const cacheTimeKey = `github_cache_time_${branch}`;
+            const cachedData = localStorage.getItem(cacheKey); const cachedTime = localStorage.getItem(cacheTimeKey); const now = new Date().getTime();
+            if (cachedData && cachedTime && (now - cachedTime < 21600000)) { allFiles = JSON.parse(cachedData); return; }
             try {
-                const res = await fetch(apiUrl);
-                if(res.ok) {
-                    const data = await res.json();
-                    if(Array.isArray(data)) {
-                        allFiles = data;
-                        localStorage.setItem(cacheKey, JSON.stringify(data));
-                        localStorage.setItem(cacheTimeKey, now.toString());
-                    }
-                } else if (res.status === 403 || res.status === 429) {
-                    if (cachedData) allFiles = JSON.parse(cachedData); // Fallback
-                }
-            } catch(err) { 
-                if (cachedData) allFiles = JSON.parse(cachedData); // Fallback
-            }
+                const res = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/contents/?ref=${branch}&v=${new Date().getTime()}`);
+                if(res.ok) { const data = await res.json(); if(Array.isArray(data)) { allFiles = data; localStorage.setItem(cacheKey, JSON.stringify(data)); localStorage.setItem(cacheTimeKey, now.toString()); } } 
+                else if (cachedData) allFiles = JSON.parse(cachedData);
+            } catch(err) { if (cachedData) allFiles = JSON.parse(cachedData); }
         }
 
         function normalizeText(text) { return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim(); }
@@ -593,135 +738,62 @@
         function isValidFile(filename) {
             const forbidden =['index.html', 'style.css', 'script.js', 'sw.js', 'manifest.json', 'icon-192.png', 'icon-512.png', 'favicon.ico', 'cname', 'readme.md'];
             const lower = filename.toLowerCase();
-            if (lower.includes('placeholder') || filename === '.keep' || lower.startsWith('.') || forbidden.includes(lower)) return false;
-            return true;
+            return !(lower.includes('placeholder') || filename === '.keep' || lower.startsWith('.') || forbidden.includes(lower));
         }
 
-        // خوارزمية فرز الملفات المحدثة للتقسيم الجديد
         function getFileCategory(filename) {
-            // 1. الأولوية لملفات الإدارة المرفوعة عبر المنصة
-            if (filename.startsWith('Cours_')) return 'cours';
-            if (filename.startsWith('TD_TP_')) return 'td_tp';
-            if (filename.startsWith('Devoir_')) return 'devoir';
-            if (filename.startsWith('Examen_') || filename.startsWith('Archive_')) return 'examen';
-
+            if (filename.startsWith('Cours_')) return 'cours'; if (filename.startsWith('TD_TP_')) return 'td_tp'; if (filename.startsWith('Devoir_')) return 'devoir'; if (filename.startsWith('Examen_') || filename.startsWith('Archive_')) return 'examen';
             let lowerName = filename.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
-            // 2. العلامات المباشرة بين أقواس (إضافة exeman)
             if (lowerName.includes('[archive]') || lowerName.includes('- archive -') || lowerName.includes('_archive_') || lowerName.includes('[examen]') || lowerName.includes('[exemen]') || lowerName.includes('[exeman]')) return 'examen';
             if (lowerName.includes('[td]') || lowerName.includes('- td -') || lowerName.includes('_td_') || lowerName.includes('[tp]') || lowerName.includes('- tp -') || lowerName.includes('_tp_')) return 'td_tp';
             if (lowerName.includes('[devoir]') || lowerName.includes('- devoir -') || lowerName.includes('_devoir_') || lowerName.includes('[test]')) return 'devoir';
             if (lowerName.includes('[cours]') || lowerName.includes('- cours -') || lowerName.includes('_cours_')) return 'cours';
-
-            // ----------------------------------------------------
-            // 3. قواعد استثنائية (لضمان دقة الكلمات المركبة حسب طلبك)
-            // ----------------------------------------------------
-            // تم إضافة exeman هنا أيضاً لضمان دقة التصحيحات
             if (lowerName.includes('correction examen') || lowerName.includes('correction exemen') || lowerName.includes('correction exeman') || lowerName.includes('corrige examen') || lowerName.includes('corrige exemen') || lowerName.includes('corrige exeman') || lowerName.includes('correction de l\'examen')) return 'examen';
             if (lowerName.includes('correction dv') || lowerName.includes('corrige dv') || lowerName.includes('correction devoir') || lowerName.includes('corrige devoir')) return 'devoir';
-
-            // 4. الاختبارات والواجبات (نُقلت قبل الامتحانات لكي تتغلب كلمة devoir على rattrapage)
-            const devoirKeywords =['devoir', 'test'];
-            if (devoirKeywords.some(k => lowerName.includes(k))) return 'devoir';
-            if (/control(e)?[ \-_]*\d+/.test(lowerName) || lowerName.includes('controle continu')) return 'devoir';
-            if (/(^|[^a-z0-9])(dev|dv|di)([^a-z0-9]|$)/.test(lowerName)) return 'devoir';
-
-            // 5. الامتحانات والأرشيف (تم إضافة exeman للكلمات الدالة)
-            const examenKeywords =['archive', 'examen', 'exemen', 'exeman', 'exam', 'sujet', 'rattrapage', 'session', 'partiel', 'epreuve'];
-            if (examenKeywords.some(k => lowerName.includes(k))) return 'examen';
-
-            // 6. الأعمال الموجهة والتطبيقية
+            if (['devoir', 'test'].some(k => lowerName.includes(k))) return 'devoir';
+            if (/control(e)?[ \-_]*\d+/.test(lowerName) || lowerName.includes('controle continu') || /(^|[^a-z0-9])(dev|dv|di)([^a-z0-9]|$)/.test(lowerName)) return 'devoir';
+            if (['archive', 'examen', 'exemen', 'exeman', 'exam', 'sujet', 'rattrapage', 'session', 'partiel', 'epreuve'].some(k => lowerName.includes(k))) return 'examen';
             if (/(^|[^a-z])tp([^a-z]|$)/.test(lowerName) || /tp[ \-_]*\d+/.test(lowerName) ||['pratique', 'atelier', 'travaux pratiques'].some(k => lowerName.includes(k))) return 'td_tp';
-            if (/(^|[^a-z])td([^a-z]|$)/.test(lowerName) || /td[ \-_]*\d+/.test(lowerName)) return 'td_tp';
-            if (['serie', 'exercice', 'exo', 'travaux diriges', 'corrige', 'correction'].some(k => lowerName.includes(k))) return 'td_tp';
-            if (/\bcas\b/.test(lowerName)) return 'td_tp';
-
-            // 7. الدروس والملخصات
+            if (/(^|[^a-z])td([^a-z]|$)/.test(lowerName) || /td[ \-_]*\d+/.test(lowerName) ||['serie', 'exercice', 'exo', 'travaux diriges', 'corrige', 'correction', 'cas'].some(k => lowerName.includes(k))) return 'td_tp';
             if (lowerName.includes('cours') || lowerName.includes('chapitre') || lowerName.includes('resume') || lowerName.includes('partie')) return 'cours';
-
-            // الافتراضي
             return 'cours';
         }
 
-        // المفضلة
         function isFavorite(path) { return favorites.some(f => f.path === path); }
         function toggleFavorite(fileObj, btnElement) {
             const index = favorites.findIndex(f => f.path === fileObj.path);
-            if (index > -1) {
-                favorites.splice(index, 1);
-                btnElement.innerHTML = '<i class="far fa-star"></i>'; btnElement.classList.remove('fav-active');
-            } else {
-                favorites.push(fileObj);
-                btnElement.innerHTML = '<i class="fas fa-star"></i>'; btnElement.classList.add('fav-active');
-            }
+            if (index > -1) { favorites.splice(index, 1); btnElement.innerHTML = '<i class="far fa-star"></i>'; btnElement.classList.remove('fav-active'); } 
+            else { favorites.push(fileObj); btnElement.innerHTML = '<i class="fas fa-star"></i>'; btnElement.classList.add('fav-active'); }
             localStorage.setItem('unem_favorites', JSON.stringify(favorites));
             if (currentTab === 'favorites_view') renderFavorites();
         }
 
         function showFavorites() {
             hideAll(); document.getElementById('file-list-container').classList.remove('hidden');
-            document.getElementById('selected-subject-name').textContent = "محفظتي (الملفات المفضلة)";
-            document.getElementById('file-list-back-btn').setAttribute('onclick', 'goBackToMainMenu()');
-            currentTab = 'favorites_view';
-            renderFavorites();
+            document.getElementById('selected-subject-name').textContent = i18n[currentLang]['card_fav'];
+            document.getElementById('file-list-back-btn').setAttribute('onclick', 'goBackToMainMenu()'); currentTab = 'favorites_view'; renderFavorites();
         }
 
-        // بناء عنصر القائمة مع زر الحذف للإدارة
         function buildFileListItem(file) {
             const li = document.createElement('li');
             let displayName = file.name.replace(/\[.*?\]/g, '').replace(/^\d+-/, '').replace(/_/g, ' ').replace('.pdf', '');
-
-            const infoDiv = document.createElement('div');
-            infoDiv.className = 'file-info';
-            infoDiv.innerHTML = `<i class="fas fa-file-pdf"></i> <span>${displayName}</span>`;
-            infoDiv.onclick = () => openSmartViewer(file);
-
-            const actionsDiv = document.createElement('div');
-            actionsDiv.className = 'actions-group';
-
-            const favBtn = document.createElement('button');
-            favBtn.className = isFavorite(file.path) ? 'action-btn fav-active' : 'action-btn';
-            favBtn.innerHTML = isFavorite(file.path) ? `<i class="fas fa-star"></i>` : `<i class="far fa-star"></i>`;
-            favBtn.onclick = (e) => { e.stopPropagation(); toggleFavorite(file, favBtn); };
-
-            const dlBtn = document.createElement('button');
-            dlBtn.className = 'action-btn'; dlBtn.innerHTML = `<i class="fas fa-arrow-down"></i>`;
-            dlBtn.onclick = (e) => { e.stopPropagation(); triggerDownload(file); };
-
+            const infoDiv = document.createElement('div'); infoDiv.className = 'file-info'; infoDiv.innerHTML = `<i class="fas fa-file-pdf"></i> <span>${displayName}</span>`; infoDiv.onclick = () => openSmartViewer(file);
+            const actionsDiv = document.createElement('div'); actionsDiv.className = 'actions-group';
+            const favBtn = document.createElement('button'); favBtn.className = isFavorite(file.path) ? 'action-btn fav-active' : 'action-btn';
+            favBtn.innerHTML = isFavorite(file.path) ? `<i class="fas fa-star"></i>` : `<i class="far fa-star"></i>`; favBtn.onclick = (e) => { e.stopPropagation(); toggleFavorite(file, favBtn); };
+            const dlBtn = document.createElement('button'); dlBtn.className = 'action-btn'; dlBtn.innerHTML = `<i class="fas fa-arrow-down"></i>`; dlBtn.onclick = (e) => { e.stopPropagation(); triggerDownload(file); };
             actionsDiv.appendChild(favBtn); actionsDiv.appendChild(dlBtn);
-
-            // زر الحذف (يظهر فقط للإدارة وللملفات المرفوعة على Supabase)
             if(isAdminLoggedIn && file.source === 'supabase') {
-                const delBtn = document.createElement('button');
-                delBtn.className = 'action-btn';
-                delBtn.innerHTML = `<i class="fas fa-trash"></i>`;
-                delBtn.style.color = '#ef4444'; delBtn.style.borderColor = '#fca5a5';
-                delBtn.onclick = (e) => { e.stopPropagation(); deleteFile(file, li); };
+                const delBtn = document.createElement('button'); delBtn.className = 'action-btn'; delBtn.innerHTML = `<i class="fas fa-trash"></i>`; delBtn.style.color = '#ef4444'; delBtn.style.borderColor = '#fca5a5';
+                delBtn.onclick = async (e) => { e.stopPropagation(); if(!confirm("تأكيد الحذف؟")) return; li.style.opacity = '0.4'; const { error } = await supabaseClient.storage.from('pdf-files').remove([file.path]); if(!error){ li.remove(); currentSubjectFiles = currentSubjectFiles.filter(f => f.path !== file.path); } else li.style.opacity = '1'; };
                 actionsDiv.appendChild(delBtn);
             }
-
-            li.appendChild(infoDiv); li.appendChild(actionsDiv);
-            return li;
-        }
-
-        // دالة حذف الملف من قاعدة البيانات
-        async function deleteFile(fileObj, liElement) {
-            if(!confirm(`هل أنت متأكد من حذف الملف نهائياً؟\n${fileObj.name}`)) return;
-            liElement.style.opacity = '0.4';
-            const { data, error } = await supabaseClient.storage.from('pdf-files').remove([fileObj.path]);
-            if(error) {
-                alert("فشل الحذف! تأكد من اتصالك.");
-                liElement.style.opacity = '1';
-            } else {
-                liElement.remove();
-                currentSubjectFiles = currentSubjectFiles.filter(f => f.path !== fileObj.path);
-            }
+            li.appendChild(infoDiv); li.appendChild(actionsDiv); return li;
         }
 
         function renderFavorites() {
             const pdfList = document.getElementById('pdf-list'); pdfList.innerHTML = "";
-            if (favorites.length === 0) { document.getElementById('no-files-msg').classList.remove('hidden'); } 
-            else { document.getElementById('no-files-msg').classList.add('hidden'); favorites.forEach(file => pdfList.appendChild(buildFileListItem(file))); }
+            if (favorites.length === 0) { document.getElementById('no-files-msg').classList.remove('hidden'); } else { document.getElementById('no-files-msg').classList.add('hidden'); favorites.forEach(file => pdfList.appendChild(buildFileListItem(file))); }
         }
 
         function selectCategory(categoryName) { document.getElementById('category-selection-container').classList.add('hidden'); document.getElementById('file-list-container').classList.remove('hidden'); currentTab = categoryName; renderFilteredFiles(); }
@@ -729,56 +801,36 @@
         function renderFilteredFiles() {
             const pdfList = document.getElementById('pdf-list'); pdfList.innerHTML = "";
             let filtered = isArchiveSpecialCase ? currentSubjectFiles : currentSubjectFiles.filter(f => getFileCategory(f.name) === currentTab);
-            if (filtered.length === 0) { document.getElementById('no-files-msg').classList.remove('hidden'); } 
-            else { document.getElementById('no-files-msg').classList.add('hidden'); filtered.forEach(file => pdfList.appendChild(buildFileListItem(file))); }
+            if (filtered.length === 0) { document.getElementById('no-files-msg').classList.remove('hidden'); } else { document.getElementById('no-files-msg').classList.add('hidden'); filtered.forEach(file => pdfList.appendChild(buildFileListItem(file))); }
         }
 
         function triggerDownload(fileObj) {
             let downloadUrl = '';
             if (fileObj.source === 'supabase') { const { data } = supabaseClient.storage.from('pdf-files').getPublicUrl(fileObj.path); downloadUrl = data.publicUrl; } 
-            else { let cleanPath = fileObj.path.replace(/^"|"$/g, ''); let encodedPath = cleanPath.split('/').map(part => encodeURIComponent(part)).join('/'); downloadUrl = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/${currentBranch}/${encodedPath}`; }
-            const link = document.createElement('a'); link.href = downloadUrl; link.target = '_blank'; link.download = fileObj.name.replace(/^"|"$/g, ''); 
-            document.body.appendChild(link); link.click(); document.body.removeChild(link);
+            else { downloadUrl = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/${currentBranch}/${fileObj.path.replace(/^"|"$/g, '').split('/').map(encodeURIComponent).join('/')}`; }
+            const link = document.createElement('a'); link.href = downloadUrl; link.target = '_blank'; link.download = fileObj.name.replace(/^"|"$/g, ''); document.body.appendChild(link); link.click(); document.body.removeChild(link);
         }
 
-        // جلب سريع ومتزامن للملفات
         async function loadFiles(subjectName) {
             document.getElementById('selected-subject-name').textContent = subjectName; document.getElementById('selected-subject-title-card').textContent = subjectName;
-            const cleanSubject = normalizeText(subjectName);
-            const sanitizedSubject = cleanSubject.replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ').trim();
-            const subjectKeywords = sanitizedSubject.split(' ');
-            
-            // تنظيف القائمة وإظهار مؤشر التحميل فوراً
-            const pdfList = document.getElementById('pdf-list');
-            pdfList.innerHTML = "";
-            document.getElementById('loading-spinner').classList.remove('hidden');
-            document.getElementById('no-files-msg').classList.add('hidden');
+            const cleanSubject = normalizeText(subjectName); const sanitizedSubject = cleanSubject.replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ').trim(); const subjectKeywords = sanitizedSubject.split(' ');
+            document.getElementById('pdf-list').innerHTML = ""; document.getElementById('loading-spinner').classList.remove('hidden'); document.getElementById('no-files-msg').classList.add('hidden');
 
-            if (cleanSubject.includes("archive") && cleanSubject.match(/s[1-6]/)) {
-                isArchiveSpecialCase = true; hideAll(); document.getElementById('file-list-container').classList.remove('hidden'); document.getElementById('file-list-back-btn').setAttribute('onclick', 'goBackToSubjects()');
-            } else {
-                isArchiveSpecialCase = false; hideAll(); document.getElementById('category-selection-container').classList.remove('hidden'); document.getElementById('file-list-back-btn').setAttribute('onclick', 'goBackToCategories()');
-            }
+            if (cleanSubject.includes("archive") && cleanSubject.match(/s[1-6]/)) { isArchiveSpecialCase = true; hideAll(); document.getElementById('file-list-container').classList.remove('hidden'); document.getElementById('file-list-back-btn').setAttribute('onclick', 'goBackToSubjects()'); } 
+            else { isArchiveSpecialCase = false; hideAll(); document.getElementById('category-selection-container').classList.remove('hidden'); document.getElementById('file-list-back-btn').setAttribute('onclick', 'goBackToCategories()'); }
             
-            // الانتظار الإجباري حتى تنتهي عملية الجلب من GitHub
-            if(allFiles.length === 0) {
-                await fetchFilesFromGitHub(currentBranch);
-            }
+            if(allFiles.length === 0) await fetchFilesFromGitHub(currentBranch);
             
-            let githubFiles = allFiles.map(f => ({...f, source: 'github'}));
-            let supabaseFiles =[];
-
+            let githubFiles = allFiles.map(f => ({...f, source: 'github'})); let supabaseFiles =[];
             if(supabaseClient && currentSpecialization && currentLevel && currentSemester) {
-                const subjectFolder = getSafeSubjectCode(subjectName);
-                const folderPath = `${currentSpecialization.toUpperCase()}/${currentLevel.toUpperCase()}/${currentSemester.toUpperCase()}/${subjectFolder}`;
-                const { data, error } = await supabaseClient.storage.from('pdf-files').list(folderPath);
+                const folderPath = `${currentSpecialization.toUpperCase()}/${currentLevel.toUpperCase()}/${currentSemester.toUpperCase()}/${getSafeSubjectCode(subjectName)}`;
+                const { data } = await supabaseClient.storage.from('pdf-files').list(folderPath);
                 if(data && data.length > 0) supabaseFiles = data.filter(f => isValidFile(f.name)).map(f => ({ name: f.name, type: 'file', source: 'supabase', path: `${folderPath}/${f.name}` }));
             }
 
             const filteredGithub = githubFiles.filter(file => {
                 if(file.type !== "file" || !isValidFile(file.name)) return false; 
-                const fName = normalizeText(file.name);
-                const sanitizedFile = fName.replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ').trim();
+                const fName = normalizeText(file.name); const sanitizedFile = fName.replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ').trim();
 
                 if (isArchiveSpecialCase) {
                     if (!fName.includes("archive")) return false;
@@ -793,33 +845,17 @@
                 if (fName.startsWith("archive s")) return false;
                 if (cleanSubject === 'langage c') return fName.includes('langage') && fName.match(/\bc\b/) && !fName.includes('sql') && !fName.includes('base de donnee');
 
-                const subjectHasRoman = sanitizedSubject.match(/\b(i|ii|iii|iv|v|vi)\b/)?.[0]; 
-                const fileHasRoman = sanitizedFile.match(/\b(i|ii|iii|iv|v|vi)\b/)?.[0];
-                if (subjectHasRoman) { if (fileHasRoman !== subjectHasRoman) return false; } else { if (fileHasRoman) return false; }
+                const subRom = sanitizedSubject.match(/\b(i|ii|iii|iv|v|vi)\b/)?.[0]; const fileRom = sanitizedFile.match(/\b(i|ii|iii|iv|v|vi)\b/)?.[0];
+                if (subRom) { if (fileRom !== subRom) return false; } else { if (fileRom) return false; }
 
                 const stopWords =['de', 'du', 'des', 'la', 'le', 'les', 'et', 'en', 'a', 'au', 'aux', 'l', 'd', 'pour', 'sur', 'dans'];
                 const distinctKeywords = subjectKeywords.filter(w => !stopWords.includes(w) && w.length > 1);
 
                 if (distinctKeywords.length > 0) {
-                    // 1. معالجة المفرد والجمع (حذف حرف s للبحث المرن)
                     const baseKeywords = distinctKeywords.map(w => w.endsWith('s') ? w.slice(0, -1) : w);
-
-                    // 2. يجب أن يحتوي الملف على كل الكلمات الأساسية
-                    const hasAllWords = baseKeywords.every(k => sanitizedFile.includes(k));
-                    if (!hasAllWords) return false;
-
-                    // 3. منع التشتت (لحل مشكلة الصورة الأولى)
-                    // يجب أن تكون الكلمات قريبة من بعضها (بحد أقصى 35 حرف)
-                    const distanceRegex = new RegExp(baseKeywords.join('.{0,35}'));
-                    if (!distanceRegex.test(sanitizedFile)) return false;
-
-                    // 4. منع التداخل (لحل مشكلة الصورة الثانية الخاصة بـ assurance وغيرها)
-                    // كلمات تميز مواد أخرى، إذا وُجدت في الملف والمادة الحالية لا تحتويها، يتم الرفض
-                    const collisionBlockers =['assurance', 'approfondie', 'bancaire', 'international', 'internationale', 'islamique', 'portefeuille', 'tresorerie', 'patrimoine'];
-                    for (let word of collisionBlockers) {
-                        if (sanitizedFile.includes(word) && !sanitizedSubject.includes(word)) {
-                            return false;
-                        }
+                    if (!baseKeywords.every(k => sanitizedFile.includes(k)) || !new RegExp(baseKeywords.join('.{0,35}')).test(sanitizedFile)) return false;
+                    for (let word of['assurance', 'approfondie', 'bancaire', 'international', 'internationale', 'islamique', 'portefeuille', 'tresorerie', 'patrimoine']) {
+                        if (sanitizedFile.includes(word) && !sanitizedSubject.includes(word)) return false;
                     }
                     return true;
                 }
@@ -827,107 +863,90 @@
             });
 
             currentSubjectFiles =[...filteredGithub, ...supabaseFiles];
-            
-            // إخفاء مؤشر التحميل بعد الانتهاء
             document.getElementById('loading-spinner').classList.add('hidden');
-            
             if(isArchiveSpecialCase) renderFilteredFiles();
         }
 
         function openSmartViewer(fileObj) {
-            document.getElementById('pdf-viewer-overlay').classList.remove('hidden');
-            document.getElementById('viewer-filename').textContent = fileObj.name.replace(/^"|"$/g, '');
-            document.getElementById('rendering-msg').style.display = 'block';
-
-            let rawUrl = '';
-            if (fileObj.source === 'supabase') { const { data } = supabaseClient.storage.from('pdf-files').getPublicUrl(fileObj.path); rawUrl = data.publicUrl; } 
-            else { let cleanPath = fileObj.path.replace(/^"|"$/g, ''); let encodedPath = cleanPath.split('/').map(part => encodeURIComponent(part)).join('/'); rawUrl = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/${currentBranch}/${encodedPath}`; }
-
-            // زر التحميل الخارجي في شريط العارض
+            document.getElementById('pdf-viewer-overlay').classList.remove('hidden'); document.getElementById('viewer-filename').textContent = fileObj.name.replace(/^"|"$/g, ''); document.getElementById('rendering-msg').style.display = 'block';
+            let rawUrl = fileObj.source === 'supabase' ? supabaseClient.storage.from('pdf-files').getPublicUrl(fileObj.path).data.publicUrl : `https://raw.githubusercontent.com/${repoOwner}/${repoName}/${currentBranch}/${fileObj.path.replace(/^"|"$/g, '').split('/').map(encodeURIComponent).join('/')}`;
             document.getElementById('viewer-action-btn').onclick = () => triggerDownload(fileObj);
-            
-            const area = document.getElementById('pdf-render-area'); area.innerHTML = '';
             const iframe = document.createElement('iframe'); iframe.style.width = "100%"; iframe.style.height = "100%"; iframe.style.border = "none";
-            iframe.src = `https://docs.google.com/gview?url=${encodeURIComponent(rawUrl)}&embedded=true`;
-            iframe.onload = () => document.getElementById('rendering-msg').style.display = 'none';
-            area.appendChild(iframe);
+            iframe.src = `https://docs.google.com/gview?url=${encodeURIComponent(rawUrl)}&embedded=true`; iframe.onload = () => document.getElementById('rendering-msg').style.display = 'none';
+            document.getElementById('pdf-render-area').innerHTML = ''; document.getElementById('pdf-render-area').appendChild(iframe);
         }
 
         function handleGlobalSearch(query) {
             if(query.length === 0) { closeSearch(); return; }
-            hideAll(); document.getElementById('file-list-container').classList.remove('hidden');
-            document.getElementById('file-list-back-btn').setAttribute('onclick', 'closeSearch()');
-            document.getElementById('selected-subject-name').textContent = "نتائج البحث: " + query;
-            const pdfList = document.getElementById('pdf-list'); pdfList.innerHTML = "";
-            const term = normalizeText(query);
+            hideAll(); document.getElementById('file-list-container').classList.remove('hidden'); document.getElementById('file-list-back-btn').setAttribute('onclick', 'closeSearch()'); document.getElementById('selected-subject-name').textContent = query;
+            const pdfList = document.getElementById('pdf-list'); pdfList.innerHTML = ""; const term = normalizeText(query);
             if(allFiles.length === 0) fetchFilesFromGitHub('main');
             const results = allFiles.filter(file => isValidFile(file.name) && normalizeText(file.name).includes(term));
-            
-            if(results.length === 0) { document.getElementById('no-files-msg').classList.remove('hidden'); } 
-            else { document.getElementById('no-files-msg').classList.add('hidden'); results.forEach(file => pdfList.appendChild(buildFileListItem({...file, source: 'github'}))); }
+            if(results.length === 0) { document.getElementById('no-files-msg').classList.remove('hidden'); } else { document.getElementById('no-files-msg').classList.add('hidden'); results.forEach(file => pdfList.appendChild(buildFileListItem({...file, source: 'github'}))); }
         }
         
         function closeSearch() { hideAll(); document.getElementById('main-menu').classList.remove('hidden'); }
         function closePdfViewer() { document.getElementById('pdf-viewer-overlay').classList.add('hidden'); document.getElementById('pdf-render-area').innerHTML = ""; }
         function openUnionModal() { document.getElementById('union-modal-overlay').classList.remove('hidden'); }
         function closeUnionModal() { document.getElementById('union-modal-overlay').classList.add('hidden'); }
-        
         function openWebViewer(url, title) { document.getElementById('web-viewer-title').textContent = title; document.getElementById('web-frame').src = url; document.getElementById('web-viewer-overlay').classList.remove('hidden'); }
         function closeWebViewer() { document.getElementById('web-viewer-overlay').classList.add('hidden'); document.getElementById('web-frame').src = ''; }
-        
         function openUploadModal() { document.getElementById('upload-modal-overlay').classList.remove('hidden'); updateUploadSubjects(); }
         function closeUploadModal() { document.getElementById('upload-modal-overlay').classList.add('hidden'); document.getElementById('upload-status').textContent = ''; document.getElementById('upload-form').reset(); }
 
         function updateUploadSubjects() {
             const spec = document.getElementById('upload-spec').value; const semester = document.getElementById('upload-semester').value; const subjectSelect = document.getElementById('upload-subject');
-            subjectSelect.innerHTML = '<option value="">اختر المادة...</option>';
-            if (subjectsData[spec] && subjectsData[spec][semester]) {
-                const subjects = subjectsData[spec][semester];
-                if (subjects.length === 0) { subjectSelect.innerHTML = '<option value="">لا توجد مواد لهذا الفصل</option>'; return; }
-                subjects.forEach(subject => { const option = document.createElement('option'); option.value = subject; option.textContent = subject; subjectSelect.appendChild(option); });
-            } else { subjectSelect.innerHTML = '<option value="">لا توجد بيانات</option>'; }
+            subjectSelect.innerHTML = '<option value="">---</option>';
+            if (subjectsData[spec] && subjectsData[spec][semester] && subjectsData[spec][semester].length > 0) {
+                subjectsData[spec][semester].forEach(subject => { const option = document.createElement('option'); option.value = subject; option.textContent = subject; subjectSelect.appendChild(option); });
+            }
         }
 
         const uploadForm = document.getElementById('upload-form'); const statusDiv = document.getElementById('upload-status'); const submitBtn = document.getElementById('upload-submit-btn');
         uploadForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            if (!supabaseClient) { statusDiv.textContent = 'خطأ في اتصال قاعدة البيانات'; statusDiv.className = 'status-msg error'; return; }
-            
-            const spec = document.getElementById('upload-spec').value; const level = document.getElementById('upload-level').value; const semester = document.getElementById('upload-semester').value;
-            const subject = document.getElementById('upload-subject').value; const type = document.getElementById('upload-type').value; const files = document.getElementById('upload-file').files;
-
-            if (files.length === 0 || !subject) { statusDiv.textContent = 'يرجى اختيار المادة والملف(ات)'; statusDiv.className = 'status-msg error'; return; }
-
-            submitBtn.disabled = true; let successCount = 0; let errorCount = 0;
-
+            e.preventDefault(); if (!supabaseClient) { statusDiv.textContent = 'خطأ اتصال'; statusDiv.className = 'status-msg error'; return; }
+            const spec = document.getElementById('upload-spec').value; const level = document.getElementById('upload-level').value; const semester = document.getElementById('upload-semester').value; const subject = document.getElementById('upload-subject').value; const type = document.getElementById('upload-type').value; const files = document.getElementById('upload-file').files;
+            if (files.length === 0 || !subject) return; submitBtn.disabled = true; let successCount = 0; let errorCount = 0;
             for (let i = 0; i < files.length; i++) {
-                const file = files[i];
-                statusDiv.textContent = `⏳ جاري رفع الملف (${i + 1} من ${files.length})...`; statusDiv.className = 'status-msg';
-
+                statusDiv.textContent = `⏳ جاري رفع (${i + 1}/${files.length})...`; statusDiv.className = 'status-msg';
                 try {
-                    const timestamp = new Date().getTime(); const subjectFolder = getSafeSubjectCode(subject);
-                    let safeFileName = file.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9.\-_]/g, "_");
-                    const taggedFileName = `${type}_${timestamp}_${i}_${safeFileName}`;
-                    const filePath = `${spec}/${level}/${semester}/${subjectFolder}/${taggedFileName}`;
-                    const { data, error } = await supabaseClient.storage.from('pdf-files').upload(filePath, file, { cacheControl: '3600', upsert: false });
+                    const filePath = `${spec}/${level}/${semester}/${getSafeSubjectCode(subject)}/${type}_${new Date().getTime()}_${i}_${files[i].name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9.\-_]/g, "_")}`;
+                    const { error } = await supabaseClient.storage.from('pdf-files').upload(filePath, files[i], { cacheControl: '3600', upsert: false });
                     if (error) throw error; successCount++;
-                } catch (error) { console.error('Upload Error:', error); errorCount++; }
+                } catch (error) { errorCount++; }
             }
-
-            if (errorCount === 0) { statusDiv.textContent = `✅ تم رفع ${successCount} ملف(ات) بنجاح!`; statusDiv.className = 'status-msg success'; } 
-            else { statusDiv.textContent = `⚠️ تم رفع ${successCount} بنجاح، وفشل ${errorCount}`; statusDiv.className = 'status-msg error'; }
-
-            setTimeout(() => { uploadForm.reset(); document.getElementById('upload-subject').innerHTML = '<option value="">اختر التخصص والفصل أولاً...</option>'; statusDiv.textContent = ''; submitBtn.disabled = false; }, 4000);
+            statusDiv.textContent = errorCount === 0 ? `✅ تم رفع ${successCount} بنجاح!` : `⚠️ تم رفع ${successCount}، وفشل ${errorCount}`; statusDiv.className = errorCount === 0 ? 'status-msg success' : 'status-msg error';
+            setTimeout(() => { uploadForm.reset(); updateUploadSubjects(); statusDiv.textContent = ''; submitBtn.disabled = false; }, 4000);
         });
     </script>
 
-    <!-- تشغيل Service Worker لضمان اعتماده كتطبيق PWA آمن -->
+    <!-- نظام Service Worker مع تحديث PWA الذكي -->
     <script>
+      let newWorker;
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('sw.js')
-            .then(reg => console.log('تم تسجيل Service Worker بنجاح'))
-            .catch(err => console.error('خطأ في تسجيل Service Worker:', err));
+          navigator.serviceWorker.register('sw.js?v=' + new Date().getTime()).then(reg => {
+            console.log('SW Registered');
+            reg.addEventListener('updatefound', () => {
+              newWorker = reg.installing;
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  document.getElementById('update-toast').classList.add('show');
+                }
+              });
+            });
+          });
+          
+          let refreshing;
+          navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (refreshing) return;
+            refreshing = true;
+            window.location.reload();
+          });
+        });
+
+        document.getElementById('update-btn').addEventListener('click', () => {
+          if (newWorker) newWorker.postMessage({ action: 'skipWaiting' });
         });
       }
     </script>
