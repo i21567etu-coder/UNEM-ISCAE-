@@ -14,8 +14,19 @@
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- استدعاء مكتبة Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- مكتبة الرسوم البيانية للإحصائيات -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- كود جوجل أناليتكس كدعم إضافي للمستقبل -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-PDTFN9Y84M"></script>
+    <script>
+      window.dataLayer = window.dataLayer ||[];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-PDTFN9Y84M');
+    </script>
 
     <style>
         /* ==================== MODERN STYLE.CSS (With Dark Mode & RTL/LTR Support) ==================== */
@@ -29,10 +40,8 @@
             --text-secondary: #64748b;
             --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.05);
             --shadow-md: 0 10px 15px -3px rgba(15, 81, 50, 0.08);
-            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
             --border-color: #e2e8f0;
-            --radius-lg: 24px;
-            --radius-md: 16px;
+            --radius-lg: 20px;
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
@@ -49,154 +58,209 @@
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
         body { 
-            font-family: 'Tajawal', sans-serif; margin: 0; padding-bottom: 0; 
+            font-family: 'Tajawal', sans-serif; margin: 0; padding: 0; 
             background-color: var(--bg-color); color: var(--text-primary); 
             line-height: 1.6; transition: background-color 0.3s, color 0.3s;
+            height: 100dvh; 
+            width: 100vw;
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased; 
+            -moz-osx-font-smoothing: grayscale;
         }
 
         @keyframes fadeUp { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } }
         .section-box:not(.hidden) { animation: fadeUp 0.4s ease-out forwards; }
 
-        .top-slogan { background: linear-gradient(90deg, #d4af37, #f3e5ab, #d4af37); color: #4a3c00; text-align: center; padding: 8px; font-size: 0.95rem; font-weight: 800; box-shadow: var(--shadow-sm); position: relative; z-index: 100; }
-        .top-nav { 
-            background: #064e3b; color: white; 
-            padding: 12px 60px; 
-            text-align: center; font-size: 0.9rem; font-weight: 700; 
-            transition: background-color 0.3s; position: relative; 
-            line-height: 1.6;
-        }
-        .unem-badge { 
-            background: rgba(255,255,255,0.15); padding: 4px 10px; 
-            border-radius: 20px; backdrop-filter: blur(4px); 
-            border: 1px solid rgba(255,255,255,0.2); 
-            display: inline-block; margin-top: 3px;
-        }
+        .top-slogan { background: linear-gradient(90deg, #d4af37, #f3e5ab, #d4af37); color: #4a3c00; text-align: center; padding: 5px; font-size: 0.9rem; font-weight: 800; box-shadow: var(--shadow-sm); position: relative; z-index: 100; letter-spacing: 0.5px;}
         
-        /* أزرار الثيم واللغة */
         .theme-btn, .lang-btn { 
             background: rgba(255,255,255,0.2); border: none; color: white; 
             border-radius: 50px; width: 38px; height: 38px; 
             display: flex; align-items: center; justify-content: center; 
             font-size: 1.1rem; font-weight: 800; cursor: pointer; transition: var(--transition); 
-            position: absolute; top: 50%; transform: translateY(-50%); 
+            position: absolute; top: 15px; 
+            z-index: 1000; 
         }
-        .theme-btn { inset-inline-start: 15px; }
-        .lang-btn { inset-inline-end: 15px; font-size: 0.95rem; }
-        .theme-btn:hover, .lang-btn:hover { background: rgba(255,255,255,0.3); transform: translateY(-50%) scale(1.1); }
+        .theme-btn { inset-inline-start: 15px; } .lang-btn { inset-inline-end: 15px; font-size: 0.95rem; }
+        .theme-btn:hover, .lang-btn:hover { background: rgba(255,255,255,0.3); transform: scale(1.1); }
 
-        .main-header { background: linear-gradient(135deg, #0f5132 0%, #198754 100%); color: white; padding: 40px 20px 50px; border-radius: 0 0 40px 40px; text-align: center; box-shadow: 0 10px 30px rgba(25, 135, 84, 0.3); margin-bottom: -30px; position: relative; overflow: hidden; }
+        .main-header { background: linear-gradient(135deg, #0f5132 0%, #198754 100%); color: white; padding: 15px 10px 15px; border-radius: 0 0 25px 25px; text-align: center; box-shadow: 0 10px 30px rgba(25, 135, 84, 0.3); margin-bottom: -15px; position: relative; overflow: hidden; flex-shrink: 0; }
         body.dark-mode .main-header { background: linear-gradient(135deg, #064e3b 0%, #047857 100%); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         
-        .logo-container { background: white; width: 90px; height: 90px; border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px rgba(255, 255, 255, 0.4); border: 4px solid rgba(255,255,255,0.2); overflow: hidden; position: relative; z-index: 2; }
+        .logo-container { background: white; width: 50px; height: 50px; border-radius: 50%; margin: 0 auto 5px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 15px rgba(255, 255, 255, 0.4); border: 3px solid rgba(255,255,255,0.2); overflow: hidden; position: relative; z-index: 2; }
         .logo-img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; padding: 2px;}
-        
-        .main-header h1 { margin: 0; font-size: 2rem; font-weight: 800; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-        .main-header p { font-size: 1.1rem; margin-top: 8px; opacity: 0.9; font-weight: 500; }
+        .main-header h1 { margin: 0; font-size: 1.3rem; font-weight: 800; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .main-header p { font-size: 0.9rem; margin-top: 2px; opacity: 0.95; font-weight: 700; margin-bottom: 0; }
 
-        .container { width: 92%; max-width: 800px; margin: 0 auto; padding-top: 50px; padding-bottom: 40px; position: relative; z-index: 10; }
-        .section-box { background: var(--card-bg); border-radius: var(--radius-lg); padding: 25px; margin-bottom: 20px; box-shadow: var(--shadow-md); border: 1px solid var(--border-color); transition: var(--transition); }
-        .section-title { color: var(--primary-color); position: relative; padding-bottom: 12px; margin: 0 0 25px; font-weight: 800; text-align: center; transition: color 0.3s; }
+        .container { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; overflow: hidden; width: 96%; max-width: 1200px; margin: 0 auto; padding-top: 15px; padding-bottom: 10px; position: relative; z-index: 10; }
+        
+        .section-box { flex: 1 1 auto; min-height: 0; overflow-y: auto; background: var(--card-bg); border-radius: var(--radius-lg); padding: 12px; box-shadow: var(--shadow-md); border: 1px solid var(--border-color); transition: var(--transition); }
+        .section-box::-webkit-scrollbar { width: 4px; }
+        .section-box::-webkit-scrollbar-thumb { background-color: var(--secondary-color); border-radius: 10px; }
+        
+        .section-title { color: var(--primary-color); position: relative; padding-bottom: 8px; margin: 0 0 15px; font-weight: 800; font-size: 1.15rem; text-align: center; transition: color 0.3s; }
         .section-title::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 50px; height: 4px; background: var(--secondary-color); border-radius: 10px; }
 
-        .search-box { background: var(--card-bg); border-radius: 50px; padding: 15px 25px; display: flex; align-items: center; box-shadow: var(--shadow-md); margin-bottom: 25px; border: 2px solid var(--border-color); transition: var(--transition); }
-        .search-box:focus-within { border-color: var(--secondary-color); box-shadow: var(--shadow-lg); }
-        .search-box input { flex: 1; border: none; outline: none; background: transparent; font-size: 1.05rem; font-family: inherit; color: var(--text-primary); }
-        .search-box i { font-size: 1.2rem; color: var(--text-secondary); margin-inline-start: 10px;}
+        .search-box { flex-shrink: 0; background: var(--card-bg); border-radius: 50px; padding: 12px 18px; display: flex; align-items: center; box-shadow: var(--shadow-md); margin-bottom: 10px; border: 2px solid var(--border-color); transition: var(--transition); }
+        .search-box:focus-within { border-color: var(--secondary-color); box-shadow: var(--shadow-sm); }
+        .search-box input { flex: 1; border: none; outline: none; background: transparent; font-size: 0.95rem; font-weight: 600; font-family: inherit; color: var(--text-primary); }
+        .search-box i { font-size: 1.1rem; color: var(--text-secondary); margin-inline-start: 10px;}
 
-        .semesters-grid { display: grid; grid-template-columns: 1fr; gap: 18px; }
-        @media (min-width: 600px) { .semesters-grid { grid-template-columns: 1fr 1fr; } }
+        .semesters-grid, .category-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        @media (min-width: 650px) { .semesters-grid, .category-grid { grid-template-columns: repeat(3, 1fr); gap: 15px; } }
+        @media (min-width: 950px) { .semesters-grid, .category-grid { grid-template-columns: repeat(4, 1fr); gap: 20px; } }
 
-        .semester-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 25px 20px; text-align: center; cursor: pointer; transition: var(--transition); display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; }
-        .semester-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--secondary-color); transform: scaleX(0); transition: var(--transition); }
-        .semester-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-md); border-color: var(--secondary-color); }
-        .semester-card:hover::before { transform: scaleX(1); }
+        .semester-card, .category-card { 
+            background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px 5px; 
+            text-align: center; cursor: pointer; transition: var(--transition); display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; position: relative; overflow: hidden; 
+            min-height: 110px; box-shadow: var(--shadow-sm);
+            border-bottom: 4px solid var(--theme-color, var(--primary-color));
+            border-inline-end: 4px solid var(--theme-color, var(--primary-color));
+        }
+
+        .semester-card:hover, .category-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: var(--theme-color, var(--primary-color)); }
+
+        .semester-card .icon-box, .category-card .icon-box { 
+            position: absolute; top: 0; inset-inline-end: 0; width: 35px; height: 35px; 
+            background: var(--theme-light, rgba(15, 81, 50, 0.1)); color: var(--theme-color, var(--primary-color)); 
+            display: flex; align-items: center; justify-content: center; font-size: 1.1rem; transition: var(--transition); 
+        }
+
+        html[dir="rtl"] .semester-card .icon-box, html[dir="rtl"] .category-card .icon-box { border-bottom-left-radius: 100%; }
+        html[dir="ltr"] .semester-card .icon-box, html[dir="ltr"] .category-card .icon-box { border-bottom-right-radius: 100%; }
+
+        .semester-card h3, .category-card h3 { margin: 15px 0 5px 0; font-weight: 800; font-size: 0.95rem; color: var(--text-primary); z-index: 2; line-height: 1.3; }
+        .semester-card p, .category-card p { margin: 0; color: var(--text-secondary); font-size: 0.8rem; font-weight: 700; z-index: 2; line-height: 1.4; }
+
+        #main-menu { display: flex; flex-direction: column; }
+        #main-menu .semesters-grid { 
+            flex: 1; 
+            display: grid !important; 
+            grid-template-columns: repeat(2, 1fr) !important; 
+            grid-template-rows: repeat(3, 1fr); 
+            gap: 12px; 
+            height: 100%;
+        }
         
-        .icon-box { width: 65px; height: 65px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin-bottom: 15px; background: rgba(15, 81, 50, 0.05); color: var(--primary-color); transition: var(--transition); }
-        body.dark-mode .icon-box { background: rgba(16, 185, 129, 0.1); }
-        .semester-card:hover .icon-box { background: var(--primary-color); color: white; transform: scale(1.1) rotate(5deg); }
-        .semester-card h3 { margin: 0 0 5px; font-weight: 800; font-size: 1.2rem; color: var(--text-primary); }
-        .semester-card p { margin: 0; color: var(--text-secondary); font-size: 0.9rem; font-weight: 500;}
+        @media (min-width: 650px) { #main-menu .semesters-grid { gap: 15px; } }
+        @media (min-width: 950px) { #main-menu .semesters-grid { gap: 20px; } }
 
-        .category-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .category-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 25px 15px; text-align: center; cursor: pointer; transition: var(--transition); }
-        .category-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-md); }
-        .category-card i { font-size: 2.5rem; margin-bottom: 12px; transition: var(--transition); }
-        .category-card:hover i { transform: scale(1.1); }
-        .category-card h3 { margin: 0 0 5px; font-weight: 800; font-size: 1.1rem; color: var(--text-primary); }
-        .category-card p { margin: 0; color: var(--text-secondary); font-size: 0.85rem; }
+        .semester-card.wide-card { 
+            grid-column: 1 / -1; 
+            padding: 15px; 
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        #main-menu .semester-card {
+            height: 100%; 
+            min-height: 0; 
+            justify-content: center;
+        }
 
-        .cat-cours i { color: #3b82f6; } .cat-td-tp i { color: #059669; } .cat-devoir i { color: #f59e0b; } .cat-examen i { color: #ef4444; }
+        .semester-card.wide-card h3 { font-size: 1.15rem; margin: 15px 0 5px 0; }
+        .semester-card.wide-card p { font-size: 0.9rem; }
+        .semester-card.wide-card .icon-box { width: 50px; height: 50px; font-size: 1.3rem; }
 
-        .buttons-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
-        .buttons-grid button { background: var(--card-bg); border: 1px solid var(--border-color); border-inline-start: 5px solid var(--primary-color); padding: 16px; border-radius: 12px; text-align: start; font-weight: 700; font-size: 1rem; color: var(--text-primary); cursor: pointer; transition: var(--transition); box-shadow: var(--shadow-sm); font-family: inherit; }
-        .buttons-grid button:hover { transform: translateX(calc(-5px * var(--dir-sign, 1))); box-shadow: var(--shadow-md); border-color: var(--secondary-color); }
+        @media (min-width: 650px) {
+            .semester-card.wide-card h3 { font-size: 1.4rem; margin: 20px 0 8px 0; }
+            .semester-card.wide-card p { font-size: 1.1rem; }
+            .semester-card.wide-card .icon-box { width: 65px; height: 65px; font-size: 1.6rem; }
+            
+            #main-menu .semester-card:not(.wide-card) h3 { font-size: 1.2rem; margin-top: 25px; }
+            #main-menu .semester-card:not(.wide-card) p { font-size: 0.95rem; }
+            #main-menu .semester-card:not(.wide-card) .icon-box { width: 50px; height: 50px; font-size: 1.4rem; }
+        }
+
+        .semesters-grid > *:nth-child(6n+1), .category-grid > *:nth-child(4n+1) { --theme-color: #20b2aa; --theme-light: rgba(32, 178, 170, 0.2); background-color: rgba(32, 178, 170, 0.04); }
+        .semesters-grid > *:nth-child(6n+2), .category-grid > *:nth-child(4n+2) { --theme-color: #f06292; --theme-light: rgba(240, 98, 146, 0.2); background-color: rgba(240, 98, 146, 0.04); }
+        .semesters-grid > *:nth-child(6n+3), .category-grid > *:nth-child(4n+3) { --theme-color: #7986cb; --theme-light: rgba(121, 134, 203, 0.2); background-color: rgba(121, 134, 203, 0.04); }
+        .semesters-grid > *:nth-child(6n+4), .category-grid > *:nth-child(4n+4) { --theme-color: #10b981; --theme-light: rgba(16, 185, 129, 0.2); background-color: rgba(16, 185, 129, 0.04); }
+        .semesters-grid > *:nth-child(6n+5) { --theme-color: #5c6bc0; --theme-light: rgba(92, 107, 192, 0.2); background-color: rgba(92, 107, 192, 0.04); }
+        .semesters-grid > *:nth-child(6n+6) { --theme-color: #29b6f6; --theme-light: rgba(41, 182, 246, 0.2); background-color: rgba(41, 182, 246, 0.04); }
+
+        body.dark-mode .semester-card, body.dark-mode .category-card { background-color: var(--card-bg); }
+
+        .buttons-grid { display: grid; grid-template-columns: 1fr; gap: 8px; }
+        @media (min-width: 650px) { .buttons-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; } }
+        @media (min-width: 950px) { .buttons-grid { grid-template-columns: repeat(3, 1fr); gap: 15px; } }
+        
+        .buttons-grid button { background: var(--card-bg); border: 1px solid var(--border-color); border-inline-start: 5px solid var(--primary-color); padding: 14px; border-radius: 12px; text-align: start; font-weight: 800; font-size: 0.95rem; color: var(--text-primary); cursor: pointer; transition: var(--transition); box-shadow: var(--shadow-sm); font-family: inherit; }
+        .buttons-grid button:hover { transform: translateX(calc(-5px * var(--dir-sign, 1))); box-shadow: var(--shadow-md); border-color: var(--secondary-color); background: rgba(15, 81, 50, 0.02); }
         html[dir="ltr"] .buttons-grid button:hover { transform: translateX(5px); }
 
-        .header-with-back { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-        .back-btn { background: rgba(15, 81, 50, 0.08); border: none; padding: 10px 20px; border-radius: 50px; font-weight: 800; cursor: pointer; color: var(--primary-color); transition: var(--transition); display: flex; align-items: center; gap: 8px; font-family: inherit; }
+        .header-with-back { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .back-btn { background: rgba(15, 81, 50, 0.08); border: none; padding: 8px 15px; border-radius: 50px; font-weight: 800; cursor: pointer; color: var(--primary-color); transition: var(--transition); display: flex; align-items: center; gap: 8px; font-family: inherit; font-size: 0.9rem;}
         body.dark-mode .back-btn { background: rgba(16, 185, 129, 0.15); }
         .back-btn::before { content: '\f0da'; font-family: 'Font Awesome 6 Free'; font-weight: 900; } 
         html[dir="ltr"] .back-btn::before { content: '\f0d9'; }
-        .back-btn:hover { background: var(--primary-color); color: white; }
+        .back-btn:hover { background: var(--primary-color); color: white; transform: scale(1.05); }
         .hidden { display: none !important; }
 
-        #pdf-list { list-style: none; padding: 0; }
-        #pdf-list li { background: var(--card-bg); padding: 12px 15px; margin-bottom: 12px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); transition: var(--transition); }
-        #pdf-list li:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--secondary-color); }
+        #pdf-list { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: 1fr; gap: 8px; }
+        @media (min-width: 650px) { #pdf-list { grid-template-columns: repeat(2, 1fr); gap: 12px; } }
         
-        .file-info { display: flex; align-items: center; gap: 15px; cursor: pointer; flex-grow: 1; padding: 5px; text-align: start; }
-        .file-info i.fa-file-pdf { font-size: 1.5rem; color: #ef4444; background: rgba(239, 68, 68, 0.1); padding: 10px; border-radius: 12px; }
-        .file-info span { font-weight: 600; color: var(--text-primary); word-break: break-word; font-size: 1rem; }
+        #pdf-list li { background: var(--card-bg); padding: 12px 12px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); transition: var(--transition); }
+        #pdf-list li:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: var(--secondary-color); }
+        
+        .file-info { display: flex; align-items: center; gap: 12px; cursor: pointer; flex-grow: 1; padding: 5px; text-align: start; }
+        .file-info i.fa-file-pdf { font-size: 1.4rem; color: #ef4444; background: rgba(239, 68, 68, 0.1); padding: 10px; border-radius: 10px; }
+        .file-info span { font-weight: 800; color: var(--text-primary); word-break: break-word; font-size: 0.95rem; line-height: 1.4; }
 
-        .actions-group { display: flex; gap: 8px; flex-shrink: 0; }
-        .action-btn { background: var(--bg-color); color: var(--text-secondary); border: 1px solid var(--border-color); width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: var(--transition); }
-        .action-btn:hover { background: var(--primary-color); color: white; transform: translateY(-2px); border-color: var(--primary-color); }
+        .actions-group { display: flex; gap: 6px; flex-shrink: 0; }
+        .action-btn { background: var(--bg-color); color: var(--text-secondary); border: 1px solid var(--border-color); width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: var(--transition); font-size: 0.95rem;}
+        .action-btn:hover { background: var(--primary-color); color: white; transform: translateY(-3px); border-color: var(--primary-color); box-shadow: var(--shadow-sm); }
 
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; display: flex; flex-direction: column; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); justify-content: center; align-items: center; padding: 20px; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; display: flex; flex-direction: column; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); justify-content: center; align-items: center; padding: 20px; }
         #web-viewer-overlay { background: #0f172a; padding: 0 !important; }
         #pdf-viewer-overlay { background: rgba(15, 23, 42, 0.95); justify-content: flex-start; padding: 0; }
         
-        .modal-content { background: var(--card-bg); width: 100%; max-width: 450px; max-height: 85vh; overflow-y: auto; border-radius: var(--radius-lg); padding: 30px; text-align: center; position: relative; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); border: 1px solid var(--border-color); animation: modalPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .modal-content { background: var(--card-bg); width: 100%; max-width: 500px; max-height: 85vh; overflow-y: auto; border-radius: var(--radius-lg); padding: 25px; text-align: center; position: relative; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); border: 1px solid var(--border-color); animation: modalPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
         @keyframes modalPop { 0% { transform: scale(0.8) translateY(30px); opacity: 0; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
         
-        .modal-content h2 { color: var(--primary-color); margin-top: 0; font-weight: 800; margin-bottom: 20px;}
-        .modal-content p { color: var(--text-secondary); font-size: 1.05rem; line-height: 1.8; }
+        .modal-content h2 { color: var(--primary-color); margin-top: 0; font-weight: 800; margin-bottom: 15px; font-size: 1.25rem;}
+        .modal-content p { color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6; font-weight: 600;}
 
-        .viewer-header { background: #0f172a; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .viewer-header { background: #0f172a; color: white; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
         #pdf-render-area, .web-viewer-container { flex: 1; width: 100%; height: 100%; background: #f8fafc; position: relative; }
         .web-viewer-container iframe { width: 100%; height: 100%; border: none; }
-        .spinner { border: 4px solid rgba(255,255,255,0.2); border-top: 4px solid var(--accent-color); border-radius: 50%; width: 45px; height: 45px; animation: spin 1s linear infinite; margin: 30px auto; }
+        .spinner { border: 4px solid rgba(255,255,255,0.2); border-top: 4px solid var(--accent-color); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 25px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        .form-group { margin-bottom: 18px; text-align: start; }
-        .form-group label { display: block; margin-bottom: 8px; font-weight: 800; color: var(--text-primary); font-size: 0.95rem; }
-        .form-group select, .form-group input { width: 100%; padding: 14px; border: 2px solid var(--border-color); border-radius: 12px; font-family: inherit; font-size: 1rem; color: var(--text-primary); transition: var(--transition); background: var(--bg-color); }
+        .form-group { margin-bottom: 15px; text-align: start; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: 800; color: var(--text-primary); font-size: 0.95rem; }
+        .form-group select, .form-group input { width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: 12px; font-family: inherit; font-size: 0.95rem; color: var(--text-primary); font-weight: 600; transition: var(--transition); background: var(--bg-color); }
         .form-group select:focus, .form-group input:focus { border-color: var(--secondary-color); outline: none; box-shadow: 0 0 0 4px rgba(25, 135, 84, 0.1); }
-        .btn-submit { background: var(--primary-color); color: white; width: 100%; padding: 15px; border: none; border-radius: 12px; font-weight: 800; font-size: 1.1rem; cursor: pointer; margin-top: 10px; transition: var(--transition); font-family: inherit;}
+        .btn-submit { background: var(--primary-color); color: white; width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: 800; font-size: 1.05rem; cursor: pointer; margin-top: 8px; transition: var(--transition); font-family: inherit;}
         .btn-submit:hover:not(:disabled) { background: var(--secondary-color); transform: translateY(-2px); box-shadow: var(--shadow-md); }
         .btn-submit:disabled { background: var(--text-secondary); cursor: not-allowed; }
         .btn-cancel { background: var(--bg-color); color: var(--text-secondary); border: 1px solid var(--border-color); }
         .btn-cancel:hover { background: #fee2e2; color: #ef4444; border-color: #fca5a5; }
 
-        .status-msg { margin-top: 15px; font-size: 1rem; font-weight: 800; text-align: center; }
-        .success { color: #10b981; background: rgba(16, 185, 129, 0.1); padding: 10px; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.2);} 
-        .error { color: #ef4444; background: rgba(239, 68, 68, 0.1); padding: 10px; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.2);}
+        .status-msg { margin-top: 10px; font-size: 0.95rem; font-weight: 800; text-align: center; }
+        .success { color: #10b981; background: rgba(16, 185, 129, 0.1); padding: 8px; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.2);} 
+        .error { color: #ef4444; background: rgba(239, 68, 68, 0.1); padding: 8px; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.2);}
 
-        .main-footer { background: var(--primary-color); color: white; padding: 40px 20px; text-align: center; border-radius: 40px 40px 0 0; margin-top: 40px; position: relative; overflow: hidden; box-shadow: 0 -10px 25px rgba(0,0,0,0.1); }
+        .main-footer { background: var(--primary-color); color: white; padding: 10px 10px; text-align: center; border-radius: 20px 20px 0 0; margin-top: auto; position: relative; overflow: hidden; box-shadow: 0 -10px 25px rgba(0,0,0,0.1); flex-shrink: 0;}
         body.dark-mode .main-footer { background: #064e3b; }
         
-        .social-btn { display: inline-flex; align-items: center; justify-content: center; padding: 14px 25px; color: white; text-decoration: none; font-weight: 800; font-size: 1.05rem; border-radius: 50px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: var(--transition); min-width: 220px; margin: 5px; }
-        .social-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.3); }
+        .social-btn { display: inline-flex; align-items: center; justify-content: center; padding: 10px 15px; color: white; text-decoration: none; font-weight: 800; font-size: 0.9rem; border-radius: 50px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: var(--transition); min-width: 160px; margin: 4px; }
+        .social-btn:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 8px 15px rgba(0,0,0,0.3); }
         .fb-btn { background: linear-gradient(135deg, #1877F2, #0c56b9); } 
         .wa-btn { background: linear-gradient(135deg, #25D366, #1da851); }
-        .copyright { margin-top: 25px; font-size: 0.9rem; color: rgba(255,255,255,0.6); font-weight: 500;}
+        .copyright { margin-top: 10px; font-size: 0.85rem; color: rgba(255,255,255,0.7); font-weight: 700; margin-bottom: 0;}
 
-        /* --- تصميم الإشعار بالتحديث --- */
         #update-toast {
             position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(150px);
             background: var(--card-bg); border: 2px solid var(--accent-color);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3); padding: 12px 20px;
-            border-radius: 50px; display: flex; align-items: center; gap: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3); padding: 10px 15px;
+            border-radius: 50px; display: flex; align-items: center; gap: 10px;
             z-index: 10000; transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s;
             opacity: 0; width: 90%; max-width: 400px; justify-content: space-between;
         }
@@ -204,71 +268,50 @@
         #update-toast span { font-weight: 800; color: var(--text-primary); font-size: 0.95rem; }
         #update-toast button {
             background: var(--primary-color); color: white; border: none;
-            padding: 8px 18px; border-radius: 20px; font-weight: 800;
-            cursor: pointer; transition: var(--transition); font-family: inherit;
+            padding: 8px 15px; border-radius: 20px; font-weight: 800;
+            cursor: pointer; transition: var(--transition); font-family: inherit; font-size: 0.9rem;
         }
         #update-toast button:hover { background: var(--secondary-color); transform: scale(1.05); }
 
-        /* --- تصميم الأكورديون (عن الاتحاد) --- */
         .accordion-btn {
-            background: rgba(232, 93, 34, 0.1);
-            color: #e85d22;
-            padding: 15px 20px;
-            border-radius: 12px;
-            width: 100%;
-            text-align: start;
-            border: 2px solid rgba(232, 93, 34, 0.2);
-            outline: none;
-            font-weight: 800;
-            font-size: 1.1rem;
-            cursor: pointer;
-            transition: var(--transition);
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-family: inherit;
+            background: rgba(232, 93, 34, 0.1); color: #e85d22; padding: 12px 12px;
+            border-radius: 10px; width: 100%; text-align: start; border: 1px solid rgba(232, 93, 34, 0.2);
+            outline: none; font-weight: 800; font-size: 0.95rem; cursor: pointer;
+            transition: var(--transition); margin-bottom: 6px; display: flex;
+            justify-content: space-between; align-items: center; font-family: inherit;
         }
-        body.dark-mode .accordion-btn {
-            background: rgba(232, 93, 34, 0.15);
-            color: #f97316;
-            border-color: rgba(232, 93, 34, 0.3);
-        }
-        .accordion-btn:hover, .accordion-btn.active-btn { 
-            background: #e85d22; 
-            color: white; 
-        }
-        .accordion-content {
-            padding: 5px 15px 15px 15px;
-            display: none;
-            color: var(--text-secondary);
-            animation: fadeDown 0.3s ease-out;
-        }
-        .accordion-content p {
-            margin: 0;
-            text-align: justify;
-        }
-        .accordion-content.active {
-            display: block;
-        }
-        @keyframes fadeDown {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        body.dark-mode .accordion-btn { background: rgba(232, 93, 34, 0.15); color: #f97316; border-color: rgba(232, 93, 34, 0.3); }
+        .accordion-btn:hover, .accordion-btn.active-btn { background: #e85d22; color: white; }
+        .accordion-content { padding: 5px 12px 15px 12px; display: none; color: var(--text-secondary); animation: fadeDown 0.3s ease-out; font-size: 0.9rem;}
+        .accordion-content p { margin: 0; text-align: justify; line-height: 1.7; font-weight: 600;}
+        .accordion-content.active { display: block; }
+        @keyframes fadeDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
+        /* ==================== كود ضبط شاشات الكمبيوتر (Zoom 85%) ==================== */
+        @media (min-width: 1024px) {
+            body {
+                zoom: 0.85;
+                width: calc(100vw / 0.85) !important;
+                height: calc(100dvh / 0.85) !important;
+            }
+            .modal-overlay {
+                width: calc(100vw / 0.85) !important;
+                height: calc(100dvh / 0.85) !important;
+            }
+            .container {
+                max-width: 1500px; 
+            }
+        }
     </style>
 </head>
 <body>
 
     <div class="top-slogan" data-i18n="slogan">الوطني يد تبني و أخرى تناضل</div>
 
-    <nav class="top-nav">
-        <div><span data-i18n="nav_title">الاتحاد الوطني لطلبة موريتانيا - </span><span class="unem-badge">UNEM/ISCAE</span></div>
-        <button id="theme-toggle" class="theme-btn"><i class="fas fa-moon"></i></button>
-        <button id="lang-toggle" class="lang-btn">FR</button>
-    </nav>
-
     <header class="main-header">
+        <button id="theme-toggle" class="theme-btn" onclick="toggleTheme()"><i id="theme-icon" class="fas fa-moon"></i></button>
+        <button id="lang-toggle" class="lang-btn">FR</button>
+
         <div class="logo-container">
             <img src="logo.png" alt="شعار الاتحاد" class="logo-img">
         </div>
@@ -285,30 +328,28 @@
 
         <!-- 1. القائمة الرئيسية -->
         <div id="main-menu" class="section-box">
-            <h2 class="section-title" data-i18n="section_services">الخدمات والأقسام</h2>
             <div class="semesters-grid">
                 
-                <div class="semester-card" onclick="showSpecializationSelection()">
+                <div class="semester-card wide-card" onclick="showSpecializationSelection()">
                     <div class="icon-box"><i class="fas fa-book-reader"></i></div>
                     <h3 data-i18n="card_summaries">الملخصات والأرشيف</h3>
                     <p data-i18n="card_summaries_desc">جميع التخصصات (L1, L2, L3)</p>
                 </div>
 
-                <!-- المسابقات الثقافية والرياضية -->
-                <div class="semester-card" onclick="openWebViewer('https://challenge-unem-iscae.vercel.app/', i18n[currentLang]['card_competitions'])">
-                    <div class="icon-box" style="color:#f59e0b; background: rgba(245, 158, 11, 0.1);"><i class="fas fa-trophy"></i></div>
+                <div class="semester-card wide-card" onclick="logSupabaseAnalytics('دخول قسم', 'النتائج'); openWebViewer('https://resultat-iscae.vercel.app/', i18n[currentLang]['card_results'])">
+                    <div class="icon-box"><i class="fas fa-graduation-cap"></i></div>
+                    <h3 data-i18n="card_results">نتائج المعهد</h3>
+                    <p data-i18n="card_results_desc">الاستعلام عن النتائج</p>
+                </div>
+
+                <div class="semester-card" onclick="logSupabaseAnalytics('دخول قسم', 'المسابقات'); openWebViewer('https://challenge-unem-iscae.vercel.app/', i18n[currentLang]['card_competitions'])">
+                    <div class="icon-box"><i class="fas fa-trophy"></i></div>
                     <h3 data-i18n="card_competitions">المسابقات الثقافية والرياضية</h3>
                     <p data-i18n="card_competitions_desc">التسجيل ومتابعة المنافسات</p>
                 </div>
 
-                <div class="semester-card" onclick="openWebViewer('https://resultat-iscae.vercel.app/', i18n[currentLang]['card_results'])">
-                    <div class="icon-box" style="color:#dc2626; background: rgba(220, 38, 38, 0.1);"><i class="fas fa-graduation-cap"></i></div>
-                    <h3 data-i18n="card_results">نتائج المعهد</h3>
-                    <p data-i18n="card_results_desc">الاستعلام عن النتائج (جديد)</p>
-                </div>
-
                 <div class="semester-card" onclick="openUnionModal()">
-                    <div class="icon-box" style="color:#059669; background: rgba(5, 150, 105, 0.1);"><i class="fas fa-info-circle"></i></div>
+                    <div class="icon-box"><i class="fas fa-info-circle"></i></div>
                     <h3 data-i18n="card_about">عن الاتحاد</h3>
                     <p data-i18n="card_about_desc">نبذة تعريفية وتاريخية</p>
                 </div>
@@ -323,16 +364,14 @@
                 <h2 class="section-title" data-i18n="section_specs">اختر التخصص</h2>
             </div>
             <div class="semesters-grid">
-                <div class="semester-card card-ba" onclick="selectSpecialization('ba')"><div class="icon-box"><i class="fas fa-university"></i></div><h3>BA</h3><p>Banques et Assurances</p></div>
-                <div class="semester-card card-fc" onclick="selectSpecialization('fc')"><div class="icon-box"><i class="fas fa-calculator"></i></div><h3>FC</h3><p>Finance et Comptabilité</p></div>
-                <div class="semester-card card-tcm" onclick="selectSpecialization('tcm')"><div class="icon-box"><i class="fas fa-bullhorn"></i></div><h3>TCM</h3><p>Techniques Commerciales et Marketing</p></div>
-                <div class="semester-card card-grh" onclick="selectSpecialization('grh')"><div class="icon-box"><i class="fas fa-users-cog"></i></div><h3>GRH</h3><p>Gestion des Ressources Humaines</p></div>
-                <div class="semester-card card-sae" onclick="selectSpecialization('sae')"><div class="icon-box"><i class="fas fa-chart-pie"></i></div><h3>SAE</h3><p>Statistique Appliquée à l'Economie</p></div>
-                
-                <!-- أيقونة IG المحدثة والتي تدمج بين الدرع والمعلوماتية والمخطط البياني -->
-                <div class="semester-card card-ig" onclick="selectSpecialization('ig')">
+                <div class="semester-card" onclick="selectSpecialization('ba')"><div class="icon-box"><i class="fas fa-university"></i></div><h3>BA</h3><p>Banques et Assurances</p></div>
+                <div class="semester-card" onclick="selectSpecialization('fc')"><div class="icon-box"><i class="fas fa-calculator"></i></div><h3>FC</h3><p>Finance et Comptabilité</p></div>
+                <div class="semester-card" onclick="selectSpecialization('tcm')"><div class="icon-box"><i class="fas fa-bullhorn"></i></div><h3>TCM</h3><p>Techniques Commerciales et Marketing</p></div>
+                <div class="semester-card" onclick="selectSpecialization('grh')"><div class="icon-box"><i class="fas fa-users-cog"></i></div><h3>GRH</h3><p>Gestion des Ressources Humaines</p></div>
+                <div class="semester-card" onclick="selectSpecialization('sae')"><div class="icon-box"><i class="fas fa-chart-pie"></i></div><h3>SAE</h3><p>Statistique Appliquée à l'Economie</p></div>
+                <div class="semester-card" onclick="selectSpecialization('ig')">
                     <div class="icon-box">
-                        <span class="fa-stack" style="font-size: 0.85em;">
+                        <span class="fa-stack" style="font-size: 0.6em;">
                             <i class="fas fa-shield-halved fa-stack-2x"></i>
                             <i class="fas fa-chart-line fa-stack-1x fa-inverse" style="transform: scale(0.9) translateX(1px);"></i>
                         </span>
@@ -340,7 +379,6 @@
                     <h3>IG</h3>
                     <p>Informatique de Gestion</p>
                 </div>
-
             </div>
         </div>
 
@@ -351,9 +389,9 @@
                 <h2 class="section-title" data-i18n="section_levels">المستوى الدراسي</h2>
             </div>
             <div class="semesters-grid">
-                <div class="semester-card" onclick="showSemesters('l1')"><h3>L1</h3><p data-i18n="level_1">السنة الأولى</p></div>
-                <div class="semester-card" onclick="showSemesters('l2')"><h3>L2</h3><p data-i18n="level_2">السنة الثانية</p></div>
-                <div class="semester-card" onclick="showSemesters('l3')"><h3>L3</h3><p data-i18n="level_3">السنة الثالثة</p></div>
+                <div class="semester-card" onclick="showSemesters('l1')"><div class="icon-box"><i class="fas fa-layer-group"></i></div><h3>L1</h3><p data-i18n="level_1">السنة الأولى</p></div>
+                <div class="semester-card" onclick="showSemesters('l2')"><div class="icon-box"><i class="fas fa-layer-group"></i></div><h3>L2</h3><p data-i18n="level_2">السنة الثانية</p></div>
+                <div class="semester-card" onclick="showSemesters('l3')"><div class="icon-box"><i class="fas fa-layer-group"></i></div><h3>L3</h3><p data-i18n="level_3">السنة الثالثة</p></div>
             </div>
         </div>
 
@@ -381,24 +419,24 @@
                 <button class="back-btn" onclick="goBackToSubjects()" data-i18n="btn_back">العودة</button>
                 <h2 class="section-title" data-i18n="section_file_type">اختر نوع الملف</h2>
             </div>
-            <h3 style="text-align:center; color:var(--primary-color); margin-bottom:25px; font-weight: 800;"><span id="selected-subject-title-card"></span> 📂</h3>
+            <h3 style="text-align:center; color:var(--primary-color); margin-bottom:15px; font-weight: 800; font-size:1.1rem;"><span id="selected-subject-title-card"></span> 📂</h3>
             <div class="category-grid">
-                <div class="category-card cat-cours" onclick="selectCategory('cours')"><i class="fas fa-chalkboard-teacher"></i><h3 data-i18n="cat_cours">Cours</h3><p data-i18n="cat_cours_desc">الدروس والملخصات</p></div>
-                <div class="category-card cat-td-tp" onclick="selectCategory('td_tp')"><i class="fas fa-laptop-code"></i><h3 data-i18n="cat_td">TD et TP</h3><p data-i18n="cat_td_desc">أعمال موجهة وتطبيقية</p></div>
-                <div class="category-card cat-devoir" onclick="selectCategory('devoir')"><i class="fas fa-file-signature"></i><h3 data-i18n="cat_devoir">Devoir</h3><p data-i18n="cat_devoir_desc">الاختبارات والواجبات</p></div>
-                <div class="category-card cat-examen" onclick="selectCategory('examen')"><i class="fas fa-file-alt"></i><h3 data-i18n="cat_examen">Examen</h3><p data-i18n="cat_examen_desc">الامتحانات والأرشيف</p></div>
+                <div class="category-card" onclick="selectCategory('cours')"><div class="icon-box"><i class="fas fa-chalkboard-teacher"></i></div><h3 data-i18n="cat_cours">Cours</h3><p data-i18n="cat_cours_desc">الدروس والملخصات</p></div>
+                <div class="category-card" onclick="selectCategory('td_tp')"><div class="icon-box"><i class="fas fa-laptop-code"></i></div><h3 data-i18n="cat_td">TD et TP</h3><p data-i18n="cat_td_desc">أعمال موجهة وتطبيقية</p></div>
+                <div class="category-card" onclick="selectCategory('devoir')"><div class="icon-box"><i class="fas fa-file-signature"></i></div><h3 data-i18n="cat_devoir">Devoir</h3><p data-i18n="cat_devoir_desc">الاختبارات والواجبات</p></div>
+                <div class="category-card" onclick="selectCategory('examen')"><div class="icon-box"><i class="fas fa-file-alt"></i></div><h3 data-i18n="cat_examen">Examen</h3><p data-i18n="cat_examen_desc">الامتحانات والأرشيف</p></div>
             </div>
         </div>
 
         <!-- عرض الملفات -->
         <div id="file-list-container" class="section-box hidden">
-            <button class="back-btn" id="file-list-back-btn" onclick="goBackToCategories()" style="width:100%; justify-content:center; margin-bottom:20px;" data-i18n="btn_back_files">عودة للخلف</button>
-            <h3 style="text-align:center; margin-bottom: 20px;">📂 <span id="selected-subject-name" style="color:var(--primary-color)"></span></h3>
+            <button class="back-btn" id="file-list-back-btn" onclick="goBackToCategories()" style="width:100%; justify-content:center; margin-bottom:15px; font-size: 0.95rem;" data-i18n="btn_back_files">عودة للخلف</button>
+            <h3 style="text-align:center; margin-bottom: 15px; font-size:1.1rem;">📂 <span id="selected-subject-name" style="color:var(--primary-color)"></span></h3>
             <div id="loading-spinner" class="spinner hidden"></div>
             <ul id="pdf-list"></ul>
-            <div id="no-files-msg" class="hidden" style="text-align:center; padding: 30px; border-radius: 15px; margin-top: 20px; background: rgba(0,0,0,0.02);">
+            <div id="no-files-msg" class="hidden" style="text-align:center; padding: 25px; border-radius: 12px; margin-top: 15px; background: rgba(0,0,0,0.02);">
                 <i class="fas fa-folder-open" style="font-size: 3rem; color: var(--text-secondary); margin-bottom: 10px;"></i>
-                <p style="color:var(--text-secondary); margin:0; font-weight: 600;" data-i18n="no_files">عذراً، لا توجد ملفات هنا حالياً.</p>
+                <p style="color:var(--text-secondary); margin:0; font-weight: 800; font-size:0.95rem;" data-i18n="no_files">عذراً، لا توجد ملفات هنا حالياً.</p>
             </div>
         </div>
     </div>
@@ -422,22 +460,21 @@
         <div style="width: 100%; height: 100%; display: flex; flex-direction: column;">
             <div class="viewer-header">
                 <button onclick="closePdfViewer()" style="background:none; border:none; color:white; font-size:1.1rem; font-weight:800; cursor:pointer;"><i class="fas fa-times"></i> <span data-i18n="btn_close">إغلاق</span></button>
-                <span id="viewer-filename" style="max-width:150px; overflow:hidden; white-space:nowrap; color:#f8fafc; font-weight:600;">ملف</span>
-                <button id="viewer-action-btn" style="background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.3); color:white; padding:6px 15px; border-radius:50px; cursor:pointer; font-weight: 600;"><i class="fas fa-external-link-alt"></i> <span data-i18n="btn_download">تحميل</span></button>
+                <span id="viewer-filename" style="max-width:180px; overflow:hidden; white-space:nowrap; color:#f8fafc; font-weight:800; font-size:0.95rem;">ملف</span>
+                <button id="viewer-action-btn" style="background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.3); color:white; padding:8px 18px; border-radius:50px; cursor:pointer; font-weight: 800; font-size:0.9rem;"><i class="fas fa-external-link-alt"></i> <span data-i18n="btn_download">تحميل</span></button>
             </div>
             <div id="pdf-render-area"></div>
-            <div id="rendering-msg"><div class="spinner"></div><p style="color:white; text-align:center; margin-top:10px; font-weight:600;" data-i18n="loading_file">جاري فتح الملف...<br><span style="font-size:0.8rem; font-weight:normal;">إذا تأخر الفتح، اضغط على زر تحميل أعلاه</span></p></div>
+            <div id="rendering-msg"><div class="spinner"></div><p style="color:white; text-align:center; margin-top:15px; font-weight:800; font-size:0.95rem;" data-i18n="loading_file">جاري فتح الملف...<br><span style="font-size:0.8rem; font-weight:normal;">إذا تأخر الفتح، اضغط على زر تحميل أعلاه</span></p></div>
         </div>
     </div>
 
-    <!-- عن الاتحاد (نظام الأكورديون الجديد) -->
+    <!-- عن الاتحاد -->
     <div id="union-modal-overlay" class="modal-overlay hidden">
         <div class="modal-content" style="text-align: start;">
             <h2 style="text-align: center;" data-i18n="about_title">عن الاتحاد</h2>
             
-            <p style="text-align: center; font-weight: 800; color: var(--primary-color); margin-bottom: 25px; font-size: 1.1rem;" data-i18n="about_welcome">يرحب بالطلبة الجدد ويتمنى لهم مسارا جامعيا موفقا وعاما مليئا بالإنجاز والتميز.</p>
+            <p style="text-align: center; font-weight: 800; color: var(--primary-color); margin-bottom: 20px; font-size: 0.95rem;" data-i18n="about_welcome">يرحب بالطلبة ويتمنى لهم مسارا جامعيا موفقا وعاما مليئا بالإنجاز والتميز.</p>
             
-            <!-- زر من نحن -->
             <button class="accordion-btn" onclick="toggleAccordion('about-who', this)">
                 <span data-i18n="about_who">من نحن ؟</span>
                 <i class="fas fa-chevron-down"></i>
@@ -446,7 +483,6 @@
                 <p data-i18n="about_who_desc">أكبر نقابة طلابية وطنية، تأسست في 13 مايو سنة 2000م، تنشط في الوسط الجامعي وتسعى إلى الدفاع عن الحقوق المادية والمعنوية للطلاب.</p>
             </div>
             
-            <!-- زر رؤيتنا -->
             <button class="accordion-btn" onclick="toggleAccordion('about-vision', this)">
                 <span data-i18n="about_vision">رؤيتنا:</span>
                 <i class="fas fa-chevron-down"></i>
@@ -455,18 +491,17 @@
                 <p data-i18n="about_vision_desc">تقوم رؤية الاتحاد الوطني على عدة أسس من أهمها: تطوير النضال الطلابي لتوفير جميع متطلبات المسار الجامعي الناجح للطلاب الموريتانيين في الداخل والخارج، والإسهام في تكوينهم وتأطيرهم لبناء وعي معرفي حول القضايا والإشكالات الوطنية والمساهمة الفعالة في بناء الوطن ورفع التحديات.</p>
             </div>
             
-            <!-- زر أهدافنا -->
             <button class="accordion-btn" onclick="toggleAccordion('about-goals', this)">
                 <span data-i18n="about_goals">من أهدافنا:</span>
                 <i class="fas fa-chevron-down"></i>
             </button>
             <div id="about-goals" class="accordion-content">
                 <ul style="list-style: none; padding: 0; margin: 0; text-align: start;">
-                    <li style="margin-bottom: 10px;"><i class="fas fa-square" style="color: #e85d22; margin-inline-end: 8px; font-size: 0.7rem;"></i> <span data-i18n="goal_1">النضال من أجل تحسين أوضاع الطالب الموريتاني</span></li>
-                    <li style="margin-bottom: 10px;"><i class="fas fa-square" style="color: #e85d22; margin-inline-end: 8px; font-size: 0.7rem;"></i> <span data-i18n="goal_2">الدفاع عن الحقوق المادية والمعنوية للطلاب وصيانة مكتسباتهم</span></li>
-                    <li style="margin-bottom: 10px;"><i class="fas fa-square" style="color: #e85d22; margin-inline-end: 8px; font-size: 0.7rem;"></i> <span data-i18n="goal_3">إرساء منظومة جامعية متطورة تنتج المعرفة وتواكب التطور العلمي والابتكار</span></li>
-                    <li style="margin-bottom: 10px;"><i class="fas fa-square" style="color: #e85d22; margin-inline-end: 8px; font-size: 0.7rem;"></i> <span data-i18n="goal_4">دمقرطة المجال الجامعي وتعزيز الوحدة الوطنية</span></li>
-                    <li style="margin-bottom: 10px;"><i class="fas fa-square" style="color: #e85d22; margin-inline-end: 8px; font-size: 0.7rem;"></i> <span data-i18n="goal_5">تعزيز الوعي الطلابي حول مختلف القضايا الوطنية</span></li>
+                    <li style="margin-bottom: 8px;"><i class="fas fa-square" style="color: #e85d22; margin-inline-end: 8px; font-size: 0.6rem;"></i> <span data-i18n="goal_1">النضال من أجل تحسين أوضاع الطالب الموريتاني</span></li>
+                    <li style="margin-bottom: 8px;"><i class="fas fa-square" style="color: #e85d22; margin-inline-end: 8px; font-size: 0.6rem;"></i> <span data-i18n="goal_2">الدفاع عن الحقوق المادية والمعنوية للطلاب وصيانة مكتسباتهم</span></li>
+                    <li style="margin-bottom: 8px;"><i class="fas fa-square" style="color: #e85d22; margin-inline-end: 8px; font-size: 0.6rem;"></i> <span data-i18n="goal_3">إرساء منظومة جامعية متطورة تنتج المعرفة وتواكب التطور العلمي والابتكار</span></li>
+                    <li style="margin-bottom: 8px;"><i class="fas fa-square" style="color: #e85d22; margin-inline-end: 8px; font-size: 0.6rem;"></i> <span data-i18n="goal_4">دمقرطة المجال الجامعي وتعزيز الوحدة الوطنية</span></li>
+                    <li style="margin-bottom: 8px;"><i class="fas fa-square" style="color: #e85d22; margin-inline-end: 8px; font-size: 0.6rem;"></i> <span data-i18n="goal_5">تعزيز الوعي الطلابي حول مختلف القضايا الوطنية</span></li>
                 </ul>
             </div>
             
@@ -478,20 +513,23 @@
     <div id="admin-login-overlay" class="modal-overlay hidden">
         <div class="modal-content" style="max-width:350px;">
             <h2 data-i18n="admin_login_title">تسجيل دخول الإدارة</h2>
-            <p style="font-size: 0.9rem; margin-bottom: 20px;" data-i18n="admin_login_desc">يرجى إدخال بيانات حساب Supabase</p>
+            <p style="font-size: 0.95rem; margin-bottom: 15px; font-weight:600;" data-i18n="admin_login_desc">يرجى إدخال بيانات حساب Supabase</p>
             <input type="email" id="admin-email" data-i18n="email_placeholder" placeholder="البريد الإلكتروني" class="form-group input" style="width: 100%; padding: 12px; margin-bottom: 10px;">
             <input type="password" id="admin-pass" data-i18n="pass_placeholder" placeholder="كلمة المرور" class="form-group input" style="width: 100%; padding: 12px; margin-bottom: 10px;">
             <div id="admin-error" class="status-msg error hidden"></div>
             <button onclick="adminLogin()" id="admin-login-btn" class="btn-submit" data-i18n="btn_login">دخول للوحة الرفع</button>
-            <button onclick="closeAdminLogin()" class="btn-submit btn-cancel" style="margin-top: 10px;" data-i18n="btn_cancel">إلغاء</button>
+            <button onclick="closeAdminLogin()" class="btn-submit btn-cancel" style="margin-top: 8px;" data-i18n="btn_cancel">إلغاء</button>
         </div>
     </div>
 
     <!-- نافذة الرفع المتعدد -->
     <div id="upload-modal-overlay" class="modal-overlay hidden">
         <div class="modal-content" style="padding: 25px;">
-            <h2 style="margin-bottom: 20px;" data-i18n="upload_title">رفع ملفات جديدة</h2>
-            <form id="upload-form">
+            <h2 style="margin-bottom: 15px;" data-i18n="upload_title">لوحة الإدارة والرفع</h2>
+            
+            <button onclick="openAnalyticsDashboard()" class="btn-submit" style="background:var(--accent-color); color:#1e293b; margin-bottom: 20px; border: 2px solid #eab308; box-shadow: 0 4px 6px rgba(255, 193, 7, 0.3);">📊 عرض إحصائيات الزوار المباشرة</button>
+            
+            <form id="upload-form" style="border-top: 2px dashed var(--border-color); padding-top: 15px;">
                 <div class="form-group"><label data-i18n="lbl_spec">التخصص</label><select id="upload-spec" required onchange="updateUploadSubjects()"><option value="BA">BA</option><option value="FC">FC</option><option value="TCM">TCM</option><option value="GRH">GRH</option><option value="SAE">SAE</option><option value="IG">IG</option></select></div>
                 <div class="form-group"><label data-i18n="lbl_level">المستوى</label><select id="upload-level" required><option value="L1">L1</option><option value="L2">L2</option><option value="L3">L3</option></select></div>
                 <div class="form-group"><label data-i18n="lbl_sem">الفصل</label><select id="upload-semester" required onchange="updateUploadSubjects()"><option value="S1">S1</option><option value="S2">S2</option><option value="S3">S3</option><option value="S4">S4</option><option value="S5">S5</option><option value="S6">S6</option></select></div>
@@ -501,7 +539,50 @@
                 <div id="upload-status" class="status-msg"></div>
                 <button type="submit" id="upload-submit-btn" class="btn-submit" data-i18n="btn_upload">بدء الرفع</button>
             </form>
-            <button onclick="closeUploadModal()" class="btn-submit btn-cancel" style="margin-top: 10px;" data-i18n="btn_close">إغلاق</button>
+            <button onclick="closeUploadModal()" class="btn-submit btn-cancel" style="margin-top: 8px;" data-i18n="btn_close">إغلاق</button>
+        </div>
+    </div>
+
+    <!-- نافذة الإحصائيات المدمجة (تظهر كصفحة كاملة للإدارة فقط) -->
+    <div id="analytics-overlay" class="modal-overlay hidden" style="background: var(--bg-color);">
+        <div class="modal-content" style="max-width: 100%; width: 100%; height: 100%; border-radius: 0; padding: 25px; border: none; box-shadow: none; display: flex; flex-direction: column; overflow-y: auto;">
+            <div class="header-with-back" style="margin-bottom: 20px;">
+                <button class="back-btn" onclick="closeAnalyticsDashboard()" style="padding: 10px 20px; font-size: 1rem;">رجوع للإدارة</button>
+                <h2 style="color: var(--primary-color); margin: 0; font-weight: 800; font-size: 1.5rem;">📊 الإحصائيات المباشرة</h2>
+                <div style="width:80px"></div>
+            </div>
+            
+            <div style="display: flex; gap: 15px; justify-content: space-between; margin-bottom: 30px; flex-wrap: wrap;">
+                <div style="flex:1; min-width: 120px; background: rgba(15, 81, 50, 0.05); padding: 25px; border-radius: 15px; border: 1px solid var(--border-color); text-align: center;">
+                    <h3 id="stat-visits" style="margin: 0; font-size: 2.2rem; color: var(--primary-color);">0</h3>
+                    <p style="margin: 10px 0 0 0; font-size: 1rem; font-weight: 800; color: var(--text-secondary);">زيارات الموقع</p>
+                </div>
+                <div style="flex:1; min-width: 120px; background: rgba(15, 81, 50, 0.05); padding: 25px; border-radius: 15px; border: 1px solid var(--border-color); text-align: center;">
+                    <h3 id="stat-results" style="margin: 0; font-size: 2.2rem; color: var(--primary-color);">0</h3>
+                    <p style="margin: 10px 0 0 0; font-size: 1rem; font-weight: 800; color: var(--text-secondary);">دخول النتائج</p>
+                </div>
+                <div style="flex:1; min-width: 120px; background: rgba(15, 81, 50, 0.05); padding: 25px; border-radius: 15px; border: 1px solid var(--border-color); text-align: center;">
+                    <h3 id="stat-comps" style="margin: 0; font-size: 2.2rem; color: var(--primary-color);">0</h3>
+                    <p style="margin: 10px 0 0 0; font-size: 1rem; font-weight: 800; color: var(--text-secondary);">المسابقات</p>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; flex: 1;">
+                <div style="background: var(--card-bg); padding: 20px; border-radius: 15px; border: 1px solid var(--border-color); display: flex; flex-direction: column;">
+                    <h4 style="margin-top: 0; text-align: center; color: var(--text-primary); font-size: 1.2rem; font-weight: 800; margin-bottom: 20px;">أكثر التخصصات زيارة</h4>
+                    <div style="position: relative; flex: 1; min-height: 350px;">
+                        <canvas id="specChart"></canvas>
+                    </div>
+                </div>
+                <div style="background: var(--card-bg); padding: 20px; border-radius: 15px; border: 1px solid var(--border-color); display: flex; flex-direction: column;">
+                    <h4 style="margin-top: 0; text-align: center; color: var(--text-primary); font-size: 1.2rem; font-weight: 800; margin-bottom: 20px;">المستويات الدراسية المحددة</h4>
+                    <div style="position: relative; flex: 1; min-height: 350px;">
+                        <canvas id="levelChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="analytics-error" class="status-msg error hidden" style="margin-top: 20px;"></div>
         </div>
     </div>
 
@@ -519,22 +600,20 @@
         <p class="copyright" data-i18n="copyright">جميع الحقوق محفوظة © <span id="copyright-year" style="cursor:pointer; user-select:none;">2026</span> - UNEM ISCAE</p>
     </footer>
 
-    <!-- سكربت الترجمة (عربي / فرنسي) -->
+    <!-- سكربت الترجمة والوضع الليلي -->
     <script>
         const i18n = {
             ar: {
                 slogan: "الوطني يد تبني و أخرى تناضل",
-                nav_title: "الاتحاد الوطني لطلبة موريتانيا - ",
                 header_title: "UNEM ISCAE",
                 header_subtitle: "منصة الاتحاد الوطني لطلبة موريتانيا",
                 search_placeholder: "ابحث عن مادة أو ملف (يكفي حرف واحد)...",
-                section_services: "الخدمات والأقسام",
                 card_summaries: "الملخصات والأرشيف",
                 card_summaries_desc: "جميع التخصصات (L1, L2, L3)",
                 card_competitions: "المسابقات الثقافية والرياضية",
                 card_competitions_desc: "التسجيل ومتابعة المنافسات",
                 card_results: "نتائج المعهد",
-                card_results_desc: "الاستعلام عن النتائج (جديد)",
+                card_results_desc: "الاستعلام عن النتائج",
                 card_about: "عن الاتحاد",
                 card_about_desc: "نبذة تعريفية وتاريخية",
                 btn_home: "الرئيسية",
@@ -564,7 +643,7 @@
                 btn_download: "تحميل",
                 loading_file: "جاري فتح الملف...<br><span style='font-size:0.8rem; font-weight:normal;'>إذا تأخر الفتح، اضغط على زر تحميل أعلاه</span>",
                 about_title: "عن الاتحاد",
-                about_welcome: "يرحب بالطلبة الجدد ويتمنى لهم مسارا جامعيا موفقا وعاما مليئا بالإنجاز والتميز.",
+                about_welcome: "يرحب بالطلبة ويتمنى لهم مسارا جامعيا موفقا وعاما مليئا بالإنجاز والتميز.",
                 about_who: "من نحن ؟",
                 about_who_desc: "أكبر نقابة طلابية وطنية، تأسست في 13 مايو سنة 2000م، تنشط في الوسط الجامعي وتسعى إلى الدفاع عن الحقوق المادية والمعنوية للطلاب.",
                 about_vision: "رؤيتنا:",
@@ -582,7 +661,7 @@
                 pass_placeholder: "كلمة المرور",
                 btn_login: "دخول للوحة الرفع",
                 btn_cancel: "إلغاء",
-                upload_title: "رفع ملفات جديدة",
+                upload_title: "لوحة الإدارة والرفع",
                 lbl_spec: "التخصص",
                 lbl_level: "المستوى",
                 lbl_sem: "الفصل",
@@ -599,17 +678,15 @@
             },
             fr: {
                 slogan: "L'UNEM, une main qui construit et une autre qui lutte",
-                nav_title: "Union Nationale des Étudiants de Mauritanie - ",
                 header_title: "UNEM ISCAE",
                 header_subtitle: "Plateforme de l'Union Nationale des Étudiants",
                 search_placeholder: "Rechercher une matière ou un fichier...",
-                section_services: "Services et Sections",
                 card_summaries: "Résumés et Archives",
                 card_summaries_desc: "Toutes les filières (L1, L2, L3)",
                 card_competitions: "Compétitions Culturelles et Sportives",
                 card_competitions_desc: "Inscription et suivi des compétitions",
                 card_results: "Résultats de l'Institut",
-                card_results_desc: "Consulter les résultats (Nouveau)",
+                card_results_desc: "Consulter les résultats",
                 card_about: "À propos de l'Union",
                 card_about_desc: "Aperçu historique et présentation",
                 btn_home: "Accueil",
@@ -639,11 +716,11 @@
                 btn_download: "Télécharger",
                 loading_file: "Ouverture du fichier en cours...<br><span style='font-size:0.8rem; font-weight:normal;'>Si cela tarde, cliquez sur télécharger ci-dessus</span>",
                 about_title: "À propos de l'Union",
-                about_welcome: "Souhaite la bienvenue aux nouveaux étudiants et leur désire un parcours réussi et une année d'excellence.",
+                about_welcome: "Souhaite la bienvenue aux étudiants et leur désire un parcours réussi et une année d'excellence.",
                 about_who: "Qui sommes-nous ?",
                 about_who_desc: "Le plus grand syndicat étudiant national, fondé le 13 mai 2000, actif pour défendre les droits matériels et moraux des étudiants.",
                 about_vision: "Notre Vision :",
-                about_vision_desc: "La vision de l'Union repose sur le développement de la lutte étudiante pour assurer un parcours universitaire réussi aux étudiants mauritaniens, les former et renforcer leur conscience sur les enjeux nationaux.",
+                about_vision_desc: "La vision de l'Union repose sur le développement de la lutte étudiante pour assurer un parcours universitaire réussi aux étudiants mauritaniens, les গঠন et renforcer leur conscience sur les enjeux nationaux.",
                 about_goals: "Nos objectifs :",
                 goal_1: "Lutter pour l'amélioration des conditions de l'étudiant",
                 goal_2: "Défendre les droits matériels et moraux et préserver les acquis",
@@ -657,7 +734,7 @@
                 pass_placeholder: "Mot de passe",
                 btn_login: "Se connecter au panneau",
                 btn_cancel: "Annuler",
-                upload_title: "Ajouter de nouveaux fichiers",
+                upload_title: "لوحة الإدارة والرفع",
                 lbl_spec: "Filière",
                 lbl_level: "Niveau",
                 lbl_sem: "Semestre",
@@ -691,6 +768,18 @@
             }
         }
         document.getElementById('lang-toggle').addEventListener('click', () => setLanguage(currentLang === 'ar' ? 'fr' : 'ar'));
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('unem_theme', isDark ? 'dark' : 'light');
+            document.getElementById('theme-icon').className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+        }
+        
+        if (localStorage.getItem('unem_theme') === 'dark') {
+            document.body.classList.add('dark-mode');
+            document.getElementById('theme-icon').className = 'fas fa-sun';
+        }
     </script>
 
     <script>
@@ -714,22 +803,114 @@
             "TCM": { "S1":["Initiation à la gestion commerciale", "Principe de gestion", "Comptabilité financière I", "Introduction à l’économie", "Anglais I", "Techniques de communication", "MS office", "Statistique descriptive I", "Mathématique", "Introduction au droit", "Archive S1"], "S2":["Gestion commerciale de la relation client", "Economie d'entreprise", "Comptabilité financière II", "Gestion financière", "Anglais II", "Aptitudes en TIC", "Développement personnel", "Microéconomie", "Macro-économie", "Statistique descriptive II", "Archive S2"], "S3":["Marketing I", "Commerce international I", "Business Intelligence", "Gestion financière II", "Anglais des affaires", "Gestion de production", "Logiciels de gestion commerciale", "Droit administratif", "Droit des affaires", "GRH", "Archive S3"], "S4":["Marketing II", "Commerce international II", "Commerce électronique", "Finance Internationale", "Techniques Douanières et Transit", "Analyse financière", "Stratégie d’entreprise", "Techniques de sondage", "Droit des assurances", "Recherche opérationnelle", "Archive S4"], "S5":["Communication Marketing et commerciale", "Planification Marketing", "Techniques de Négociations Commerciales", "Fiscalité", "E-Marketing", "Finance des Marchés", "Etude des marchés", "Logistique du commerce international", "Management des projects", "Rapport de stage de la 2ème année", "Archive S5"], "S6":["Méthodologie de recherche", "Séminaire sur l'entrepreneuriat", "Mémoire de fin d'études", "Archive S6"] },
             "GRH": { "S1":["Initiation à la gestion des RH", "Principes de gestion", "Comptabilité financière I", "Introduction à l’économie", "Anglais I", "MS Office", "Techniques de Communication", "Statistique descriptive I", "Mathématiques", "Introduction au droit", "Archive S1"], "S2":["Evaluation des compétences", "Gestion Administrative des RH I", "Comptabilité financière II", "Gestion financière I", "Anglais II", "Aptitudes en TIC", "Développement personnel", "Rédaction administrative I", "Droit de travail I", "Statistiques descriptives II", "Archive S2"], "S3":["Gestion de la paie", "Recrutement", "Sécurité sociale I", "Gestion financière II", "Plan et ingénierie de formation", "Logiciels paie", "Anglais des affaires", "Rédaction administrative II", "Droit de travail II", "Droit des obligations", "Archive S3"], "S4":["GPEC", "Sécurité sociale II", "Stratégie d'entreprise", "Macroéconomie", "Microéconomie", "Analyse financière", "Communication interne", "Système d'information RH", "Gestion des conflits et négociations", "Droit Administratif", "Archive S4"], "S5":["Sources de motivation du personnel", "Politique de rémunération", "Audit des Ressources Humaines", "Droit pénal général", "Passation des marchés", "Sociologie des organisations", "Rapport de stage de la 2ème année", "Outils pilotage RH", "Management des projects", "Gestion des connaissances", "Archive S5"], "S6":["Méthodologie de recherche", "Séminaire sur l'entrepreneuriat", "Mémoire de fin d'études", "Archive S6"] },
             "SAE": { "S1":["Introduction à l’économie", "Principe de gestion", "Calcul intégral I", "Calcul matricielle I", "Probabilité I", "Statistique descriptive", "Anglais technique", "Méthodologie de travail universitaire", "Introduction au droit", "MS office I", "Archive S1"], "S2":["Macro-économie", "Microéconomie", "Calcul intégral II", "Calcul matricielle II", "Probabilité II", "Statistique descriptive II", "Anglais technique II", "MS office II", "Comptabilité générale", "Technique de communication", "Archive S2"], "S3":["Statistique inferential", "Technique de sondage", "Programmation linéaire", "Comptabilité nationale", "Microeconomie 2", "Macro-économie 2", "Marketing", "Mangement", "Monnaies et crédit", "Logiciel (spss ou R)", "Archive S3"], "S4":["Finance public", "GRH", "Econometrie", "Commerce extérieur", "Optimisation", "Analyse des données", "Logiciel statistique", "Gestion des projects", "Finance des marchés", "Économie Mauritanienne", "Archive S4"], "S5":["Analyse Démographique", "Analyse des données II", "Chaîne de Markov", "Econométrie II", "Economie Monétaire", "Modélisation Macroéconomique", "Séries temporelles", "Sujet", "Théorie de croissance", "Théorie de décision", "Archive S5"], "S6":["Méthodologie de recherche", "Séminaire sur l'entrepreneuriat", "Mémoire de fin d'études", "Archive S6"] },
-            "IG": { "S1":["Introduction à l’économie", "Introduction au droit", "Comptabilité financière", "Algorithmiques", "Architecture des ordinateurs", "MS office", "Anglais technique", "Méthodologie du travail universitaire", "Logique mathématique", "Analyse I", "Archive S1"], "S2":["Comptabilité financière II", "principe de gestion", "Langage C", "Système d'exploitation", "Programation Web", "Python", "Anglais technique", "Technique de communication", "Algèbre linéaire", "Analyse II", "Archive S2"], "S3":["Comptabilité analytique I", "Stratégie d’entreprise", "Java I", "PHP-My SQL", "Conception des bases de données I", "Réseaux informatiques", "Modélisation UML MERISE", "Calcul multi-variables", "Logiciel de Calcul Scientifique", "probabilités et Statistiques", "Archive S3"], "S4":["Comptabilité analytique II", "Gestion des ressources humaines", "Java II", "C#", "PHP Frameworks", "Gestion de projet informatique", "Théories des Graphes", "Bases de données", "Réseaux informatique II", "Compilations", "Archive S4"], "S5":["Contrôle de gestion", "Gestion financière", "Technologie DotNet", "JEE Framework", "Programmation Mobile", "Intelligence artificielle", "Bases des données avancées", "Administration des Systèmes", "Système d'Informations Géographique", "Rapport de stage de la 2ème année", "Archive S5"], "S6":["Méthodologie de recherche", "Séminaire sur l'entrepreneuriat", "Mémoire de fin d'études", "Archive S6"] }
+            "IG": { "S1":["Introduction à l’économie", "Introduction au droit", "Comptabilité financière", "Algorithmiques", "Architecture des ordinateurs", "MS office", "Anglais technique", "Méthodologie du travail universitaire", "Logique mathématique", "Analyse I", "Archive S1"], "S2":["Comptabilité financière II", "principe de gestion", "Langage C", "Système d'exploitation", "Programation Web", "Python", "Anglais technique", "Technique de communication", "Algèbre linéaire", "Analyse II", "Archive S2"], "S3":["Comptabilité analytique I", "Stratégie d’entreprise", "Java I", "PHP-My SQL", "Conception des bases de données I", "Réseaux informatiques", "Modélisation UML MERISE", "Calcul multi-variables", "Logiciel de Calcul Scientifique", "probabilités et Statistiques", "Archive S3"], "S4":["Comptabilité analytique II", "Gestion des ресурс humaines", "Java II", "C#", "PHP Frameworks", "Gestion de projet informatique", "Théories des Graphes", "Bases de données", "Réseaux informatique II", "Compilations", "Archive S4"], "S5":["Contrôle de gestion", "Gestion financière", "Technologie DotNet", "JEE Framework", "Programmation Mobile", "Intelligence artificielle", "Bases des données avancées", "Administration des Systèmes", "Système d'Informations Géographique", "Rapport de stage de la 2ème année", "Archive S5"], "S6":["Méthodologie de recherche", "Séminaire sur l'entrepreneuriat", "Mémoire de fin d'études", "Archive S6"] }
         };
 
-        const themeToggle = document.getElementById('theme-toggle');
-        if (localStorage.getItem('unem_theme') === 'dark') {
-            document.body.classList.add('dark-mode'); themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
-            document.getElementById('theme-color-meta').setAttribute('content', '#064e3b');
+        // ================== نظام إحصائيات Supabase السريع والفوري ==================
+        async function logSupabaseAnalytics(actionType, actionDetail) {
+            if (!supabaseClient) return;
+            try {
+                await supabaseClient.from('analytics').insert([
+                    { action_type: actionType, action_detail: actionDetail }
+                ]);
+            } catch (e) {}
         }
-        themeToggle.addEventListener('click', () => {
-            document.body.classList.toggle('dark-mode');
-            if (document.body.classList.contains('dark-mode')) {
-                localStorage.setItem('unem_theme', 'dark'); themeToggle.innerHTML = '<i class="fas fa-sun"></i>'; document.getElementById('theme-color-meta').setAttribute('content', '#064e3b');
-            } else {
-                localStorage.setItem('unem_theme', 'light'); themeToggle.innerHTML = '<i class="fas fa-moon"></i>'; document.getElementById('theme-color-meta').setAttribute('content', '#0f5132');
-            }
+
+        window.addEventListener('load', () => {
+            logSupabaseAnalytics('زيارة الموقع', 'الصفحة الرئيسية');
         });
+
+        async function openAnalyticsDashboard() {
+            document.getElementById('upload-modal-overlay').classList.add('hidden');
+            document.getElementById('analytics-overlay').classList.remove('hidden');
+            const errDiv = document.getElementById('analytics-error');
+            errDiv.classList.add('hidden');
+
+            if (!supabaseClient) { errDiv.textContent = "لم يتم الاتصال بقاعدة البيانات!"; errDiv.classList.remove('hidden'); return; }
+
+            try {
+                const { data, error } = await supabaseClient.from('analytics').select('*').order('created_at', { ascending: false }).limit(3000);
+                if (error) throw error;
+
+                let totalVisits = 0, resultsVisits = 0, compVisits = 0;
+                let specCounts = {};
+                let levelCounts = {};
+
+                data.forEach(row => {
+                    if (row.action_type === 'زيارة الموقع') totalVisits++;
+                    if (row.action_type === 'دخول قسم' && row.action_detail === 'النتائج') resultsVisits++;
+                    if (row.action_type === 'دخول قسم' && row.action_detail === 'المسابقات') compVisits++;
+                    
+                    if (row.action_type === 'دخول تخصص') {
+                        specCounts[row.action_detail] = (specCounts[row.action_detail] || 0) + 1;
+                    }
+                    if (row.action_type === 'دخول مستوى') {
+                        levelCounts[row.action_detail] = (levelCounts[row.action_detail] || 0) + 1;
+                    }
+                });
+
+                document.getElementById('stat-visits').textContent = totalVisits;
+                document.getElementById('stat-results').textContent = resultsVisits;
+                document.getElementById('stat-comps').textContent = compVisits;
+
+                renderAnalyticsChart('specChart', 'pie', 'التخصصات', specCounts);
+                renderAnalyticsChart('levelChart', 'doughnut', 'المستويات', levelCounts);
+
+            } catch(e) {
+                errDiv.textContent = "حدث خطأ أثناء جلب البيانات أو أن الجدول (analytics) غير موجود.";
+                errDiv.classList.remove('hidden');
+            }
+        }
+
+        let activeCharts = {};
+        function renderAnalyticsChart(canvasId, type, label, dataObj) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            if (activeCharts[canvasId]) activeCharts[canvasId].destroy();
+
+            const labels = Object.keys(dataObj);
+            const dataVals = Object.values(dataObj);
+
+            activeCharts[canvasId] = new Chart(ctx, {
+                type: type,
+                data: {
+                    labels: labels,
+                    datasets:[{
+                        label: label,
+                        data: dataVals,
+                        // ألوان جديدة متباينة تماماً لضمان الوضوح التام
+                        backgroundColor:['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#8AC926', '#1982C4', '#F15BB5', '#00BBF9'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, // لضمان أخذ الحجم المتاح بشكل كامل
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: { family: 'Tajawal', size: 14, weight: 'bold' } } },
+                        // تفعيل عرض الأرقام بشكل واضح جداً عند الضغط/التمرير
+                        tooltip: {
+                            titleFont: { family: 'Tajawal', size: 16 },
+                            bodyFont: { family: 'Tajawal', size: 16, weight: 'bold' },
+                            padding: 12,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) { label += ': '; }
+                                    if (context.parsed !== null) { label += context.parsed + ' (عملية/زيارة)'; }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function closeAnalyticsDashboard() {
+            document.getElementById('analytics-overlay').classList.add('hidden');
+            document.getElementById('upload-modal-overlay').classList.remove('hidden');
+        }
+        // =========================================================================
 
         let tapCount = 0; let tapTimer;
         document.getElementById('copyright-year').addEventListener('click', () => {
@@ -750,6 +931,7 @@
         function closeAdminLogin() { document.getElementById('admin-login-overlay').classList.add('hidden'); }
 
         function hideAll() { document.querySelectorAll('.section-box').forEach(el => el.classList.add('hidden')); }
+        
         function goBackToMainMenu() { hideAll(); document.getElementById('main-menu').classList.remove('hidden'); }
         function goBackToSpecialization() { hideAll(); document.getElementById('specialization-selection').classList.remove('hidden'); }
         function goBackToLevels() { hideAll(); document.getElementById('level-selection').classList.remove('hidden'); }
@@ -758,8 +940,16 @@
         function goBackToCategories() { hideAll(); document.getElementById('category-selection-container').classList.remove('hidden'); }
 
         function showSpecializationSelection() { hideAll(); document.getElementById('specialization-selection').classList.remove('hidden'); }
-        function selectSpecialization(spec) { currentSpecialization = spec; currentBranch = branchMap[spec] || 'main'; allFiles =[]; hideAll(); document.getElementById('level-selection').classList.remove('hidden'); fetchFilesFromGitHub(currentBranch); }
+        
+        function selectSpecialization(spec) { 
+            if(typeof gtag === 'function') gtag('event', 'select_specialization', { 'specialization': spec });
+            logSupabaseAnalytics('دخول تخصص', spec.toUpperCase()); 
+            
+            currentSpecialization = spec; currentBranch = branchMap[spec] || 'main'; allFiles =[]; hideAll(); document.getElementById('level-selection').classList.remove('hidden'); fetchFilesFromGitHub(currentBranch); 
+        }
+        
         function showSemesters(level) {
+            logSupabaseAnalytics('دخول مستوى', level.toUpperCase());
             currentLevel = level; hideAll(); document.getElementById('semesters-container').classList.remove('hidden');
             const grid = document.getElementById('semesters-grid-view'); grid.innerHTML = ''; 
             let semesters = (level === 'l1') ?['s1', 's2'] : (level === 'l2') ?['s3', 's4'] :['s5', 's6'];
@@ -781,7 +971,7 @@
                     else { btn.textContent = sub; }
                     btn.onclick = () => loadFiles(sub); container.appendChild(btn);
                 });
-            } else { container.innerHTML = `<p style="text-align:center;">${i18n[currentLang]['no_subjects']}</p>`; }
+            } else { container.innerHTML = `<p style="text-align:center; font-weight:700;">${i18n[currentLang]['no_subjects']}</p>`; }
             document.getElementById('current-semester-title').textContent = `${i18n[currentLang]['section_subjects']} (${specUpper} - ${semUpper})`;
         }
 
@@ -848,10 +1038,14 @@
         }
 
         function triggerDownload(fileObj) {
+            const safeName = fileObj.name.replace(/^"|"$/g, '');
+            if(typeof gtag === 'function') gtag('event', 'download_file', { 'file_name': safeName });
+            logSupabaseAnalytics('تحميل ملف', safeName); 
+
             let downloadUrl = '';
             if (fileObj.source === 'supabase') { const { data } = supabaseClient.storage.from('pdf-files').getPublicUrl(fileObj.path); downloadUrl = data.publicUrl; } 
             else { downloadUrl = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/${currentBranch}/${fileObj.path.replace(/^"|"$/g, '').split('/').map(encodeURIComponent).join('/')}`; }
-            const link = document.createElement('a'); link.href = downloadUrl; link.target = '_blank'; link.download = fileObj.name.replace(/^"|"$/g, ''); document.body.appendChild(link); link.click(); document.body.removeChild(link);
+            const link = document.createElement('a'); link.href = downloadUrl; link.target = '_blank'; link.download = safeName; document.body.appendChild(link); link.click(); document.body.removeChild(link);
         }
 
         async function loadFiles(subjectName) {
@@ -911,7 +1105,11 @@
         }
 
         function openSmartViewer(fileObj) {
-            document.getElementById('pdf-viewer-overlay').classList.remove('hidden'); document.getElementById('viewer-filename').textContent = fileObj.name.replace(/^"|"$/g, ''); document.getElementById('rendering-msg').style.display = 'block';
+            const safeName = fileObj.name.replace(/^"|"$/g, '');
+            if(typeof gtag === 'function') gtag('event', 'view_file', { 'file_name': safeName });
+            logSupabaseAnalytics('فتح ملف', safeName); 
+
+            document.getElementById('pdf-viewer-overlay').classList.remove('hidden'); document.getElementById('viewer-filename').textContent = safeName; document.getElementById('rendering-msg').style.display = 'block';
             let rawUrl = fileObj.source === 'supabase' ? supabaseClient.storage.from('pdf-files').getPublicUrl(fileObj.path).data.publicUrl : `https://raw.githubusercontent.com/${repoOwner}/${repoName}/${currentBranch}/${fileObj.path.replace(/^"|"$/g, '').split('/').map(encodeURIComponent).join('/')}`;
             document.getElementById('viewer-action-btn').onclick = () => triggerDownload(fileObj);
             const iframe = document.createElement('iframe'); iframe.style.width = "100%"; iframe.style.height = "100%"; iframe.style.border = "none";
@@ -921,6 +1119,11 @@
 
         function handleGlobalSearch(query) {
             if(query.length === 0) { closeSearch(); return; }
+            if(query.length > 2) {
+                if(typeof gtag === 'function') gtag('event', 'search', { 'search_term': query });
+                logSupabaseAnalytics('بحث', query); 
+            }
+
             hideAll(); document.getElementById('file-list-container').classList.remove('hidden'); document.getElementById('file-list-back-btn').setAttribute('onclick', 'closeSearch()'); document.getElementById('selected-subject-name').textContent = query;
             const pdfList = document.getElementById('pdf-list'); pdfList.innerHTML = ""; const term = normalizeText(query);
             if(allFiles.length === 0) fetchFilesFromGitHub('main');
@@ -932,20 +1135,17 @@
         function closePdfViewer() { document.getElementById('pdf-viewer-overlay').classList.add('hidden'); document.getElementById('pdf-render-area').innerHTML = ""; }
         function openUnionModal() { document.getElementById('union-modal-overlay').classList.remove('hidden'); }
         
-        // دالة فتح وإغلاق التبويبات (الأكورديون)
         function toggleAccordion(contentId, btn) {
             const content = document.getElementById(contentId);
             const icon = btn.querySelector('i');
             const isActive = content.classList.contains('active');
 
-            // إغلاق كل القوائم
             document.querySelectorAll('.accordion-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.accordion-btn').forEach(el => {
                 el.classList.remove('active-btn');
                 el.querySelector('i').className = 'fas fa-chevron-down';
             });
 
-            // فتح القائمة المطلوبة فقط إذا لم تكن مفتوحة مسبقاً
             if (!isActive) {
                 content.classList.add('active');
                 btn.classList.add('active-btn');
@@ -955,12 +1155,8 @@
 
         function closeUnionModal() { 
             document.getElementById('union-modal-overlay').classList.add('hidden'); 
-            // إعادة ضبط التبويبات عند الإغلاق
             document.querySelectorAll('.accordion-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.accordion-btn').forEach(el => {
-                el.classList.remove('active-btn');
-                el.querySelector('i').className = 'fas fa-chevron-down';
-            });
+            document.querySelectorAll('.accordion-btn').forEach(el => { el.classList.remove('active-btn'); el.querySelector('i').className = 'fas fa-chevron-down'; });
         }
         
         function openWebViewer(url, title) { document.getElementById('web-viewer-title').textContent = title; document.getElementById('web-frame').src = url; document.getElementById('web-viewer-overlay').classList.remove('hidden'); }
@@ -994,14 +1190,13 @@
         });
     </script>
 
-    <!-- نظام Service Worker مع تحديث PWA الذكي (النسخة المصححة) -->
+    <!-- نظام Service Worker -->
     <script>
       let newWorker;
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('sw.js').then(reg => {
             console.log('SW Registered');
-            
             reg.addEventListener('updatefound', () => {
               newWorker = reg.installing;
               newWorker.addEventListener('statechange', () => {
@@ -1022,11 +1217,8 @@
 
         document.getElementById('update-btn').addEventListener('click', () => {
           document.getElementById('update-toast').classList.remove('show');
-          if (newWorker) {
-            newWorker.postMessage({ action: 'skipWaiting' });
-          } else {
-            window.location.reload();
-          }
+          if (newWorker) { newWorker.postMessage({ action: 'skipWaiting' }); } 
+          else { window.location.reload(); }
         });
       }
     </script>
