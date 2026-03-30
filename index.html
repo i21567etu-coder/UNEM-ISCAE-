@@ -551,6 +551,19 @@
                 <h2 style="color: var(--primary-color); margin: 0; font-weight: 800; font-size: 1.5rem;">📊 الإحصائيات المباشرة</h2>
                 <div style="width:80px"></div>
             </div>
+
+            <!-- فلتر التاريخ -->
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; align-items: flex-end; background: var(--card-bg); padding: 15px; border-radius: 15px; border: 1px solid var(--border-color);">
+                <div style="flex: 1; min-width: 150px; text-align: start;">
+                    <label style="display: block; font-weight: 800; font-size: 0.9rem; margin-bottom: 5px; color: var(--text-primary);">من تاريخ:</label>
+                    <input type="date" id="analytics-start-date" style="width: 100%; padding: 10px; border: 2px solid var(--border-color); border-radius: 10px; font-family: inherit; font-weight: 600; background: var(--bg-color); color: var(--text-primary); outline: none;">
+                </div>
+                <div style="flex: 1; min-width: 150px; text-align: start;">
+                    <label style="display: block; font-weight: 800; font-size: 0.9rem; margin-bottom: 5px; color: var(--text-primary);">إلى تاريخ:</label>
+                    <input type="date" id="analytics-end-date" style="width: 100%; padding: 10px; border: 2px solid var(--border-color); border-radius: 10px; font-family: inherit; font-weight: 600; background: var(--bg-color); color: var(--text-primary); outline: none;">
+                </div>
+                <button onclick="applyAnalyticsFilter()" class="btn-submit" style="flex: 0 0 auto; width: auto; padding: 11px 20px; margin: 0; min-width: 120px;">تطبيق الفلتر</button>
+            </div>
             
             <div style="display: flex; gap: 15px; justify-content: space-between; margin-bottom: 30px; flex-wrap: wrap;">
                 <div style="flex:1; min-width: 120px; background: rgba(15, 81, 50, 0.05); padding: 25px; border-radius: 15px; border: 1px solid var(--border-color); text-align: center;">
@@ -564,6 +577,14 @@
                 <div style="flex:1; min-width: 120px; background: rgba(15, 81, 50, 0.05); padding: 25px; border-radius: 15px; border: 1px solid var(--border-color); text-align: center;">
                     <h3 id="stat-comps" style="margin: 0; font-size: 2.2rem; color: var(--primary-color);">0</h3>
                     <p style="margin: 10px 0 0 0; font-size: 1rem; font-weight: 800; color: var(--text-secondary);">المسابقات</p>
+                </div>
+            </div>
+
+            <!-- رسم بياني خطي للزيارات اليومية -->
+            <div style="background: var(--card-bg); padding: 20px; border-radius: 15px; border: 1px solid var(--border-color); margin-bottom: 30px; width: 100%;">
+                <h4 style="margin-top: 0; text-align: center; color: var(--text-primary); font-size: 1.2rem; font-weight: 800; margin-bottom: 20px;">الزيارات اليومية خلال الفترة</h4>
+                <div style="position: relative; width: 100%; min-height: 300px;">
+                    <canvas id="dailyVisitsChart"></canvas>
                 </div>
             </div>
 
@@ -720,7 +741,7 @@
                 about_who: "Qui sommes-nous ?",
                 about_who_desc: "Le plus grand syndicat étudiant national, fondé le 13 mai 2000, actif pour défendre les droits matériels et moraux des étudiants.",
                 about_vision: "Notre Vision :",
-                about_vision_desc: "La vision de l'Union repose sur le développement de la lutte étudiante pour assurer un parcours universitaire réussi aux étudiants mauritaniens, les গঠন et renforcer leur conscience sur les enjeux nationaux.",
+                about_vision_desc: "La vision de l'Union repose sur le développement de la lutte étudiante pour assurer un parcours universitaire réussi aux étudiants mauritaniens, les formers et renforcer leur conscience sur les enjeux nationaux.",
                 about_goals: "Nos objectifs :",
                 goal_1: "Lutter pour l'amélioration des conditions de l'étudiant",
                 goal_2: "Défendre les droits matériels et moraux et préserver les acquis",
@@ -820,7 +841,14 @@
             logSupabaseAnalytics('زيارة الموقع', 'الصفحة الرئيسية');
         });
 
-        async function openAnalyticsDashboard() {
+        // تم التعديل لدعم فلتر التاريخ
+        function applyAnalyticsFilter() {
+            const startDate = document.getElementById('analytics-start-date').value;
+            const endDate = document.getElementById('analytics-end-date').value;
+            openAnalyticsDashboard(startDate, endDate);
+        }
+
+        async function openAnalyticsDashboard(startDate = null, endDate = null) {
             document.getElementById('upload-modal-overlay').classList.add('hidden');
             document.getElementById('analytics-overlay').classList.remove('hidden');
             const errDiv = document.getElementById('analytics-error');
@@ -829,15 +857,27 @@
             if (!supabaseClient) { errDiv.textContent = "لم يتم الاتصال بقاعدة البيانات!"; errDiv.classList.remove('hidden'); return; }
 
             try {
-                const { data, error } = await supabaseClient.from('analytics').select('*').order('created_at', { ascending: false }).limit(3000);
+                // جلب البيانات ترتيب تنازلي لضمان الحصول على الأحدث دائمًا
+                let query = supabaseClient.from('analytics').select('*').order('created_at', { ascending: false }).limit(5000);
+
+                if (startDate) query = query.gte('created_at', startDate + 'T00:00:00.000Z');
+                if (endDate) query = query.lte('created_at', endDate + 'T23:59:59.999Z');
+
+                const { data, error } = await query;
                 if (error) throw error;
 
                 let totalVisits = 0, resultsVisits = 0, compVisits = 0;
                 let specCounts = {};
                 let levelCounts = {};
+                let dailyVisits = {};
 
                 data.forEach(row => {
-                    if (row.action_type === 'زيارة الموقع') totalVisits++;
+                    const dateStr = row.created_at.split('T')[0]; // استخراج التاريخ فقط
+                    
+                    if (row.action_type === 'زيارة الموقع') {
+                        totalVisits++;
+                        dailyVisits[dateStr] = (dailyVisits[dateStr] || 0) + 1;
+                    }
                     if (row.action_type === 'دخول قسم' && row.action_detail === 'النتائج') resultsVisits++;
                     if (row.action_type === 'دخول قسم' && row.action_detail === 'المسابقات') compVisits++;
                     
@@ -853,6 +893,12 @@
                 document.getElementById('stat-results').textContent = resultsVisits;
                 document.getElementById('stat-comps').textContent = compVisits;
 
+                // ترتيب التواريخ تصاعديًا للرسم البياني الخطي
+                const sortedDates = Object.keys(dailyVisits).sort();
+                const sortedDailyVisits = {};
+                sortedDates.forEach(d => sortedDailyVisits[d] = dailyVisits[d]);
+
+                renderAnalyticsChart('dailyVisitsChart', 'line', 'زيارات الموقع', sortedDailyVisits);
                 renderAnalyticsChart('specChart', 'pie', 'التخصصات', specCounts);
                 renderAnalyticsChart('levelChart', 'doughnut', 'المستويات', levelCounts);
 
@@ -870,38 +916,59 @@
             const labels = Object.keys(dataObj);
             const dataVals = Object.values(dataObj);
 
+            let dataset = {
+                label: label,
+                data: dataVals,
+                borderWidth: 1
+            };
+
+            // تخصيص الألوان بناءً على نوع الرسم (خطي للزيارات، دائري للبقية)
+            if (type === 'line') {
+                dataset.borderColor = '#198754'; // اللون الأخضر الثانوي للاتحاد
+                dataset.backgroundColor = 'rgba(25, 135, 84, 0.1)';
+                dataset.fill = true;
+                dataset.tension = 0.4; // لجعله منحنياً قليلاً ومريحاً للعين
+                dataset.borderWidth = 3;
+                dataset.pointBackgroundColor = '#0f5132';
+                dataset.pointRadius = 4;
+                dataset.pointHoverRadius = 6;
+            } else {
+                dataset.backgroundColor = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#8AC926', '#1982C4', '#F15BB5', '#00BBF9'];
+            }
+
             activeCharts[canvasId] = new Chart(ctx, {
                 type: type,
                 data: {
                     labels: labels,
-                    datasets:[{
-                        label: label,
-                        data: dataVals,
-                        // ألوان جديدة متباينة تماماً لضمان الوضوح التام
-                        backgroundColor:['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#8AC926', '#1982C4', '#F15BB5', '#00BBF9'],
-                        borderWidth: 1
-                    }]
+                    datasets: [dataset]
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: false, // لضمان أخذ الحجم المتاح بشكل كامل
+                    maintainAspectRatio: false,
                     plugins: {
                         legend: { position: 'bottom', labels: { font: { family: 'Tajawal', size: 14, weight: 'bold' } } },
-                        // تفعيل عرض الأرقام بشكل واضح جداً عند الضغط/التمرير
                         tooltip: {
                             titleFont: { family: 'Tajawal', size: 16 },
                             bodyFont: { family: 'Tajawal', size: 16, weight: 'bold' },
                             padding: 12,
                             callbacks: {
                                 label: function(context) {
-                                    let label = context.label || '';
+                                    let label = context.dataset.label || '';
                                     if (label) { label += ': '; }
-                                    if (context.parsed !== null) { label += context.parsed + ' (عملية/زيارة)'; }
+                                    if (context.parsed.y !== undefined) { 
+                                        label += context.parsed.y + (type === 'line' ? ' زيارة' : ' (عملية/زيارة)'); 
+                                    } else if (context.parsed !== null) { 
+                                        label += context.parsed + ' (عملية/زيارة)'; 
+                                    }
                                     return label;
                                 }
                             }
                         }
-                    }
+                    },
+                    scales: type === 'line' ? {
+                        y: { beginAtZero: true, ticks: { font: { family: 'Tajawal', weight: 'bold' } } },
+                        x: { ticks: { font: { family: 'Tajawal', weight: 'bold' } } }
+                    } : {} // إخفاء المحاور للرسومات الدائرية
                 }
             });
         }
