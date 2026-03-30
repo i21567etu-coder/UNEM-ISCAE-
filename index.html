@@ -568,7 +568,7 @@
             <div style="display: flex; gap: 15px; justify-content: space-between; margin-bottom: 30px; flex-wrap: wrap;">
                 <div style="flex:1; min-width: 120px; background: rgba(15, 81, 50, 0.05); padding: 25px; border-radius: 15px; border: 1px solid var(--border-color); text-align: center;">
                     <h3 id="stat-visits" style="margin: 0; font-size: 2.2rem; color: var(--primary-color);">0</h3>
-                    <p style="margin: 10px 0 0 0; font-size: 1rem; font-weight: 800; color: var(--text-secondary);">زيارات الموقع</p>
+                    <p style="margin: 10px 0 0 0; font-size: 1rem; font-weight: 800; color: var(--text-secondary);">زيارات الموقع الفريدة</p>
                 </div>
                 <div style="flex:1; min-width: 120px; background: rgba(15, 81, 50, 0.05); padding: 25px; border-radius: 15px; border: 1px solid var(--border-color); text-align: center;">
                     <h3 id="stat-results" style="margin: 0; font-size: 2.2rem; color: var(--primary-color);">0</h3>
@@ -582,7 +582,7 @@
 
             <!-- رسم بياني خطي للزيارات اليومية -->
             <div style="background: var(--card-bg); padding: 20px; border-radius: 15px; border: 1px solid var(--border-color); margin-bottom: 30px; width: 100%;">
-                <h4 style="margin-top: 0; text-align: center; color: var(--text-primary); font-size: 1.2rem; font-weight: 800; margin-bottom: 20px;">الزيارات اليومية خلال الفترة</h4>
+                <h4 style="margin-top: 0; text-align: center; color: var(--text-primary); font-size: 1.2rem; font-weight: 800; margin-bottom: 20px;">الزيارات اليومية (الفريدة) خلال الفترة</h4>
                 <div style="position: relative; width: 100%; min-height: 300px;">
                     <canvas id="dailyVisitsChart"></canvas>
                 </div>
@@ -590,13 +590,13 @@
 
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; flex: 1;">
                 <div style="background: var(--card-bg); padding: 20px; border-radius: 15px; border: 1px solid var(--border-color); display: flex; flex-direction: column;">
-                    <h4 style="margin-top: 0; text-align: center; color: var(--text-primary); font-size: 1.2rem; font-weight: 800; margin-bottom: 20px;">أكثر التخصصات زيارة</h4>
+                    <h4 style="margin-top: 0; text-align: center; color: var(--text-primary); font-size: 1.2rem; font-weight: 800; margin-bottom: 20px;">التخصصات (زائر فريد لكل تخصص)</h4>
                     <div style="position: relative; flex: 1; min-height: 350px;">
                         <canvas id="specChart"></canvas>
                     </div>
                 </div>
                 <div style="background: var(--card-bg); padding: 20px; border-radius: 15px; border: 1px solid var(--border-color); display: flex; flex-direction: column;">
-                    <h4 style="margin-top: 0; text-align: center; color: var(--text-primary); font-size: 1.2rem; font-weight: 800; margin-bottom: 20px;">المستويات الدراسية المحددة</h4>
+                    <h4 style="margin-top: 0; text-align: center; color: var(--text-primary); font-size: 1.2rem; font-weight: 800; margin-bottom: 20px;">المستويات (زائر فريد لكل مستوى)</h4>
                     <div style="position: relative; flex: 1; min-height: 350px;">
                         <canvas id="levelChart"></canvas>
                     </div>
@@ -741,7 +741,7 @@
                 about_who: "Qui sommes-nous ?",
                 about_who_desc: "Le plus grand syndicat étudiant national, fondé le 13 mai 2000, actif pour défendre les droits matériels et moraux des étudiants.",
                 about_vision: "Notre Vision :",
-                about_vision_desc: "La vision de l'Union repose sur le développement de la lutte étudiante pour assurer un parcours universitaire réussi aux étudiants mauritaniens, les formers et renforcer leur conscience sur les enjeux nationaux.",
+                about_vision_desc: "La vision de l'Union repose sur le développement de la lutte étudiante pour assurer un parcours universitaire réussi aux étudiants mauritaniens, les former et renforcer leur conscience sur les enjeux nationaux.",
                 about_goals: "Nos objectifs :",
                 goal_1: "Lutter pour l'amélioration des conditions de l'étudiant",
                 goal_2: "Défendre les droits matériels et moraux et préserver les acquis",
@@ -827,10 +827,35 @@
             "IG": { "S1":["Introduction à l’économie", "Introduction au droit", "Comptabilité financière", "Algorithmiques", "Architecture des ordinateurs", "MS office", "Anglais technique", "Méthodologie du travail universitaire", "Logique mathématique", "Analyse I", "Archive S1"], "S2":["Comptabilité financière II", "principe de gestion", "Langage C", "Système d'exploitation", "Programation Web", "Python", "Anglais technique", "Technique de communication", "Algèbre linéaire", "Analyse II", "Archive S2"], "S3":["Comptabilité analytique I", "Stratégie d’entreprise", "Java I", "PHP-My SQL", "Conception des bases de données I", "Réseaux informatiques", "Modélisation UML MERISE", "Calcul multi-variables", "Logiciel de Calcul Scientifique", "probabilités et Statistiques", "Archive S3"], "S4":["Comptabilité analytique II", "Gestion des ресурс humaines", "Java II", "C#", "PHP Frameworks", "Gestion de projet informatique", "Théories des Graphes", "Bases de données", "Réseaux informatique II", "Compilations", "Archive S4"], "S5":["Contrôle de gestion", "Gestion financière", "Technologie DotNet", "JEE Framework", "Programmation Mobile", "Intelligence artificielle", "Bases des données avancées", "Administration des Systèmes", "Système d'Informations Géographique", "Rapport de stage de la 2ème année", "Archive S5"], "S6":["Méthodologie de recherche", "Séminaire sur l'entrepreneuriat", "Mémoire de fin d'études", "Archive S6"] }
         };
 
-        // ================== نظام إحصائيات Supabase السريع والفوري ==================
+        // ================== نظام إحصائيات الدقيق والفريد للمتصفح ==================
         async function logSupabaseAnalytics(actionType, actionDetail) {
             if (!supabaseClient) return;
+            
             try {
+                // فلترة تعتمد على الجهاز/المتصفح لحساب الزيارة الفريدة فقط
+                if (actionType === 'زيارة الموقع') {
+                    if (localStorage.getItem('unem_has_visited')) return;
+                    localStorage.setItem('unem_has_visited', 'true');
+                } 
+                else if (actionType === 'دخول تخصص') {
+                    let loggedSpecs = JSON.parse(localStorage.getItem('unem_logged_specs') || '[]');
+                    if (loggedSpecs.includes(actionDetail)) return;
+                    loggedSpecs.push(actionDetail);
+                    localStorage.setItem('unem_logged_specs', JSON.stringify(loggedSpecs));
+                }
+                else if (actionType === 'دخول مستوى') {
+                    let loggedLevels = JSON.parse(localStorage.getItem('unem_logged_levels') || '[]');
+                    if (loggedLevels.includes(actionDetail)) return;
+                    loggedLevels.push(actionDetail);
+                    localStorage.setItem('unem_logged_levels', JSON.stringify(loggedLevels));
+                }
+                else if (actionType === 'دخول قسم') {
+                    let loggedSections = JSON.parse(localStorage.getItem('unem_logged_sections') || '[]');
+                    if (loggedSections.includes(actionDetail)) return;
+                    loggedSections.push(actionDetail);
+                    localStorage.setItem('unem_logged_sections', JSON.stringify(loggedSections));
+                }
+
                 await supabaseClient.from('analytics').insert([
                     { action_type: actionType, action_detail: actionDetail }
                 ]);
@@ -857,7 +882,7 @@
             if (!supabaseClient) { errDiv.textContent = "لم يتم الاتصال بقاعدة البيانات!"; errDiv.classList.remove('hidden'); return; }
 
             try {
-                // جلب البيانات ترتيب تنازلي لضمان الحصول على الأحدث دائمًا
+                // جلب البيانات ترتيب تنازلي
                 let query = supabaseClient.from('analytics').select('*').order('created_at', { ascending: false }).limit(5000);
 
                 if (startDate) query = query.gte('created_at', startDate + 'T00:00:00.000Z');
@@ -872,7 +897,7 @@
                 let dailyVisits = {};
 
                 data.forEach(row => {
-                    const dateStr = row.created_at.split('T')[0]; // استخراج التاريخ فقط
+                    const dateStr = row.created_at.split('T')[0];
                     
                     if (row.action_type === 'زيارة الموقع') {
                         totalVisits++;
@@ -893,14 +918,13 @@
                 document.getElementById('stat-results').textContent = resultsVisits;
                 document.getElementById('stat-comps').textContent = compVisits;
 
-                // ترتيب التواريخ تصاعديًا للرسم البياني الخطي
                 const sortedDates = Object.keys(dailyVisits).sort();
                 const sortedDailyVisits = {};
                 sortedDates.forEach(d => sortedDailyVisits[d] = dailyVisits[d]);
 
-                renderAnalyticsChart('dailyVisitsChart', 'line', 'زيارات الموقع', sortedDailyVisits);
-                renderAnalyticsChart('specChart', 'pie', 'التخصصات', specCounts);
-                renderAnalyticsChart('levelChart', 'doughnut', 'المستويات', levelCounts);
+                renderAnalyticsChart('dailyVisitsChart', 'line', 'الزيارات الفريدة للموقع', sortedDailyVisits);
+                renderAnalyticsChart('specChart', 'pie', 'التخصصات (زائر فريد)', specCounts);
+                renderAnalyticsChart('levelChart', 'doughnut', 'المستويات (زائر فريد)', levelCounts);
 
             } catch(e) {
                 errDiv.textContent = "حدث خطأ أثناء جلب البيانات أو أن الجدول (analytics) غير موجود.";
@@ -922,12 +946,11 @@
                 borderWidth: 1
             };
 
-            // تخصيص الألوان بناءً على نوع الرسم (خطي للزيارات، دائري للبقية)
             if (type === 'line') {
-                dataset.borderColor = '#198754'; // اللون الأخضر الثانوي للاتحاد
+                dataset.borderColor = '#198754'; 
                 dataset.backgroundColor = 'rgba(25, 135, 84, 0.1)';
                 dataset.fill = true;
-                dataset.tension = 0.4; // لجعله منحنياً قليلاً ومريحاً للعين
+                dataset.tension = 0.4;
                 dataset.borderWidth = 3;
                 dataset.pointBackgroundColor = '#0f5132';
                 dataset.pointRadius = 4;
@@ -956,9 +979,9 @@
                                     let label = context.dataset.label || '';
                                     if (label) { label += ': '; }
                                     if (context.parsed.y !== undefined) { 
-                                        label += context.parsed.y + (type === 'line' ? ' زيارة' : ' (عملية/زيارة)'); 
+                                        label += context.parsed.y + (type === 'line' ? ' زائر' : ' (زائر)'); 
                                     } else if (context.parsed !== null) { 
-                                        label += context.parsed + ' (عملية/زيارة)'; 
+                                        label += context.parsed + ' (زائر)'; 
                                     }
                                     return label;
                                 }
@@ -968,7 +991,7 @@
                     scales: type === 'line' ? {
                         y: { beginAtZero: true, ticks: { font: { family: 'Tajawal', weight: 'bold' } } },
                         x: { ticks: { font: { family: 'Tajawal', weight: 'bold' } } }
-                    } : {} // إخفاء المحاور للرسومات الدائرية
+                    } : {} 
                 }
             });
         }
