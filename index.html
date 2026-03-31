@@ -336,7 +336,7 @@
                     <p data-i18n="card_summaries_desc">جميع التخصصات (L1, L2, L3)</p>
                 </div>
 
-                <div class="semester-card wide-card" onclick="logSupabaseAnalytics('دخول قسم', 'النتائج'); openWebViewer('https://resultat-iscae.vercel.app/', i18n[currentLang]['card_results'])">
+                <div class="semester-card wide-card" onclick="logSupabaseAnalytics('دخول قسم', 'النتائج'); openWebViewer('https://resultat-iscae.vercel.app/?parent=' + encodeURIComponent(window.location.href.split('?')[0]), i18n[currentLang]['card_results'])">
                     <div class="icon-box"><i class="fas fa-graduation-cap"></i></div>
                     <h3 data-i18n="card_results">نتائج المعهد</h3>
                     <p data-i18n="card_results_desc">الاستعلام عن النتائج</p>
@@ -450,7 +450,7 @@
                 <div style="width:30px"></div>
             </div>
             <div class="web-viewer-container">
-                <iframe id="web-frame" src=""></iframe>
+                <iframe id="web-frame" src="" allow="web-share"></iframe>
             </div>
         </div>
     </div>
