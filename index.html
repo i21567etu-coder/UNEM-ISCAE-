@@ -1335,7 +1335,7 @@
         });
     </script>
 
-    <!-- نظام Service Worker -->
+<!-- نظام Service Worker -->
     <script>
       let newWorker;
       if ('serviceWorker' in navigator) {
@@ -1346,7 +1346,41 @@
               newWorker = reg.installing;
               newWorker.addEventListener('statechange', () => {
                 if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  document.getElementById('update-toast').classList.add('show');
+                  
+                  // --- نظام الفحص الذكي للإصدارات والنتائج ---
+                  fetch('sw.js?t=' + new Date().getTime()) // جلب الملف لتخطي الكاش
+                    .then(res => res.text())
+                    .then(text => {
+                        let customMsg = i18n[currentLang]['update_msg']; // الرسالة الافتراضية للتحديث العادي
+                        
+                        // كود ذكي يبحث عن حرف v يليه أرقام ثم فاصلة (.) أو (,) ثم رقم من 1 إلى 6
+                        // مثال: v14.1 أو V15,3
+                        const versionMatch = text.match(/[vV]\d+[.,]([1-6])\b/);
+                        
+                        if (versionMatch && versionMatch[1]) {
+                            const semesterNumber = versionMatch[1]; // سيلتقط الرقم بعد الفاصلة (1، 2، 3 ...)
+                            
+                            // تخصيص الرسالة حسب الرقم المكتشف واللغة
+                            if (currentLang === 'ar') {
+                                customMsg = `نتائج S${semesterNumber} أصبحت متاحة في الموقع 🎓`;
+                            } else {
+                                customMsg = `Les résultats de S${semesterNumber} sont disponibles 🎓`;
+                            }
+                        }
+                        
+                        // وضع النص الجديد داخل الإشعار
+                        const updateSpan = document.querySelector('#update-toast > span > span');
+                        if (updateSpan) { updateSpan.textContent = customMsg; }
+                        
+                        // إظهار الإشعار للمستخدم
+                        document.getElementById('update-toast').classList.add('show');
+                    })
+                    .catch(err => {
+                        // في حال الخطأ نظهر التحديث العادي
+                        document.getElementById('update-toast').classList.add('show');
+                    });
+                  // ------------------------------------------
+
                 }
               });
             });
@@ -1367,7 +1401,6 @@
         });
       }
     </script>
-
     <!-- START PROTECTION CODE -->
     <script>
     (function() {
