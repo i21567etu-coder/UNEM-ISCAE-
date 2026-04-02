@@ -1,21 +1,17 @@
-const CACHE_NAME = 'unem-iscae-v29.1'; // غير الرقم عند كل تحديث
+// const CACHE_NAME = 'unem-iscae-v27.4'; // غيّر الرقم عند كل تحديث
 
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/logo.png',
-  '/icon-192.png'
+  // './index.html',   // لا تخزِّن index.html في الكاش
+  './manifest.json',
+  './logo.png',
+  './icon-192.png'
 ];
 
 self.addEventListener('install', event => {
-  self.skipWaiting(); // مهم للتحديث الفوري
-
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(urlsToCache);
-    })
+    caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
   );
+  self.skipWaiting(); // تثبيت العامل الجديد فوراً
 });
 
 self.addEventListener('activate', event => {
@@ -23,26 +19,32 @@ self.addEventListener('activate', event => {
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.map(cache => {
-          if (cache !== CACHE_NAME) {
-            return caches.delete(cache);
-          }
+          if (cache !== CACHE_NAME) return caches.delete(cache);
         })
       );
-    }).then(() => self.clients.claim()) // مهم جداً
+    }).then(() => clients.claim()) // السيطرة على الصفحات المفتوحة دون إعادة تحميل
   );
 });
 
 self.addEventListener('fetch', event => {
+  const url = new URL(event.request.url);
 
-  // لا تكاشي index.html حتى يصل التحديث
-  if (event.request.mode === 'navigate') {
+  // استراتيجية Network First لـ index.html
+  if (url.pathname === '/' || url.pathname === '/index.html') {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // لملف sw.js نفسه: دائماً من الشبكة (موجود بالفعل)
+  if (event.request.url.includes('sw.js')) {
     event.respondWith(fetch(event.request));
     return;
   }
 
+  // باقي الملفات: Cache First
   event.respondWith(
-    caches.match(event.request).then(response => {
-      return response || fetch(event.request);
-    })
+    caches.match(event.request).then(response => response || fetch(event.request))
   );
 });
