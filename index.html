@@ -1335,123 +1335,115 @@
         });
     </script>
 
-<<!-- نظام Service Worker (النسخة النهائية المقاومة للكاش) -->
-<script>
-  reg.addEventListener('updatefound', () => {
-  newWorker = reg.installing;
-  newWorker.addEventListener('statechange', () => {
-    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-      // تم تثبيت إصدار جديد، أظهر الإشعار أو أعد التحميل فوراً
-      const updateSpan = document.querySelector('#update-toast > span > span');
-      if (updateSpan) updateSpan.textContent = 'تحديث جديد – سيتم تحديث الصفحة تلقائياً';
-      document.getElementById('update-toast').classList.add('show');
-    }
-  });
-});
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(reg => {
-        console.log('SW Registered - Auto Update Active');
-        
-        const checkForUpdates = () => {
-            // استخدام Math.random لكسر أعنف أنواع الكاش في السيرفرات والمتصفحات
-            fetch(`sw.js?bypass=${Math.random()}`, {
-                cache: 'no-store',
-                headers: {
-                    'Cache-Control': 'no-cache, no-store, must-revalidate',
-                    'Pragma': 'no-cache',
-                    'Expires': '0'
+<!-- نظام Service Worker -->
+    <script>
+      let newWorker;
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('sw.js').then(reg => {
+            console.log('SW Registered');
+            
+            // 1. فحص التحديث فور تشغيل التطبيق المثبت
+            reg.update();
+
+            // 2. فحص التحديث عند عودة الطالب للتطبيق (App Focus)
+            window.addEventListener('focus', () => {
+                reg.update();
+            });
+
+            // 3. فحص التحديث عند ظهور شاشة التطبيق
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') {
+                    reg.update();
                 }
-            })
-            .then(res => res.text())
-            .then(text => {
-                const match = text.match(/CACHE_NAME\s*=\s*['"]([^'"]+)['"]/);
-                
-                if (match) {
-                    const serverVersion = match[1]; // النتيجة من السيرفر (مثال: unem-iscae-v26.1)
-                    let localVersion = localStorage.getItem('unem_saved_version');
+            });
 
-                    // تسجيل الدخول الأول
-                    if (!localVersion) {
-                        localStorage.setItem('unem_saved_version', serverVersion);
-                        return;
-                    }
+            // 4. فحص صامت كل دقيقة واحدة (فحص مستمر لكامل المتصفحات والتطبيق)
+            setInterval(() => {
+                reg.update();
+            }, 1 * 60 * 1000); // 1 دقيقة
 
-                    // إذا اختلف السيرفر عن الهاتف (تم اكتشاف تحديث!)
-                    if (serverVersion !== localVersion) {
-                        pendingVersionName = serverVersion;
-
-                        let customMsg = currentLang === 'ar' ? 'تحديث جديد متاح للموقع 🔄' : 'Une nouvelle mise à jour est disponible 🔄';
+            reg.addEventListener('updatefound', () => {
+              newWorker = reg.installing;
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  
+                  // --- نظام الفحص الذكي للإصدارات، النتائج، والتظلمات ---
+                  fetch('sw.js?t=' + new Date().getTime()) // تجاوز الكاش تماماً
+                    .then(res => res.text())
+                    .then(text => {
                         
-                        // تحليل الرقم (القاموس)
-                        const vIndex = serverVersion.toLowerCase().lastIndexOf('v');
-                        if (vIndex !== -1) {
-                            const versionStr = serverVersion.substring(vIndex + 1);
+                        // تجهيز رسالة التحديث العام الافتراضية (عربي/فرنسي)
+                        let customMsg = '';
+                        if (currentLang === 'ar') {
+                            customMsg = (typeof i18n !== 'undefined' && i18n['ar'] && i18n['ar']['update_msg']) 
+                                ? i18n['ar']['update_msg'] 
+                                : 'تحديث جديد متاح للموقع 🔄';
+                        } else {
+                            customMsg = (typeof i18n !== 'undefined' && i18n['fr'] && i18n['fr']['update_msg']) 
+                                ? i18n['fr']['update_msg'] 
+                                : 'Une nouvelle mise à jour est disponible 🔄';
+                        }
+                        
+                        // Regex مطور: يلتقط الإصدار (مثل v16) سواء بفاصلة أو بدون فاصلة
+                        // الجزء الخاص بالفاصلة أصبح اختيارياً (?: ... )?
+                        const versionMatch = text.match(/[vV]\d+(?:[.,]([1-6])(\d)?)?\b/);
+                        
+                        if (versionMatch) {
+                            const semesterNumber = versionMatch[1]; // رقم السداسي (إذا وجدت فاصلة)
+                            const isAppeal = versionMatch[2]; // رقم التظلمات (الرقم الثاني بعد الفاصلة)
 
-                            if (versionStr.includes('.')) {
-                                const subVersion = versionStr.split('.')[1]; // ما بعد النقطة
-
-                                if (subVersion.length === 1 && subVersion >= '1' && subVersion <= '6') {
-                                    customMsg = currentLang === 'ar' 
-                                        ? `نتائج S${subVersion} أصبحت متاحة في الموقع 🎓` 
-                                        : `Les résultats de S${subVersion} sont disponibles 🎓`;
-                                } 
-                                else if (subVersion.length === 2 && subVersion[0] === subVersion[1]) {
-                                    const semNumber = subVersion[0];
-                                    customMsg = currentLang === 'ar' 
-                                        ? `نتائج S${semNumber} بعد التظلمات أصبحت متاحة 🎓` 
-                                        : `Les résultats de S${semNumber} après recours sont disponibles 🎓`;
+                            // إذا كان التحديث يحتوي على فاصلة (يعني تحديث نتائج)
+                            if (semesterNumber) {
+                                if (isAppeal) {
+                                    // رسالة التظلمات (رقمين بعد الفاصلة)
+                                    if (currentLang === 'ar') {
+                                        customMsg = `نتائج S${semesterNumber} بعد التظلمات أصبحت متاحة 🎓`;
+                                    } else {
+                                        customMsg = `Les résultats de S${semesterNumber} après recours sont disponibles 🎓`;
+                                    }
+                                } else {
+                                    // الرسالة العادية للنتائج (رقم واحد بعد الفاصلة)
+                                    if (currentLang === 'ar') {
+                                        customMsg = `نتائج S${semesterNumber} أصبحت متاحة في الموقع 🎓`;
+                                    } else {
+                                        customMsg = `Les résultats de S${semesterNumber} sont disponibles 🎓`;
+                                    }
                                 }
                             }
+                            // أما إذا لم تكن هناك فاصلة (مثل v16)، سيتجاهل هذا الجزء ويحتفظ برسالة التحديث العام الافتراضية المجهزة بالأعلى
                         }
-
-                        // إظهار الإشعار للطالب
+                        
                         const updateSpan = document.querySelector('#update-toast > span > span');
                         if (updateSpan) { updateSpan.textContent = customMsg; }
                         document.getElementById('update-toast').classList.add('show');
-                        
-                        reg.update(); // تحميل التحديث في الخلفية
-                    }
+                    })
+                    .catch(err => {
+                        // في حالة فشل القراءة لأي سبب، نعرض إشعار التحديث لتجنب تعطل النظام
+                        document.getElementById('update-toast').classList.add('show');
+                    });
+                  // ------------------------------------------
+
                 }
-            }).catch(e => console.log('Update fetch error'));
-        };
-
-        // فحص تلقائي
-        checkForUpdates(); 
-        window.addEventListener('focus', checkForUpdates); 
-        document.addEventListener('visibilitychange', () => { 
-            if (document.visibilityState === 'visible') checkForUpdates(); 
+              });
+            });
+          });
+          
+          let refreshing;
+          navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (refreshing) return;
+            refreshing = true;
+            window.location.reload();
+          });
         });
-        setInterval(checkForUpdates, 1 * 60 * 1000);
 
-        reg.addEventListener('updatefound', () => {
-            newWorker = reg.installing;
+        document.getElementById('update-btn').addEventListener('click', () => {
+          document.getElementById('update-toast').classList.remove('show');
+          if (newWorker) { newWorker.postMessage({ action: 'skipWaiting' }); } 
+          else { window.location.reload(); }
         });
-      });
-
-      let refreshing;
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (refreshing) return;
-        refreshing = true;
-        window.location.reload();
-      });
-    });
-
-    // عند ضغط الطالب على زر "تحديث الآن"
-    document.getElementById('update-btn').addEventListener('click', () => {
-      document.getElementById('update-toast').classList.remove('show');
-      
-      if (pendingVersionName) {
-          localStorage.setItem('unem_saved_version', pendingVersionName);
       }
-
-      if (newWorker && newWorker.state !== 'redundant') { 
-          newWorker.postMessage({ action: 'skipWaiting' }); 
-      } else { 
-          window.location.reload(true); 
-      }
-    });
-  }
-</script>
+    </script>
     <!-- START PROTECTION CODE -->
     <script>
     (function() {

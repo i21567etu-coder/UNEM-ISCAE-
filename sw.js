@@ -1,50 +1,57 @@
-// const CACHE_NAME = 'unem-iscae-v28'; // غيّر الرقم عند كل تحديث
+// قم بتغيير هذا الرقم في كل مرة تقوم بتحديث الموقع ليظهر الإشعار للمستخدمين
+const CACHE_NAME = 'unem-iscae-v14';
 
-const urlsToCache = [
-  // './index.html',   // لا تخزِّن index.html في الكاش
+const urlsToCache =[
+  './',
+  './index.html',
   './manifest.json',
   './logo.png',
   './icon-192.png'
 ];
 
+// حدث التثبيت: نقوم بتخزين الملفات، لكن *لا نجبر* المتصفح على التحديث فوراً
+// حتى يتسنى للمستخدم رؤية إشعار "يتوفر تحديث جديد" والضغط عليه.
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
+    caches.open(CACHE_NAME)
+      .then(cache => {
+        return cache.addAll(urlsToCache);
+      })
   );
-  self.skipWaiting(); // تثبيت العامل الجديد فوراً
 });
 
+// حدث التفعيل: مسح أي نسخ قديمة من الكاش من هواتف المستخدمين
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.map(cache => {
-          if (cache !== CACHE_NAME) return caches.delete(cache);
+          if (cache !== CACHE_NAME) {
+            console.log('حذف كاش قديم:', cache);
+            return caches.delete(cache);
+          }
         })
       );
-    }).then(() => clients.claim()) // السيطرة على الصفحات المفتوحة دون إعادة تحميل
+    })
   );
 });
 
+// جلب الملفات: الاستراتيجية تعتمد على جلب الملف من الكاش أولاً إن وجد
 self.addEventListener('fetch', event => {
-  const url = new URL(event.request.url);
-
-  // استراتيجية Network First لـ index.html
-  if (url.pathname === '/' || url.pathname === '/index.html') {
-    event.respondWith(
-      fetch(event.request).catch(() => caches.match(event.request))
-    );
-    return;
-  }
-
-  // لملف sw.js نفسه: دائماً من الشبكة (موجود بالفعل)
-  if (event.request.url.includes('sw.js')) {
-    event.respondWith(fetch(event.request));
-    return;
-  }
-
-  // باقي الملفات: Cache First
   event.respondWith(
-    caches.match(event.request).then(response => response || fetch(event.request))
+    caches.match(event.request)
+      .then(response => {
+        if (response) {
+          return response;
+        }
+        return fetch(event.request);
+      })
   );
+});
+
+// الاستماع لرسالة زر "تحديث الآن" من واجهة الموقع
+self.addEventListener('message', function(event) {
+  if (event.data.action === 'skipWaiting') {
+    self.skipWaiting();
+  }
 });
