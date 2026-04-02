@@ -1,4 +1,5 @@
 // قم بتغيير هذا الرقم في كل مرة تقوم بتحديث الموقع ليظهر الإشعار للمستخدمين
+// لتجربة النتائج، يمكنك تغييره إلى: unem-iscae-v20.1
 const CACHE_NAME = 'unem-iscae-v19';
 
 const urlsToCache =[
@@ -9,13 +10,20 @@ const urlsToCache =[
   './icon-192.png'
 ];
 
-// حدث التثبيت: نقوم بتخزين الملفات، لكن *لا نجبر* المتصفح على التحديث فوراً
-// حتى يتسنى للمستخدم رؤية إشعار "يتوفر تحديث جديد" والضغط عليه.
+// حدث التثبيت: نقوم بتخزين الملفات بطريقة آمنة
+// نستخدم Promise.all بدلاً من cache.addAll لمنع تعطل التحديث بالكامل إذا كان أحد الملفات مفقوداً
+// ولا نجبر المتصفح على التحديث فوراً حتى يتسنى للمستخدم رؤية إشعار "يتوفر تحديث جديد".
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        return cache.addAll(urlsToCache);
+        return Promise.all(
+          urlsToCache.map(url => {
+            return cache.add(url).catch(err => {
+              console.warn('لم يتم العثور على الملف، سيتم تجاوزه لضمان استمرار التحديث:', url);
+            });
+          })
+        );
       })
   );
 });
