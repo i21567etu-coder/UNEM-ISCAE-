@@ -1335,19 +1335,19 @@
         });
     </script>
 
-<!-- نظام Service Worker (النسخة النهائية الصارمة) -->
+<!-- نظام Service Worker (النسخة النهائية الموحدة - تعتمد على sw.js فقط) -->
 <script>
   if ('serviceWorker' in navigator) {
     let newWorker;
-    let pendingVersion = null;
+    let pendingVersionName = null;
 
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(reg => {
-        console.log('SW Registered - Strict & No-Cache Mode');
+        console.log('SW Registered - Single File Strict Mode');
         
         const checkForUpdates = () => {
-            // إجبار Chrome وباقي المتصفحات على جلب الملف من الإنترنت فوراً (بدون كاش)
-            fetch(`version.json?t=${new Date().getTime()}`, {
+            // نقوم بجلب ملف sw.js كنص عادي ونكسر الكاش الخاص به تماماً
+            fetch(`sw.js?t=${new Date().getTime()}`, {
                 cache: 'no-store',
                 headers: {
                     'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -1355,53 +1355,66 @@
                     'Expires': '0'
                 }
             })
-            .then(res => res.json())
-            .then(data => {
-                if (data && data.version) {
-                    let localVersion = localStorage.getItem('unem_app_version');
+            .then(res => res.text())
+            .then(text => {
+                // استخراج المتغير CACHE_NAME بذكاء من داخل ملف sw.js
+                const match = text.match(/CACHE_NAME\s*=\s*['"]([^'"]+)['"]/);
+                
+                if (match) {
+                    const fetchedCacheName = match[1]; // النتيجة مثلاً: unem-iscae-v26.3
+                    let localCacheName = localStorage.getItem('unem_saved_version');
 
-                    if (!localVersion) {
-                        localStorage.setItem('unem_app_version', data.version);
+                    // إذا كان الطالب يفتح الموقع لأول مرة، نحفظ الإصدار بصمت
+                    if (!localCacheName) {
+                        localStorage.setItem('unem_saved_version', fetchedCacheName);
                         return;
                     }
 
-                    if (data.version !== localVersion) {
-                        pendingVersion = data.version;
+                    // إذا وجدنا أن الرقم الموجود في السيرفر يختلف عن هاتف الطالب!
+                    if (fetchedCacheName !== localCacheName) {
+                        pendingVersionName = fetchedCacheName; // نحفظه للتحديث لاحقاً
 
-                        // 1. الرسالة الافتراضية
+                        // 1. الرسالة الافتراضية للتحديث العادي
                         let customMsg = currentLang === 'ar' ? 'تحديث جديد متاح للموقع 🔄' : 'Une nouvelle mise à jour est disponible 🔄';
                         
-                        // 2. القراءة الصارمة والدقيقة للأرقام
-                        if (data.version.includes('.')) {
-                            const subVersion = data.version.split('.')[1]; // استخراج ما بعد النقطة (مثل 1 أو 2 أو 11)
+                        // 2. تحليل الرقم من النص (مثلاً استخراج 26.3)
+                        const vIndex = fetchedCacheName.toLowerCase().lastIndexOf('v');
+                        if (vIndex !== -1) {
+                            const versionStr = fetchedCacheName.substring(vIndex + 1); // النتيجة: 26 أو 26.3
 
-                            // إذا كان رقماً واحداً (نتائج عادية)
-                            if (subVersion.length === 1 && subVersion >= '1' && subVersion <= '6') {
-                                customMsg = currentLang === 'ar' 
-                                    ? `نتائج S${subVersion} أصبحت متاحة في الموقع 🎓` 
-                                    : `Les résultats de S${subVersion} sont disponibles 🎓`;
-                            } 
-                            // إذا كان رقمين متشابهين (تظلمات - مثل 11, 22, 33)
-                            else if (subVersion.length === 2 && subVersion[0] === subVersion[1]) {
-                                const semNumber = subVersion[0];
-                                customMsg = currentLang === 'ar' 
-                                    ? `نتائج S${semNumber} بعد التظلمات أصبحت متاحة 🎓` 
-                                    : `Les résultats de S${semNumber} après recours sont disponibles 🎓`;
+                            // إذا كان يحتوي على نقطة (نتائج)
+                            if (versionStr.includes('.')) {
+                                const subVersion = versionStr.split('.')[1]; // استخراج ما بعد النقطة (مثلاً 3)
+
+                                // تحديث نتائج سداسي عادي (رقم واحد من 1 إلى 6)
+                                if (subVersion.length === 1 && subVersion >= '1' && subVersion <= '6') {
+                                    customMsg = currentLang === 'ar' 
+                                        ? `نتائج S${subVersion} أصبحت متاحة في الموقع 🎓` 
+                                        : `Les résultats de S${subVersion} sont disponibles 🎓`;
+                                } 
+                                // تحديث نتائج تظلمات (رقمين متشابهين مثل 11, 22, 33)
+                                else if (subVersion.length === 2 && subVersion[0] === subVersion[1]) {
+                                    const semNumber = subVersion[0];
+                                    customMsg = currentLang === 'ar' 
+                                        ? `نتائج S${semNumber} بعد التظلمات أصبحت متاحة 🎓` 
+                                        : `Les résultats de S${semNumber} après recours sont disponibles 🎓`;
+                                }
                             }
                         }
 
-                        // 3. إظهار الإشعار
+                        // 3. إظهار الإشعار للطالب
                         const updateSpan = document.querySelector('#update-toast > span > span');
                         if (updateSpan) { updateSpan.textContent = customMsg; }
                         document.getElementById('update-toast').classList.add('show');
                         
-                        // 4. تحديث SW في الخلفية
+                        // 4. إجبار المتصفح على تحميل SW الجديد
                         reg.update();
                     }
                 }
-            }).catch(e => console.log('Silent check failed'));
+            }).catch(e => console.log('Update check failed'));
         };
 
+        // متى نفحص؟
         checkForUpdates(); 
         window.addEventListener('focus', checkForUpdates); 
         document.addEventListener('visibilitychange', () => { 
@@ -1422,11 +1435,16 @@
       });
     });
 
+    // التفاعل مع زر التحديث
     document.getElementById('update-btn').addEventListener('click', () => {
       document.getElementById('update-toast').classList.remove('show');
-      if (pendingVersion) {
-          localStorage.setItem('unem_app_version', pendingVersion);
+      
+      // تحديث ذاكرة الهاتف لكي لا يظهر الإشعار مجدداً
+      if (pendingVersionName) {
+          localStorage.setItem('unem_saved_version', pendingVersionName);
       }
+
+      // تفعيل التحديث وإعادة تحميل الصفحة
       if (newWorker && newWorker.state !== 'redundant') { 
           newWorker.postMessage({ action: 'skipWaiting' }); 
       } else { 
