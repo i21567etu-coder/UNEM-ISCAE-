@@ -1,5 +1,5 @@
 // لتجربة النتائج، قم بتغيير الرقم ليتطابق مع version.json
-const CACHE_NAME = 'unem-iscae-v28';
+const CACHE_NAME = 'unem-iscae-v28.3';
 
 const urlsToCache =[
   './',
