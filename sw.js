@@ -1,5 +1,5 @@
-// لتجربة النتائج، قم بتغيير الرقم ليتطابق مع version.json
-const CACHE_NAME = 'unem-iscae-v28.3';
+// لتجربة التحديثات، غير هذا الرقم (مثال: unem-iscae-v27 أو unem-iscae-v27.1)
+const CACHE_NAME = 'unem-iscae-v26';
 
 const urlsToCache =[
   './',
@@ -39,12 +39,13 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
-  // 🚀 السر لحل مشكلة Chrome: منع الكاش تماماً لملف version.json
-  if (event.request.url.includes('version.json')) {
+  // 🚀 أمر صارم: إذا كان الطلب لقراءة ملف sw.js دعه يمر للإنترنت فوراً ولا تتدخل
+  if (event.request.url.includes('sw.js')) {
     event.respondWith(fetch(event.request));
     return;
   }
 
+  // باقي الملفات استخدم الكاش لتسريع الموقع
   event.respondWith(
     caches.match(event.request)
       .then(response => {
