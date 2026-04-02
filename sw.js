@@ -1,5 +1,4 @@
-// قم بتغيير هذا الرقم في كل مرة تقوم بتحديث الموقع ليظهر الإشعار للمستخدمين
-// لتجربة النتائج، يمكنك تغييره إلى: unem-iscae-v25.2
+// لتجربة النتائج، قم بتغيير الرقم ليتطابق مع version.json
 const CACHE_NAME = 'unem-iscae-v25.2';
 
 const urlsToCache =[
@@ -10,9 +9,6 @@ const urlsToCache =[
   './icon-192.png'
 ];
 
-// حدث التثبيت: نقوم بتخزين الملفات بطريقة آمنة
-// نستخدم Promise.all بدلاً من cache.addAll لمنع تعطل التحديث بالكامل إذا كان أحد الملفات مفقوداً
-// ولا نجبر المتصفح على التحديث فوراً حتى يتسنى للمستخدم رؤية إشعار "يتوفر تحديث جديد".
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -20,7 +16,7 @@ self.addEventListener('install', event => {
         return Promise.all(
           urlsToCache.map(url => {
             return cache.add(url).catch(err => {
-              console.warn('لم يتم العثور على الملف، سيتم تجاوزه لضمان استمرار التحديث:', url);
+              console.warn('تجاوز ملف مفقود:', url);
             });
           })
         );
@@ -28,14 +24,12 @@ self.addEventListener('install', event => {
   );
 });
 
-// حدث التفعيل: مسح أي نسخ قديمة من الكاش من هواتف المستخدمين
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.map(cache => {
           if (cache !== CACHE_NAME) {
-            console.log('حذف كاش قديم:', cache);
             return caches.delete(cache);
           }
         })
@@ -44,8 +38,13 @@ self.addEventListener('activate', event => {
   );
 });
 
-// جلب الملفات: الاستراتيجية تعتمد على جلب الملف من الكاش أولاً إن وجد
 self.addEventListener('fetch', event => {
+  // 🚀 السر لحل مشكلة Chrome: منع الكاش تماماً لملف version.json
+  if (event.request.url.includes('version.json')) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request)
       .then(response => {
@@ -57,7 +56,6 @@ self.addEventListener('fetch', event => {
   );
 });
 
-// الاستماع لرسالة زر "تحديث الآن" من واجهة الموقع
 self.addEventListener('message', function(event) {
   if (event.data.action === 'skipWaiting') {
     self.skipWaiting();
