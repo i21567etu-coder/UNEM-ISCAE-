@@ -1,26 +1,20 @@
-// لتجربة التحديثات، غير هذا الرقم (مثال: unem-iscae-v27 أو unem-iscae-v27.1)
-const CACHE_NAME = 'unem-iscae-v27.3';
+const CACHE_NAME = 'unem-iscae-v28'; // غير الرقم عند كل تحديث
 
-const urlsToCache =[
-  './',
-  './index.html',
-  './manifest.json',
-  './logo.png',
-  './icon-192.png'
+const urlsToCache = [
+  '/',
+  '/index.html',
+  '/manifest.json',
+  '/logo.png',
+  '/icon-192.png'
 ];
 
 self.addEventListener('install', event => {
+  self.skipWaiting(); // مهم للتحديث الفوري
+
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        return Promise.all(
-          urlsToCache.map(url => {
-            return cache.add(url).catch(err => {
-              console.warn('تجاوز ملف مفقود:', url);
-            });
-          })
-        );
-      })
+    caches.open(CACHE_NAME).then(cache => {
+      return cache.addAll(urlsToCache);
+    })
   );
 });
 
@@ -34,31 +28,21 @@ self.addEventListener('activate', event => {
           }
         })
       );
-    })
+    }).then(() => self.clients.claim()) // مهم جداً
   );
 });
 
 self.addEventListener('fetch', event => {
-  // 🚀 أمر صارم: إذا كان الطلب لقراءة ملف sw.js دعه يمر للإنترنت فوراً ولا تتدخل
-  if (event.request.url.includes('sw.js')) {
+
+  // لا تكاشي index.html حتى يصل التحديث
+  if (event.request.mode === 'navigate') {
     event.respondWith(fetch(event.request));
     return;
   }
 
-  // باقي الملفات استخدم الكاش لتسريع الموقع
   event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        if (response) {
-          return response;
-        }
-        return fetch(event.request);
-      })
+    caches.match(event.request).then(response => {
+      return response || fetch(event.request);
+    })
   );
-});
-
-self.addEventListener('message', function(event) {
-  if (event.data.action === 'skipWaiting') {
-    self.skipWaiting();
-  }
 });
