@@ -1342,41 +1342,84 @@
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('sw.js').then(reg => {
             console.log('SW Registered');
+            
+            // 1. فحص التحديث فور تشغيل التطبيق المثبت
+            reg.update();
+
+            // 2. فحص التحديث عند عودة الطالب للتطبيق (App Focus)
+            window.addEventListener('focus', () => {
+                reg.update();
+            });
+
+            // 3. فحص التحديث عند ظهور شاشة التطبيق
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') {
+                    reg.update();
+                }
+            });
+
+            // 4. فحص صامت كل دقيقة واحدة (فحص مستمر لكامل المتصفحات والتطبيق)
+            setInterval(() => {
+                reg.update();
+            }, 1 * 60 * 1000); // 1 دقيقة
+
             reg.addEventListener('updatefound', () => {
               newWorker = reg.installing;
               newWorker.addEventListener('statechange', () => {
                 if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                   
-                  // --- نظام الفحص الذكي للإصدارات والنتائج ---
-                  fetch('sw.js?t=' + new Date().getTime()) // جلب الملف لتخطي الكاش
+                  // --- نظام الفحص الذكي للإصدارات، النتائج، والتظلمات ---
+                  fetch('sw.js?t=' + new Date().getTime()) // تجاوز الكاش تماماً
                     .then(res => res.text())
                     .then(text => {
-                        let customMsg = i18n[currentLang]['update_msg']; // الرسالة الافتراضية للتحديث العادي
                         
-                        // كود ذكي يبحث عن حرف v يليه أرقام ثم فاصلة (.) أو (,) ثم رقم من 1 إلى 6
-                        // مثال: v14.1 أو V15,3
-                        const versionMatch = text.match(/[vV]\d+[.,]([1-6])\b/);
-                        
-                        if (versionMatch && versionMatch[1]) {
-                            const semesterNumber = versionMatch[1]; // سيلتقط الرقم بعد الفاصلة (1، 2، 3 ...)
-                            
-                            // تخصيص الرسالة حسب الرقم المكتشف واللغة
-                            if (currentLang === 'ar') {
-                                customMsg = `نتائج S${semesterNumber} أصبحت متاحة في الموقع 🎓`;
-                            } else {
-                                customMsg = `Les résultats de S${semesterNumber} sont disponibles 🎓`;
-                            }
+                        // تجهيز رسالة التحديث العام الافتراضية (عربي/فرنسي)
+                        let customMsg = '';
+                        if (currentLang === 'ar') {
+                            customMsg = (typeof i18n !== 'undefined' && i18n['ar'] && i18n['ar']['update_msg']) 
+                                ? i18n['ar']['update_msg'] 
+                                : 'تحديث جديد متاح للموقع 🔄';
+                        } else {
+                            customMsg = (typeof i18n !== 'undefined' && i18n['fr'] && i18n['fr']['update_msg']) 
+                                ? i18n['fr']['update_msg'] 
+                                : 'Une nouvelle mise à jour est disponible 🔄';
                         }
                         
-                        // وضع النص الجديد داخل الإشعار
+                        // Regex مطور: يلتقط الإصدار (مثل v16) سواء بفاصلة أو بدون فاصلة
+                        // الجزء الخاص بالفاصلة أصبح اختيارياً (?: ... )?
+                        const versionMatch = text.match(/[vV]\d+(?:[.,]([1-6])(\d)?)?\b/);
+                        
+                        if (versionMatch) {
+                            const semesterNumber = versionMatch[1]; // رقم السداسي (إذا وجدت فاصلة)
+                            const isAppeal = versionMatch[2]; // رقم التظلمات (الرقم الثاني بعد الفاصلة)
+
+                            // إذا كان التحديث يحتوي على فاصلة (يعني تحديث نتائج)
+                            if (semesterNumber) {
+                                if (isAppeal) {
+                                    // رسالة التظلمات (رقمين بعد الفاصلة)
+                                    if (currentLang === 'ar') {
+                                        customMsg = `نتائج S${semesterNumber} بعد التظلمات أصبحت متاحة 🎓`;
+                                    } else {
+                                        customMsg = `Les résultats de S${semesterNumber} après recours sont disponibles 🎓`;
+                                    }
+                                } else {
+                                    // الرسالة العادية للنتائج (رقم واحد بعد الفاصلة)
+                                    if (currentLang === 'ar') {
+                                        customMsg = `نتائج S${semesterNumber} أصبحت متاحة في الموقع 🎓`;
+                                    } else {
+                                        customMsg = `Les résultats de S${semesterNumber} sont disponibles 🎓`;
+                                    }
+                                }
+                            }
+                            // أما إذا لم تكن هناك فاصلة (مثل v16)، سيتجاهل هذا الجزء ويحتفظ برسالة التحديث العام الافتراضية المجهزة بالأعلى
+                        }
+                        
                         const updateSpan = document.querySelector('#update-toast > span > span');
                         if (updateSpan) { updateSpan.textContent = customMsg; }
-                        
-                        // إظهار الإشعار للمستخدم
                         document.getElementById('update-toast').classList.add('show');
                     })
                     .catch(err => {
-                        // في حال الخطأ نظهر التحديث العادي
+                        // في حالة فشل القراءة لأي سبب، نعرض إشعار التحديث لتجنب تعطل النظام
                         document.getElementById('update-toast').classList.add('show');
                     });
                   // ------------------------------------------
