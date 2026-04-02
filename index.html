@@ -1118,13 +1118,37 @@
             }
             li.appendChild(infoDiv); li.appendChild(actionsDiv); return li;
         }
+// متغير جديد لتتبع عملية جلب الملفات في الخلفية
+        let currentSubjectFilesPromise = null;
 
-        function selectCategory(categoryName) { document.getElementById('category-selection-container').classList.add('hidden'); document.getElementById('file-list-container').classList.remove('hidden'); currentTab = categoryName; renderFilteredFiles(); }
+        async function selectCategory(categoryName) { 
+            document.getElementById('category-selection-container').classList.add('hidden'); 
+            document.getElementById('file-list-container').classList.remove('hidden'); 
+            currentTab = categoryName; 
+            
+            // إظهار التحميل فقط إذا لم تكتمل عملية الجلب في الخلفية
+            document.getElementById('pdf-list').innerHTML = "";
+            document.getElementById('no-files-msg').classList.add('hidden');
+            document.getElementById('loading-spinner').classList.remove('hidden');
+
+            // انتظار اكتمال جلب الملفات (غالباً ستكون قد اكتملت أثناء اختيار المستخدم للتصنيف)
+            if (currentSubjectFilesPromise) {
+                await currentSubjectFilesPromise;
+            }
+            
+            document.getElementById('loading-spinner').classList.add('hidden');
+            renderFilteredFiles(); 
+        }
 
         function renderFilteredFiles() {
             const pdfList = document.getElementById('pdf-list'); pdfList.innerHTML = "";
             let filtered = isArchiveSpecialCase ? currentSubjectFiles : currentSubjectFiles.filter(f => getFileCategory(f.name) === currentTab);
-            if (filtered.length === 0) { document.getElementById('no-files-msg').classList.remove('hidden'); } else { document.getElementById('no-files-msg').classList.add('hidden'); filtered.forEach(file => pdfList.appendChild(buildFileListItem(file))); }
+            if (filtered.length === 0) { 
+                document.getElementById('no-files-msg').classList.remove('hidden'); 
+            } else { 
+                document.getElementById('no-files-msg').classList.add('hidden'); 
+                filtered.forEach(file => pdfList.appendChild(buildFileListItem(file))); 
+            }
         }
 
         function triggerDownload(fileObj) {
@@ -1138,17 +1162,51 @@
             const link = document.createElement('a'); link.href = downloadUrl; link.target = '_blank'; link.download = safeName; document.body.appendChild(link); link.click(); document.body.removeChild(link);
         }
 
-        async function loadFiles(subjectName) {
-            document.getElementById('selected-subject-name').textContent = subjectName; document.getElementById('selected-subject-title-card').textContent = subjectName;
-            const cleanSubject = normalizeText(subjectName); const sanitizedSubject = cleanSubject.replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ').trim(); const subjectKeywords = sanitizedSubject.split(' ');
-            document.getElementById('pdf-list').innerHTML = ""; document.getElementById('loading-spinner').classList.remove('hidden'); document.getElementById('no-files-msg').classList.add('hidden');
+        // دالة العرض الفوري (بدون انتظار)
+        function loadFiles(subjectName) {
+            document.getElementById('selected-subject-name').textContent = subjectName; 
+            document.getElementById('selected-subject-title-card').textContent = subjectName;
+            
+            const cleanSubject = normalizeText(subjectName); 
+            
+            // إظهار الواجهة فوراً للمستخدم بدون أي تأخير
+            if (cleanSubject.includes("archive") && cleanSubject.match(/s[1-6]/)) { 
+                isArchiveSpecialCase = true; 
+                hideAll(); 
+                document.getElementById('file-list-container').classList.remove('hidden'); 
+                document.getElementById('file-list-back-btn').setAttribute('onclick', 'goBackToSubjects()'); 
+                document.getElementById('pdf-list').innerHTML = ""; 
+                document.getElementById('loading-spinner').classList.remove('hidden'); 
+                document.getElementById('no-files-msg').classList.add('hidden');
+            } else { 
+                isArchiveSpecialCase = false; 
+                hideAll(); 
+                document.getElementById('category-selection-container').classList.remove('hidden'); 
+                document.getElementById('file-list-back-btn').setAttribute('onclick', 'goBackToCategories()'); 
+            }
+            
+            // بدء جلب الملفات في الخلفية بصمت
+            currentSubjectFilesPromise = performFileFetching(subjectName, cleanSubject);
+            
+            // إذا كان أرشيفاً، نعرض الملفات بمجرد انتهاء الوعد (لأنه لا توجد شاشة تصنيفات)
+            if(isArchiveSpecialCase) {
+                currentSubjectFilesPromise.then(() => {
+                    document.getElementById('loading-spinner').classList.add('hidden');
+                    renderFilteredFiles();
+                });
+            }
+        }
 
-            if (cleanSubject.includes("archive") && cleanSubject.match(/s[1-6]/)) { isArchiveSpecialCase = true; hideAll(); document.getElementById('file-list-container').classList.remove('hidden'); document.getElementById('file-list-back-btn').setAttribute('onclick', 'goBackToSubjects()'); } 
-            else { isArchiveSpecialCase = false; hideAll(); document.getElementById('category-selection-container').classList.remove('hidden'); document.getElementById('file-list-back-btn').setAttribute('onclick', 'goBackToCategories()'); }
+        // الدالة التي تقوم بالعمل الشاق في الخلفية
+        async function performFileFetching(subjectName, cleanSubject) {
+            const sanitizedSubject = cleanSubject.replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ').trim(); 
+            const subjectKeywords = sanitizedSubject.split(' ');
             
             if(allFiles.length === 0) await fetchFilesFromGitHub(currentBranch);
             
-            let githubFiles = allFiles.map(f => ({...f, source: 'github'})); let supabaseFiles =[];
+            let githubFiles = allFiles.map(f => ({...f, source: 'github'})); 
+            let supabaseFiles = [];
+            
             if(supabaseClient && currentSpecialization && currentLevel && currentSemester) {
                 const folderPath = `${currentSpecialization.toUpperCase()}/${currentLevel.toUpperCase()}/${currentSemester.toUpperCase()}/${getSafeSubjectCode(subjectName)}`;
                 const { data } = await supabaseClient.storage.from('pdf-files').list(folderPath);
@@ -1189,11 +1247,8 @@
                 return sanitizedFile.includes(sanitizedSubject);
             });
 
-            currentSubjectFiles =[...filteredGithub, ...supabaseFiles];
-            document.getElementById('loading-spinner').classList.add('hidden');
-            if(isArchiveSpecialCase) renderFilteredFiles();
+            currentSubjectFiles = [...filteredGithub, ...supabaseFiles];
         }
-
         function openSmartViewer(fileObj) {
             const safeName = fileObj.name.replace(/^"|"$/g, '');
             if(typeof gtag === 'function') gtag('event', 'view_file', { 'file_name': safeName });
