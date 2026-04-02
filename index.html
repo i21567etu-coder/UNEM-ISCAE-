@@ -1340,7 +1340,7 @@
   let newWorker;
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      // التعديل الأول هنا: إضافة { updateViaCache: 'none' } لإجبار المتصفح على جلب التحديث الفوري
+      // إجبار المتصفح على عدم قراءة الكاش عند فحص التحديث
       navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(reg => {
         console.log('SW Registered');
         
@@ -1359,44 +1359,50 @@
           newWorker.addEventListener('statechange', () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
               
+              // جلب الملف الجديد لمعرفة رقم الإصدار بدقة
               fetch('sw.js?t=' + new Date().getTime())
                 .then(res => res.text())
                 .then(text => {
                     
-                    let customMsg = '';
-                    if (currentLang === 'ar') {
-                        customMsg = (typeof i18n !== 'undefined' && i18n['ar'] && i18n['ar']['update_msg']) 
-                            ? i18n['ar']['update_msg'] 
-                            : 'تحديث جديد متاح للموقع 🔄';
-                    } else {
-                        customMsg = (typeof i18n !== 'undefined' && i18n['fr'] && i18n['fr']['update_msg']) 
-                            ? i18n['fr']['update_msg'] 
-                            : 'Une nouvelle mise à jour est disponible 🔄';
-                    }
-                    
-                    // التعديل الثاني هنا: استخراج دقيق جداً للإصدار من المتغير CACHE_NAME فقط
-                    const cacheNameMatch = text.match(/CACHE_NAME\s*=\s*['"]([^'"]+)['"]/);
-                    
-                    if (cacheNameMatch) {
-                        const fullVersionString = cacheNameMatch[1]; // سيعطينا مثلاً: unem-iscae-v20.1
-                        const versionMatch = fullVersionString.match(/[vV]\d+(?:[.,]([1-6])(\d)?)?/);
-                        
-                        if (versionMatch) {
-                            const semesterNumber = versionMatch[1]; // رقم السداسي
-                            const isAppeal = versionMatch[2]; // رقم التظلمات
+                    // الرسالة الافتراضية للتحديث العادي
+                    let customMsg = currentLang === 'ar' 
+                        ? 'تحديث جديد متاح للموقع 🔄' 
+                        : 'Une nouvelle mise à jour est disponible 🔄';
 
-                            if (semesterNumber) {
-                                if (isAppeal) {
-                                    if (currentLang === 'ar') customMsg = `نتائج S${semesterNumber} بعد التظلمات أصبحت متاحة 🎓`;
-                                    else customMsg = `Les résultats de S${semesterNumber} après recours sont disponibles 🎓`;
-                                } else {
-                                    if (currentLang === 'ar') customMsg = `نتائج S${semesterNumber} أصبحت متاحة في الموقع 🎓`;
-                                    else customMsg = `Les résultats de S${semesterNumber} sont disponibles 🎓`;
+                    try {
+                        // استخراج اسم المتغير بدقة
+                        const cacheMatch = text.match(/CACHE_NAME\s*=\s*['"]([^'"]+)['"]/);
+                        if (cacheMatch) {
+                            const cacheString = cacheMatch[1]; // النتيجة ستكون مثلا: unem-iscae-v20.1
+                            const vIndex = cacheString.toLowerCase().indexOf('v');
+                            
+                            if (vIndex !== -1) {
+                                const versionPart = cacheString.substring(vIndex + 1); // النتيجة: 20.1 أو 20
+                                const parts = versionPart.split('.'); // تقسيم الرقم بناءً على "النقطة"
+
+                                // إذا كان هناك نقطة (يعني parts.length أكبر من 1) فهذه نتائج
+                                if (parts.length > 1 && parts[1].length > 0) {
+                                    const semesterNumber = parts[1].charAt(0); // الرقم الأول بعد النقطة (رقم السداسي)
+                                    const isAppeal = parts[1].length > 1; // إذا كان هناك رقم ثاني بعد السداسي (تظلمات)
+
+                                    if (isAppeal) {
+                                        customMsg = currentLang === 'ar' 
+                                            ? `نتائج S${semesterNumber} بعد التظلمات أصبحت متاحة 🎓` 
+                                            : `Les résultats de S${semesterNumber} après recours sont disponibles 🎓`;
+                                    } else {
+                                        customMsg = currentLang === 'ar' 
+                                            ? `نتائج S${semesterNumber} أصبحت متاحة في الموقع 🎓` 
+                                            : `Les résultats de S${semesterNumber} sont disponibles 🎓`;
+                                    }
                                 }
+                                // إذا لم تكن هناك نقطة (مثال: v20) سيتجاهل هذا الجزء وتظل الرسالة هي التحديث العادي
                             }
                         }
+                    } catch(e) {
+                        console.error('Error parsing version:', e);
                     }
                     
+                    // عرض الإشعار
                     const updateSpan = document.querySelector('#update-toast > span > span');
                     if (updateSpan) { updateSpan.textContent = customMsg; }
                     document.getElementById('update-toast').classList.add('show');
