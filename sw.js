@@ -1,4 +1,4 @@
-// const CACHE_NAME = 'unem-iscae-v27.4'; // غيّر الرقم عند كل تحديث
+// const CACHE_NAME = 'unem-iscae-v28'; // غيّر الرقم عند كل تحديث
 
 const urlsToCache = [
   // './index.html',   // لا تخزِّن index.html في الكاش
