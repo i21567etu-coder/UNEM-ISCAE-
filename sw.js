@@ -1,5 +1,5 @@
 // لتجربة التحديثات، غير هذا الرقم (مثال: unem-iscae-v27 أو unem-iscae-v27.1)
-const CACHE_NAME = 'unem-iscae-v27';
+const CACHE_NAME = 'unem-iscae-v27.3';
 
 const urlsToCache =[
   './',
