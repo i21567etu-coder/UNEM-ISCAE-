@@ -1,6 +1,6 @@
 // قم بتغيير هذا الرقم في كل مرة تقوم بتحديث الموقع ليظهر الإشعار للمستخدمين
 // لتجربة النتائج، يمكنك تغييره إلى: unem-iscae-v20.1
-const CACHE_NAME = 'unem-iscae-v22';
+const CACHE_NAME = 'unem-iscae-v23';
 
 const urlsToCache =[
   './',
