@@ -1335,48 +1335,58 @@
         });
     </script>
 
-<!-- نظام Service Worker (النسخة النهائية - الطيار الآلي) -->
+<!-- نظام Service Worker (النسخة النهائية الصارمة) -->
 <script>
   if ('serviceWorker' in navigator) {
     let newWorker;
-    let pendingVersion = null; // لتخزين رقم التحديث الجديد عند اكتشافه
+    let pendingVersion = null;
 
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(reg => {
-        console.log('SW Registered - Auto Pilot Mode');
+        console.log('SW Registered - Strict & No-Cache Mode');
         
-        // دالة الفحص الذكي التي تقارن السيرفر بهاتف الطالب
         const checkForUpdates = () => {
-            fetch(`version.json?t=${new Date().getTime()}`)
+            // إجبار Chrome وباقي المتصفحات على جلب الملف من الإنترنت فوراً (بدون كاش)
+            fetch(`version.json?t=${new Date().getTime()}`, {
+                cache: 'no-store',
+                headers: {
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache',
+                    'Expires': '0'
+                }
+            })
             .then(res => res.json())
             .then(data => {
                 if (data && data.version) {
-                    // جلب آخر إصدار تم حفظه في هاتف الطالب
                     let localVersion = localStorage.getItem('unem_app_version');
 
-                    // إذا كان الطالب يزور الموقع لأول مرة، نحفظ الإصدار بصمت ولا نزعجه
                     if (!localVersion) {
                         localStorage.setItem('unem_app_version', data.version);
                         return;
                     }
 
-                    // إذا كان إصدار السيرفر يختلف عن هاتف الطالب (تم اكتشاف تحديث!)
                     if (data.version !== localVersion) {
-                        pendingVersion = data.version; // نحفظ الرقم لنحدثه بعد ضغط الزر
+                        pendingVersion = data.version;
 
-                        // 1. تجهيز رسالة التحديث
+                        // 1. الرسالة الافتراضية
                         let customMsg = currentLang === 'ar' ? 'تحديث جديد متاح للموقع 🔄' : 'Une nouvelle mise à jour est disponible 🔄';
                         
-                        // 2. تحليل الرقم بدقة (هل هو نتائج أم تحديث عادي؟)
-                        const parts = data.version.split('.');
-                        if (parts.length > 1 && parts[1].length > 0) {
-                            const semesterNumber = parts[1].charAt(0);
-                            const isAppeal = parts[1].length > 1;
+                        // 2. القراءة الصارمة والدقيقة للأرقام
+                        if (data.version.includes('.')) {
+                            const subVersion = data.version.split('.')[1]; // استخراج ما بعد النقطة (مثل 1 أو 2 أو 11)
 
-                            if (isAppeal) {
-                                customMsg = currentLang === 'ar' ? `نتائج S${semesterNumber} بعد التظلمات أصبحت متاحة 🎓` : `Les résultats de S${semesterNumber} après recours sont disponibles 🎓`;
-                            } else {
-                                customMsg = currentLang === 'ar' ? `نتائج S${semesterNumber} أصبحت متاحة في الموقع 🎓` : `Les résultats de S${semesterNumber} sont disponibles 🎓`;
+                            // إذا كان رقماً واحداً (نتائج عادية)
+                            if (subVersion.length === 1 && subVersion >= '1' && subVersion <= '6') {
+                                customMsg = currentLang === 'ar' 
+                                    ? `نتائج S${subVersion} أصبحت متاحة في الموقع 🎓` 
+                                    : `Les résultats de S${subVersion} sont disponibles 🎓`;
+                            } 
+                            // إذا كان رقمين متشابهين (تظلمات - مثل 11, 22, 33)
+                            else if (subVersion.length === 2 && subVersion[0] === subVersion[1]) {
+                                const semNumber = subVersion[0];
+                                customMsg = currentLang === 'ar' 
+                                    ? `نتائج S${semNumber} بعد التظلمات أصبحت متاحة 🎓` 
+                                    : `Les résultats de S${semNumber} après recours sont disponibles 🎓`;
                             }
                         }
 
@@ -1385,20 +1395,19 @@
                         if (updateSpan) { updateSpan.textContent = customMsg; }
                         document.getElementById('update-toast').classList.add('show');
                         
-                        // 4. إجبار SW على الجلب في الخلفية
+                        // 4. تحديث SW في الخلفية
                         reg.update();
                     }
                 }
             }).catch(e => console.log('Silent check failed'));
         };
 
-        // متى نفحص؟
         checkForUpdates(); 
         window.addEventListener('focus', checkForUpdates); 
         document.addEventListener('visibilitychange', () => { 
             if (document.visibilityState === 'visible') checkForUpdates(); 
         });
-        setInterval(checkForUpdates, 1 * 60 * 1000); // كل دقيقة صمتاً
+        setInterval(checkForUpdates, 1 * 60 * 1000);
 
         reg.addEventListener('updatefound', () => {
             newWorker = reg.installing;
@@ -1413,20 +1422,14 @@
       });
     });
 
-    // التفاعل مع زر "تحديث الآن"
     document.getElementById('update-btn').addEventListener('click', () => {
       document.getElementById('update-toast').classList.remove('show');
-      
-      // تحديث ذاكرة الطالب فوراً حتى لا يظهر له الإشعار مرة أخرى
       if (pendingVersion) {
           localStorage.setItem('unem_app_version', pendingVersion);
       }
-
-      // تفعيل التحديث
       if (newWorker && newWorker.state !== 'redundant') { 
           newWorker.postMessage({ action: 'skipWaiting' }); 
       } else { 
-          // إنعاش إجباري كحل بديل يمسح الكاش بقوة
           window.location.reload(true); 
       }
     });
