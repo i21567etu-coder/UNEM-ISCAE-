@@ -1337,10 +1337,17 @@
 
 <<!-- نظام Service Worker (النسخة النهائية المقاومة للكاش) -->
 <script>
-  if ('serviceWorker' in navigator) {
-    let newWorker;
-    let pendingVersionName = null;
-
+  reg.addEventListener('updatefound', () => {
+  newWorker = reg.installing;
+  newWorker.addEventListener('statechange', () => {
+    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+      // تم تثبيت إصدار جديد، أظهر الإشعار أو أعد التحميل فوراً
+      const updateSpan = document.querySelector('#update-toast > span > span');
+      if (updateSpan) updateSpan.textContent = 'تحديث جديد – سيتم تحديث الصفحة تلقائياً';
+      document.getElementById('update-toast').classList.add('show');
+    }
+  });
+});
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(reg => {
         console.log('SW Registered - Auto Update Active');
