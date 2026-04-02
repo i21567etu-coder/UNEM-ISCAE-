@@ -1335,7 +1335,7 @@
         });
     </script>
 
-<!-- نظام Service Worker (النسخة النهائية الموحدة - تعتمد على sw.js فقط) -->
+<<!-- نظام Service Worker (النسخة النهائية المقاومة للكاش) -->
 <script>
   if ('serviceWorker' in navigator) {
     let newWorker;
@@ -1343,11 +1343,11 @@
 
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(reg => {
-        console.log('SW Registered - Single File Strict Mode');
+        console.log('SW Registered - Auto Update Active');
         
         const checkForUpdates = () => {
-            // نقوم بجلب ملف sw.js كنص عادي ونكسر الكاش الخاص به تماماً
-            fetch(`sw.js?t=${new Date().getTime()}`, {
+            // استخدام Math.random لكسر أعنف أنواع الكاش في السيرفرات والمتصفحات
+            fetch(`sw.js?bypass=${Math.random()}`, {
                 cache: 'no-store',
                 headers: {
                     'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -1357,42 +1357,37 @@
             })
             .then(res => res.text())
             .then(text => {
-                // استخراج المتغير CACHE_NAME بذكاء من داخل ملف sw.js
                 const match = text.match(/CACHE_NAME\s*=\s*['"]([^'"]+)['"]/);
                 
                 if (match) {
-                    const fetchedCacheName = match[1]; // النتيجة مثلاً: unem-iscae-v26.3
-                    let localCacheName = localStorage.getItem('unem_saved_version');
+                    const serverVersion = match[1]; // النتيجة من السيرفر (مثال: unem-iscae-v26.1)
+                    let localVersion = localStorage.getItem('unem_saved_version');
 
-                    // إذا كان الطالب يفتح الموقع لأول مرة، نحفظ الإصدار بصمت
-                    if (!localCacheName) {
-                        localStorage.setItem('unem_saved_version', fetchedCacheName);
+                    // تسجيل الدخول الأول
+                    if (!localVersion) {
+                        localStorage.setItem('unem_saved_version', serverVersion);
                         return;
                     }
 
-                    // إذا وجدنا أن الرقم الموجود في السيرفر يختلف عن هاتف الطالب!
-                    if (fetchedCacheName !== localCacheName) {
-                        pendingVersionName = fetchedCacheName; // نحفظه للتحديث لاحقاً
+                    // إذا اختلف السيرفر عن الهاتف (تم اكتشاف تحديث!)
+                    if (serverVersion !== localVersion) {
+                        pendingVersionName = serverVersion;
 
-                        // 1. الرسالة الافتراضية للتحديث العادي
                         let customMsg = currentLang === 'ar' ? 'تحديث جديد متاح للموقع 🔄' : 'Une nouvelle mise à jour est disponible 🔄';
                         
-                        // 2. تحليل الرقم من النص (مثلاً استخراج 26.3)
-                        const vIndex = fetchedCacheName.toLowerCase().lastIndexOf('v');
+                        // تحليل الرقم (القاموس)
+                        const vIndex = serverVersion.toLowerCase().lastIndexOf('v');
                         if (vIndex !== -1) {
-                            const versionStr = fetchedCacheName.substring(vIndex + 1); // النتيجة: 26 أو 26.3
+                            const versionStr = serverVersion.substring(vIndex + 1);
 
-                            // إذا كان يحتوي على نقطة (نتائج)
                             if (versionStr.includes('.')) {
-                                const subVersion = versionStr.split('.')[1]; // استخراج ما بعد النقطة (مثلاً 3)
+                                const subVersion = versionStr.split('.')[1]; // ما بعد النقطة
 
-                                // تحديث نتائج سداسي عادي (رقم واحد من 1 إلى 6)
                                 if (subVersion.length === 1 && subVersion >= '1' && subVersion <= '6') {
                                     customMsg = currentLang === 'ar' 
                                         ? `نتائج S${subVersion} أصبحت متاحة في الموقع 🎓` 
                                         : `Les résultats de S${subVersion} sont disponibles 🎓`;
                                 } 
-                                // تحديث نتائج تظلمات (رقمين متشابهين مثل 11, 22, 33)
                                 else if (subVersion.length === 2 && subVersion[0] === subVersion[1]) {
                                     const semNumber = subVersion[0];
                                     customMsg = currentLang === 'ar' 
@@ -1402,19 +1397,18 @@
                             }
                         }
 
-                        // 3. إظهار الإشعار للطالب
+                        // إظهار الإشعار للطالب
                         const updateSpan = document.querySelector('#update-toast > span > span');
                         if (updateSpan) { updateSpan.textContent = customMsg; }
                         document.getElementById('update-toast').classList.add('show');
                         
-                        // 4. إجبار المتصفح على تحميل SW الجديد
-                        reg.update();
+                        reg.update(); // تحميل التحديث في الخلفية
                     }
                 }
-            }).catch(e => console.log('Update check failed'));
+            }).catch(e => console.log('Update fetch error'));
         };
 
-        // متى نفحص؟
+        // فحص تلقائي
         checkForUpdates(); 
         window.addEventListener('focus', checkForUpdates); 
         document.addEventListener('visibilitychange', () => { 
@@ -1435,16 +1429,14 @@
       });
     });
 
-    // التفاعل مع زر التحديث
+    // عند ضغط الطالب على زر "تحديث الآن"
     document.getElementById('update-btn').addEventListener('click', () => {
       document.getElementById('update-toast').classList.remove('show');
       
-      // تحديث ذاكرة الهاتف لكي لا يظهر الإشعار مجدداً
       if (pendingVersionName) {
           localStorage.setItem('unem_saved_version', pendingVersionName);
       }
 
-      // تفعيل التحديث وإعادة تحميل الصفحة
       if (newWorker && newWorker.state !== 'redundant') { 
           newWorker.postMessage({ action: 'skipWaiting' }); 
       } else { 
