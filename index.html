@@ -1239,7 +1239,8 @@
                 if (distinctKeywords.length > 0) {
                     const baseKeywords = distinctKeywords.map(w => w.endsWith('s') ? w.slice(0, -1) : w);
                     if (!baseKeywords.every(k => sanitizedFile.includes(k)) || !new RegExp(baseKeywords.join('.{0,35}')).test(sanitizedFile)) return false;
-                    for (let word of['assurance', 'approfondie', 'bancaire', 'international', 'internationale', 'islamique', 'portefeuille', 'tresorerie', 'patrimoine']) {
+                    // تم إضافة الكلمات الفاصلة هنا لمنع التداخل (مثل financiere و descriptive وغيرها)
+                    for (let word of ['assurance', 'approfondie', 'bancaire', 'international', 'internationale', 'islamique', 'portefeuille', 'tresorerie', 'patrimoine', 'financiere', 'financieres', 'commerciale', 'commerciales', 'descriptive', 'appliquee', 'analytique', 'nationale', 'statistique']) {
                         if (sanitizedFile.includes(word) && !sanitizedSubject.includes(word)) return false;
                     }
                     return true;
