@@ -1368,7 +1368,7 @@
               newWorker.addEventListener('statechange', () => {
                 if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                   
-                  // --- نظام الفحص الذكي للإصدارات، النتائج، والتظلمات ---
+                  // --- نظام الفحص الذكي للإصدارات، النتائج، والتظلمات (بالأرقام الصحيحة) ---
                   fetch('sw.js?t=' + new Date().getTime()) // تجاوز الكاش تماماً
                     .then(res => res.text())
                     .then(text => {
@@ -1379,28 +1379,45 @@
                             : (typeof i18n !== 'undefined' && i18n['fr']['update_msg'] ? i18n['fr']['update_msg'] : 'Une nouvelle mise à jour est disponible 🔄');
                         
                         try {
-                            // 2. استخراج السطر الذي يحتوي على CACHE_NAME بأمان تام
+                            // 2. استخراج السطر الذي يحتوي على CACHE_NAME
                             const cacheLineMatch = text.match(/CACHE_NAME\s*=\s*['"](.*?)['"]/);
                             
                             if (cacheLineMatch && cacheLineMatch[1]) {
-                                const cacheValue = cacheLineMatch[1]; // سيستخرج مثلا: unem-iscae-v15.1
+                                const cacheValue = cacheLineMatch[1]; // يستخرج مثلا: unem-iscae-v1000
                                 
-                                // 3. البحث فقط عن النقطة أو الفاصلة المتبوعة برقم من 1 إلى 6 (رقم السداسي)
-                                const resultMatch = cacheValue.match(/[vV]\d+\s*[.,]\s*([1-6])(\d)?/);
+                                // 3. استخراج الرقم بعد حرف v
+                                const numberMatch = cacheValue.match(/[vV](\d+)/);
                                 
-                                if (resultMatch) {
-                                    const semesterNumber = resultMatch[1]; // رقم السداسي
-                                    const isAppeal = resultMatch[2]; // هل يوجد رقم ثاني (تظلمات)؟
+                                if (numberMatch && numberMatch[1]) {
+                                    const versionNumber = parseInt(numberMatch[1], 10);
                                     
-                                    if (isAppeal) {
-                                        customMsg = currentLang === 'ar' 
-                                            ? `نتائج S${semesterNumber} بعد التظلمات أصبحت متاحة 🎓` 
-                                            : `Les résultats de S${semesterNumber} après recours sont disponibles 🎓`;
-                                    } else {
-                                        customMsg = currentLang === 'ar' 
-                                            ? `نتائج S${semesterNumber} أصبحت متاحة في الموقع 🎓` 
-                                            : `Les résultats de S${semesterNumber} sont disponibles 🎓`;
+                                    let semesterNumber = 0;
+                                    let isAppeal = false;
+
+                                    // فحص الأرقام: 1000 إلى 6000 (النتائج العادية)
+                                    if (versionNumber >= 1000 && versionNumber <= 6000 && versionNumber % 1000 === 0) {
+                                        semesterNumber = versionNumber / 1000;
+                                        isAppeal = false;
+                                    } 
+                                    // فحص الأرقام: 10000 إلى 60000 (التظلمات)
+                                    else if (versionNumber >= 10000 && versionNumber <= 60000 && versionNumber % 10000 === 0) {
+                                        semesterNumber = versionNumber / 10000;
+                                        isAppeal = true;
                                     }
+
+                                    // إذا كان الرقم يطابق الحالات الخاصة بالنتائج والتظلمات
+                                    if (semesterNumber > 0) {
+                                        if (isAppeal) {
+                                            customMsg = currentLang === 'ar' 
+                                                ? `نتائج S${semesterNumber} بعد التظلمات أصبحت متاحة 🎓` 
+                                                : `Les résultats de S${semesterNumber} après recours sont disponibles 🎓`;
+                                        } else {
+                                            customMsg = currentLang === 'ar' 
+                                                ? `نتائج S${semesterNumber} أصبحت متاحة في الموقع 🎓` 
+                                                : `Les résultats de S${semesterNumber} sont disponibles 🎓`;
+                                        }
+                                    }
+                                    // أي رقم آخر (مثل 17، 25، 100) سيحتفظ بالرسالة الافتراضية "تحديث جديد متاح للموقع"
                                 }
                             }
                         } catch (e) {
