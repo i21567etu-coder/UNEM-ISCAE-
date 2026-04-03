@@ -1358,10 +1358,10 @@
                 }
             });
 
-            // 4. فحص صامت كل دقيقة واحدة (فحص مستمر لكامل المتصفحات والتطبيق)
+            // 4. فحص صامت كل 15 دقيقة (لتوفير بطارية الطلاب وبيانات الإنترنت)
             setInterval(() => {
                 reg.update();
-            }, 1 * 60 * 1000); // 1 دقيقة
+            }, 15 * 60 * 1000); // 15 دقيقة
 
             reg.addEventListener('updatefound', () => {
               newWorker = reg.installing;
@@ -1385,9 +1385,8 @@
                                 : 'Une nouvelle mise à jour est disponible 🔄';
                         }
                         
-                        // Regex مطور: يلتقط الإصدار (مثل v16) سواء بفاصلة أو بدون فاصلة
-                        // الجزء الخاص بالفاصلة أصبح اختيارياً (?: ... )?
-                        const versionMatch = text.match(/[vV]\d+(?:[.,]([1-6])(\d)?)?\b/);
+                        // Regex مطور: يلتقط الإصدار حصراً من متغير CACHE_NAME
+                        const versionMatch = text.match(/CACHE_NAME\s*=\s*['"][^'"]*-[vV]\d+(?:[.,]([1-6])(\d)?)?['"]/);
                         
                         if (versionMatch) {
                             const semesterNumber = versionMatch[1]; // رقم السداسي (إذا وجدت فاصلة)
