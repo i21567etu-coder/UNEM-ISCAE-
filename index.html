@@ -1361,7 +1361,7 @@
             // 4. فحص صامت كل 15 دقيقة (لتوفير بطارية الطلاب وبيانات الإنترنت)
             setInterval(() => {
                 reg.update();
-            }, 15 * 60 * 1000); // 15 دقيقة
+            }, 15 * 60 * 1000);
 
             reg.addEventListener('updatefound', () => {
               newWorker = reg.installing;
@@ -1373,52 +1373,47 @@
                     .then(res => res.text())
                     .then(text => {
                         
-                        // تجهيز رسالة التحديث العام الافتراضية (عربي/فرنسي)
-                        let customMsg = '';
-                        if (currentLang === 'ar') {
-                            customMsg = (typeof i18n !== 'undefined' && i18n['ar'] && i18n['ar']['update_msg']) 
-                                ? i18n['ar']['update_msg'] 
-                                : 'تحديث جديد متاح للموقع 🔄';
-                        } else {
-                            customMsg = (typeof i18n !== 'undefined' && i18n['fr'] && i18n['fr']['update_msg']) 
-                                ? i18n['fr']['update_msg'] 
-                                : 'Une nouvelle mise à jour est disponible 🔄';
-                        }
+                        // 1. رسالة التحديث العام الافتراضية
+                        let customMsg = currentLang === 'ar' 
+                            ? (typeof i18n !== 'undefined' && i18n['ar']['update_msg'] ? i18n['ar']['update_msg'] : 'تحديث جديد متاح للموقع 🔄')
+                            : (typeof i18n !== 'undefined' && i18n['fr']['update_msg'] ? i18n['fr']['update_msg'] : 'Une nouvelle mise à jour est disponible 🔄');
                         
-                        // Regex مطور: يلتقط الإصدار حصراً من متغير CACHE_NAME
-                        const versionMatch = text.match(/CACHE_NAME\s*=\s*['"][^'"]*-[vV]\d+(?:[.,]([1-6])(\d)?)?['"]/);
-                        
-                        if (versionMatch) {
-                            const semesterNumber = versionMatch[1]; // رقم السداسي (إذا وجدت فاصلة)
-                            const isAppeal = versionMatch[2]; // رقم التظلمات (الرقم الثاني بعد الفاصلة)
-
-                            // إذا كان التحديث يحتوي على فاصلة (يعني تحديث نتائج)
-                            if (semesterNumber) {
-                                if (isAppeal) {
-                                    // رسالة التظلمات (رقمين بعد الفاصلة)
-                                    if (currentLang === 'ar') {
-                                        customMsg = `نتائج S${semesterNumber} بعد التظلمات أصبحت متاحة 🎓`;
+                        try {
+                            // 2. استخراج السطر الذي يحتوي على CACHE_NAME بأمان تام
+                            const cacheLineMatch = text.match(/CACHE_NAME\s*=\s*['"](.*?)['"]/);
+                            
+                            if (cacheLineMatch && cacheLineMatch[1]) {
+                                const cacheValue = cacheLineMatch[1]; // سيستخرج مثلا: unem-iscae-v15.1
+                                
+                                // 3. البحث فقط عن النقطة أو الفاصلة المتبوعة برقم من 1 إلى 6 (رقم السداسي)
+                                const resultMatch = cacheValue.match(/[vV]\d+\s*[.,]\s*([1-6])(\d)?/);
+                                
+                                if (resultMatch) {
+                                    const semesterNumber = resultMatch[1]; // رقم السداسي
+                                    const isAppeal = resultMatch[2]; // هل يوجد رقم ثاني (تظلمات)؟
+                                    
+                                    if (isAppeal) {
+                                        customMsg = currentLang === 'ar' 
+                                            ? `نتائج S${semesterNumber} بعد التظلمات أصبحت متاحة 🎓` 
+                                            : `Les résultats de S${semesterNumber} après recours sont disponibles 🎓`;
                                     } else {
-                                        customMsg = `Les résultats de S${semesterNumber} après recours sont disponibles 🎓`;
-                                    }
-                                } else {
-                                    // الرسالة العادية للنتائج (رقم واحد بعد الفاصلة)
-                                    if (currentLang === 'ar') {
-                                        customMsg = `نتائج S${semesterNumber} أصبحت متاحة في الموقع 🎓`;
-                                    } else {
-                                        customMsg = `Les résultats de S${semesterNumber} sont disponibles 🎓`;
+                                        customMsg = currentLang === 'ar' 
+                                            ? `نتائج S${semesterNumber} أصبحت متاحة في الموقع 🎓` 
+                                            : `Les résultats de S${semesterNumber} sont disponibles 🎓`;
                                     }
                                 }
                             }
-                            // أما إذا لم تكن هناك فاصلة (مثل v16)، سيتجاهل هذا الجزء ويحتفظ برسالة التحديث العام الافتراضية المجهزة بالأعلى
+                        } catch (e) {
+                            console.log("تم الاعتماد على رسالة التحديث الافتراضية");
                         }
                         
+                        // 4. عرض الإشعار
                         const updateSpan = document.querySelector('#update-toast > span > span');
                         if (updateSpan) { updateSpan.textContent = customMsg; }
                         document.getElementById('update-toast').classList.add('show');
                     })
                     .catch(err => {
-                        // في حالة فشل القراءة لأي سبب، نعرض إشعار التحديث لتجنب تعطل النظام
+                        // في حالة فشل القراءة، نعرض إشعار التحديث لتجنب تعطل النظام
                         document.getElementById('update-toast').classList.add('show');
                     });
                   // ------------------------------------------
