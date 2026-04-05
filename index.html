@@ -1141,9 +1141,8 @@
         function normalizeText(text) { return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim(); }
         function getSafeSubjectCode(name) { return name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "_").replace(/_+/g, "_"); }
         function isValidFile(filename) {
-            const forbidden =['index.html', 'style.css', 'script.js', 'sw.js', 'manifest.json', 'icon-192.png', 'icon-512.png', 'favicon.ico', 'cname', 'readme.md'];
-            const lower = filename.toLowerCase();
-            return !(lower.includes('placeholder') || filename === '.keep' || lower.startsWith('.') || forbidden.includes(lower));
+            // السماح فقط للملفات التي تنتهي بصيغة pdf بالظهور في البحث والتصفح
+            return filename.toLowerCase().endsWith('.pdf');
         }
 
         function getFileCategory(filename) {
