@@ -143,7 +143,7 @@
             display: grid !important; 
             grid-template-columns: repeat(2, 1fr) !important; 
             grid-template-rows: repeat(3, 1fr); 
-            gap: 8px; /* تم تقليل المسافة لتتناسب مع الشاشات وتمنع التمدد */
+            gap: 8px; 
             height: 100%;
         }
         
@@ -156,7 +156,7 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
-            min-height: 85px; /* تثبيت الارتفاع لعدم التمدد */
+            min-height: 85px; 
         }
         
         #main-menu .semester-card {
@@ -288,7 +288,7 @@
         .accordion-content.active { display: block; }
        
         @keyframes fadeDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
-        /* تصميم إشعار التثبيت */
+        
         #install-toast {
             position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%);
             background: var(--card-bg); border: 2px solid var(--primary-color);
@@ -306,25 +306,14 @@
         .btn-install:hover { background: var(--secondary-color); transform: scale(1.05); }
         .btn-close-install { background: var(--bg-color); color: var(--text-secondary); border: 1px solid var(--border-color); padding: 8px 10px; border-radius: 10px; font-weight: 800; font-size: 0.8rem; cursor: pointer; }
 
-        /* تصميم نافذة شرح الآيفون */
         .ios-step { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; text-align: start; background: rgba(0,0,0,0.03); padding: 12px; border-radius: 12px; }
-        .ios-step i { font-size: 1.5rem; color: #007aff; } /* لون أبل الأزرق */
+        .ios-step i { font-size: 1.5rem; color: #007aff; } 
         .ios-step p { margin: 0; font-size: 0.9rem; font-weight: 700; color: var(--text-primary); }
 
-        /* ==================== كود ضبط شاشات الكمبيوتر (Zoom 85%) ==================== */
         @media (min-width: 1024px) {
-            body {
-                zoom: 0.85;
-                width: calc(100vw / 0.85) !important;
-                height: calc(100dvh / 0.85) !important;
-            }
-            .modal-overlay {
-                width: calc(100vw / 0.85) !important;
-                height: calc(100dvh / 0.85) !important;
-            }
-            .container {
-                max-width: 1500px; 
-            }
+            body { zoom: 0.85; width: calc(100vw / 0.85) !important; height: calc(100dvh / 0.85) !important; }
+            .modal-overlay { width: calc(100vw / 0.85) !important; height: calc(100dvh / 0.85) !important; }
+            .container { max-width: 1500px; }
         }
     </style>
 </head>
@@ -360,13 +349,15 @@
                     <p data-i18n="card_summaries_desc">جميع التخصصات (L1, L2, L3)</p>
                 </div>
 
-                <div class="semester-card wide-card" onclick="logSupabaseAnalytics('دخول قسم', 'النتائج'); openWebViewer('https://resultat-iscae.vercel.app/?parent=' + encodeURIComponent(window.location.href.split('?')[0]), i18n[currentLang]['card_results'])">
+                <!-- تم التعديل هنا ليوجه لـ /resultats مباشرة -->
+                <div class="semester-card wide-card" onclick="logSupabaseAnalytics('دخول قسم', 'النتائج'); window.location.href='/resultats'">
                     <div class="icon-box"><i class="fas fa-graduation-cap"></i></div>
                     <h3 data-i18n="card_results">نتائج المعهد</h3>
                     <p data-i18n="card_results_desc">الاستعلام عن النتائج</p>
                 </div>
 
-                <div class="semester-card" onclick="logSupabaseAnalytics('دخول قسم', 'المسابقات'); openWebViewer('https://challenge-unem-iscae.vercel.app/', i18n[currentLang]['card_competitions'])">
+                <!-- تم التعديل هنا ليوجه لـ /chalange مباشرة -->
+                <div class="semester-card" onclick="logSupabaseAnalytics('دخول قسم', 'المسابقات'); window.location.href='/chalange'">
                     <div class="icon-box"><i class="fas fa-trophy"></i></div>
                     <h3 data-i18n="card_competitions">المسابقات الثقافية والرياضية</h3>
                     <p data-i18n="card_competitions_desc">التسجيل ومتابعة المنافسات</p>
@@ -381,7 +372,7 @@
             </div>
         </div>
 
-        <!-- 2. اختيار التخصص -->
+        <!-- باقي الأكواد كما هي بدون تغيير -->
         <div id="specialization-selection" class="section-box hidden">
             <div class="header-with-back">
                 <button class="back-btn" onclick="goBackToMainMenu()" data-i18n="btn_home">الرئيسية</button>
@@ -406,7 +397,6 @@
             </div>
         </div>
 
-        <!-- 3. اختيار المستوى -->
         <div id="level-selection" class="section-box hidden">
             <div class="header-with-back">
                 <button class="back-btn" onclick="goBackToSpecialization()" data-i18n="btn_specs">التخصصات</button>
@@ -419,7 +409,6 @@
             </div>
         </div>
 
-        <!-- 4. الفصول -->
         <div id="semesters-container" class="section-box hidden">
             <div class="header-with-back">
                 <button class="back-btn" onclick="goBackToLevels()" data-i18n="btn_levels">المستويات</button>
@@ -428,7 +417,6 @@
             <div id="semesters-grid-view" class="semesters-grid"></div>
         </div>
 
-        <!-- 5. قائمة المواد -->
         <div id="subjects-container" class="section-box hidden">
             <div class="header-with-back">
                 <button class="back-btn" onclick="goBackToSemesters()" data-i18n="btn_sems">الفصول</button>
@@ -437,7 +425,6 @@
             <div id="dynamic-subjects-list" class="buttons-grid hidden"></div>
         </div>
 
-        <!-- 6. التصنيفات -->
         <div id="category-selection-container" class="section-box hidden">
             <div class="header-with-back">
                 <button class="back-btn" onclick="goBackToSubjects()" data-i18n="btn_back">العودة</button>
@@ -452,7 +439,6 @@
             </div>
         </div>
 
-        <!-- عرض الملفات -->
         <div id="file-list-container" class="section-box hidden">
             <button class="back-btn" id="file-list-back-btn" onclick="goBackToCategories()" style="width:100%; justify-content:center; margin-bottom:15px; font-size: 0.95rem;" data-i18n="btn_back_files">عودة للخلف</button>
             <h3 style="text-align:center; margin-bottom: 15px; font-size:1.1rem;">📂 <span id="selected-subject-name" style="color:var(--primary-color)"></span></h3>
@@ -567,7 +553,7 @@
         </div>
     </div>
 
-    <!-- نافذة الإحصائيات المدمجة (تظهر كصفحة كاملة للإدارة فقط) -->
+    <!-- نافذة الإحصائيات المدمجة -->
     <div id="analytics-overlay" class="modal-overlay hidden" style="background: var(--bg-color);">
         <div class="modal-content" style="max-width: 100%; width: 100%; height: 100%; border-radius: 0; padding: 25px; border: none; box-shadow: none; display: flex; flex-direction: column; overflow-y: auto;">
             <div class="header-with-back" style="margin-bottom: 20px;">
@@ -604,7 +590,6 @@
                 </div>
             </div>
 
-            <!-- رسم بياني خطي للزيارات اليومية -->
             <div style="background: var(--card-bg); padding: 20px; border-radius: 15px; border: 1px solid var(--border-color); margin-bottom: 30px; width: 100%;">
                 <h4 style="margin-top: 0; text-align: center; color: var(--text-primary); font-size: 1.2rem; font-weight: 800; margin-bottom: 20px;">الزيارات اليومية (الفريدة) خلال الفترة</h4>
                 <div style="position: relative; width: 100%; min-height: 300px;">
@@ -636,7 +621,7 @@
         <span><i class="fas fa-sync-alt" style="color: var(--accent-color); margin-inline-end: 8px;"></i> <span data-i18n="update_msg">يتوفر تحديث جديد!</span></span>
         <button id="update-btn" data-i18n="update_btn">تحديث الآن</button>
     </div>
-<!-- إشعار تثبيت التطبيق -->
+    <!-- إشعار تثبيت التطبيق -->
     <div id="install-toast">
         <div class="install-info">
             <div class="install-icon"><i class="fas fa-mobile-alt"></i></div>
@@ -648,7 +633,6 @@
         </div>
     </div>
 
-    <!-- نافذة شرح التثبيت للآيفون -->
     <div id="ios-install-modal" class="modal-overlay hidden">
         <div class="modal-content" style="max-width:350px;">
             <h2 data-i18n="ios_title" style="color: #007aff;">مستخدمي iPhone 🍎</h2>
