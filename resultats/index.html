@@ -45,16 +45,29 @@
             animation: pulse 1.5s infinite;
         }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        
         header { 
-            background: var(--primary); color: white; padding: 20px 15px; 
+            background: var(--primary); color: white; padding: 15px; 
             text-align: center; border-bottom: 4px solid var(--secondary);
             box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-radius: 0 0 15px 15px;
             cursor: pointer; user-select: none;
         }
 
-        header h1 { margin: 0; font-size: 1.8rem; pointer-events: none; }
+        /* ===== تصميم زر الرئيسية البارز المحدث لمنع التداخل (على اليسار) ===== */
+        .btn-home {
+            background: #10b981; color: white !important; text-decoration: none;
+            font-size: clamp(0.85rem, 3vw, 1rem); font-weight: bold; padding: 8px 12px; border-radius: 10px;
+            transition: all 0.3s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;
+        }
+        .btn-home:hover {
+            background: #059669; transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+
+        header h1 { margin: 0; font-size: clamp(1.1rem, 4vw, 1.8rem); pointer-events: none; }
         
-        .top-dev { color: #ffffff; font-size: 0.9rem; margin-top: 5px; font-weight: bold; letter-spacing: 0.5px; opacity: 0.9; }
+        .top-dev { color: #ffffff; font-size: 0.8rem; margin-top: 5px; font-weight: bold; letter-spacing: 0.5px; opacity: 0.9; }
         
         .container { max-width: 800px; margin: 20px auto; padding: 5px; }
         
@@ -172,10 +185,24 @@
 </head>
 <body>
 
-<header id="main-header" style="position: relative;">
-    <a href="/" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: white; text-decoration: none; font-size: 0.9rem; font-weight: bold; background: rgba(255,255,255,0.2); padding: 8px 12px; border-radius: 10px; transition: 0.3s; z-index: 10;">🏠 الرئيسية</a>
-    <h1>🎓 ISCAE Résultats</h1>
-    <div class="top-dev">UNEM ISCAE</div>
+<header id="main-header">
+    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+        <!-- الجانب الأيسر: زر الرئيسية (يظهر دائما مع الكلمة ولن يتداخل) -->
+        <div style="flex: 1; display: flex; justify-content: flex-start;">
+            <a href="/" class="btn-home" onclick="event.stopPropagation();">
+                🏠 الرئيسية
+            </a>
+        </div>
+
+        <!-- المنتصف: العنوان -->
+        <div style="text-align: center; flex: 2;">
+            <h1>🎓 ISCAE Résultats</h1>
+            <div class="top-dev">UNEM ISCAE</div>
+        </div>
+
+        <!-- الجانب الأيمن: فارغ للحفاظ على توسيط العنوان بشكل مثالي -->
+        <div style="flex: 1;"></div>
+    </div>
 </header>
 
 <div id="admin-modal" class="modal-overlay">
