@@ -444,9 +444,9 @@
             <h3 style="text-align:center; margin-bottom: 15px; font-size:1.1rem;">📂 <span id="selected-subject-name" style="color:var(--primary-color)"></span></h3>
             <div id="loading-spinner" class="spinner hidden"></div>
             <ul id="pdf-list"></ul>
-            <div id="no-files-msg" class="hidden" style="text-align:center; padding: 25px; border-radius: 12px; margin-top: 15px; background: rgba(0,0,0,0.02);">
-                <i class="fas fa-folder-open" style="font-size: 3rem; color: var(--text-secondary); margin-bottom: 10px;"></i>
-                <p style="color:var(--text-secondary); margin:0; font-weight: 800; font-size:0.95rem;" data-i18n="no_files">عذراً، لا توجد ملفات هنا حالياً.</p>
+            <div id="no-files-msg" class="hidden" style="text-align:center; padding: 30px 20px; border-radius: 15px; margin-top: 15px; background: rgba(15, 81, 50, 0.05); border: 2px dashed rgba(15, 81, 50, 0.2);">
+                <i class="fas fa-cloud-upload-alt" style="font-size: 3.5rem; color: var(--primary-color); margin-bottom: 15px; opacity: 0.9;"></i>
+                <p style="color:var(--primary-color); margin:0; font-weight: 800; font-size:1.1rem; line-height: 1.6;" data-i18n="no_files">الملفات قيد التجهيز ⏳<br><span style="font-size:0.9rem; font-weight:600; opacity:0.8;">سنقوم برفعها قريباً إن شاء الله.. بالتوفيق! ✨</span></p>
             </div>
         </div>
     </div>
@@ -696,7 +696,7 @@
                 cat_examen: "Examen",
                 cat_examen_desc: "الامتحانات والأرشيف",
                 btn_back_files: "عودة للخلف",
-                no_files: "عذراً، لا توجد ملفات هنا حالياً.",
+                no_files: "الملفات قيد التجهيز ⏳<br><span style='font-size:0.9rem; font-weight:600; opacity:0.8;'>سنقوم برفعها قريباً إن شاء الله.. بالتوفيق✨</span>",
                 btn_close: "إغلاق",
                 btn_download: "تحميل",
                 loading_file: "جاري فتح الملف...<br><span style='font-size:0.8rem; font-weight:normal;'>إذا تأخر الفتح، اضغط على زر تحميل أعلاه</span>",
@@ -775,7 +775,7 @@
                 cat_examen: "Examen",
                 cat_examen_desc: "Examens et Archives",
                 btn_back_files: "Retour",
-                no_files: "Désolé, aucun fichier trouvé ici.",
+                no_files: "Fichiers en préparation ⏳<br><span style='font-size:0.9rem; font-weight:600; opacity:0.8;'>Nous les mettrons en ligne bientôt.. Bon courage  ✨</span>",
                 btn_close: "Fermer",
                 btn_download: "Télécharger",
                 loading_file: "Ouverture du fichier en cours...<br><span style='font-size:0.8rem; font-weight:normal;'>Si cela tarde, cliquez sur télécharger ci-dessus</span>",
@@ -944,8 +944,22 @@
             if (!supabaseClient) { errDiv.textContent = "لم يتم الاتصال بقاعدة البيانات!"; errDiv.classList.remove('hidden'); return; }
 
             try {
-                // جلب البيانات ترتيب تنازلي
-                let query = supabaseClient.from('analytics').select('*').order('created_at', { ascending: false }).limit(5000);
+                // --- إضافة التعديل الذكي: تحديد شهر افتراضي إذا لم يحدد الإدمن تاريخاً ---
+                if (!startDate || !endDate) {
+                    const today = new Date();
+                    const thirtyDaysAgo = new Date();
+                    thirtyDaysAgo.setDate(today.getDate() - 30); // تحديد 30 يوماً للخلف
+
+                    if (!startDate) startDate = thirtyDaysAgo.toISOString().split('T')[0];
+                    if (!endDate) endDate = today.toISOString().split('T')[0];
+
+                    // تحديث مربعات التاريخ في الواجهة لتعكس هذه الفترة
+                    document.getElementById('analytics-start-date').value = startDate;
+                    document.getElementById('analytics-end-date').value = endDate;
+                }
+
+                // --- التعديل الجذري: رفع حد البيانات إلى 50000 بدل 5000 لضمان عدم اقتطاع الأيام ---
+                let query = supabaseClient.from('analytics').select('*').order('created_at', { ascending: false }).limit(50000);
 
                 if (startDate) query = query.gte('created_at', startDate + 'T00:00:00.000Z');
                 if (endDate) query = query.lte('created_at', endDate + 'T23:59:59.999Z');
@@ -1139,7 +1153,7 @@
         }
 
         function normalizeText(text) { return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim(); }
-        function getSafeSubjectCode(name) { return name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "_").replace(/_+/g, "_"); }
+        function getSafeSubjectCode(name) { return name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9#+]/g, "_").replace(/_+/g, "_"); }
         function isValidFile(filename) {
             // السماح فقط للملفات التي تنتهي بصيغة pdf بالظهور في البحث والتصفح
             return filename.toLowerCase().endsWith('.pdf');
@@ -1258,9 +1272,9 @@
             }
         }
 
-        // الدالة التي تقوم بالعمل الشاق في الخلفية
-        async function performFileFetching(subjectName, cleanSubject) {
-            const sanitizedSubject = cleanSubject.replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ').trim(); 
+     async function performFileFetching(subjectName, cleanSubject) {
+            // السماح لرموز # و + بالبقاء في اسم المادة
+            const sanitizedSubject = cleanSubject.replace(/[^a-z0-9#+]/g, ' ').replace(/\s+/g, ' ').trim(); 
             const subjectKeywords = sanitizedSubject.split(' ');
             
             if(allFiles.length === 0) await fetchFilesFromGitHub(currentBranch);
@@ -1268,15 +1282,18 @@
             let githubFiles = allFiles.map(f => ({...f, source: 'github'})); 
             let supabaseFiles = [];
             
+            // جلب ملفات Supabase (تأكدنا من عدم حذف هذا الجزء)
             if(supabaseClient && currentSpecialization && currentLevel && currentSemester) {
                 const folderPath = `${currentSpecialization.toUpperCase()}/${currentLevel.toUpperCase()}/${currentSemester.toUpperCase()}/${getSafeSubjectCode(subjectName)}`;
                 const { data } = await supabaseClient.storage.from('pdf-files').list(folderPath);
                 if(data && data.length > 0) supabaseFiles = data.filter(f => isValidFile(f.name)).map(f => ({ name: f.name, type: 'file', source: 'supabase', path: `${folderPath}/${f.name}` }));
             }
 
+            // الفلترة الذكية الجديدة
             const filteredGithub = githubFiles.filter(file => {
                 if(file.type !== "file" || !isValidFile(file.name)) return false; 
-                const fName = normalizeText(file.name); const sanitizedFile = fName.replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ').trim();
+                const fName = normalizeText(file.name); 
+                const sanitizedFile = fName.replace(/[^a-z0-9#+]/g, ' ').replace(/\s+/g, ' ').trim();
 
                 if (isArchiveSpecialCase) {
                     if (!fName.includes("archive")) return false;
@@ -1289,7 +1306,10 @@
                     return false;
                 }
                 if (fName.startsWith("archive s")) return false;
-                if (cleanSubject === 'langage c') return fName.includes('langage') && fName.match(/\bc\b/) && !fName.includes('sql') && !fName.includes('base de donnee');
+
+                // حل مشكلة مادة C# و Langage C
+                if (cleanSubject === 'c#') return sanitizedFile.includes('c#') || sanitizedFile.includes('c sharp');
+                if (cleanSubject === 'langage c') return fName.includes('langage') && fName.match(/\bc\b/) && !fName.includes('sql') && !fName.includes('base de donnee') && !sanitizedFile.includes('c#');
 
                 const subRom = sanitizedSubject.match(/\b(i|ii|iii|iv|v|vi)\b/)?.[0]; const fileRom = sanitizedFile.match(/\b(i|ii|iii|iv|v|vi)\b/)?.[0];
                 if (subRom) { if (fileRom !== subRom) return false; } else { if (fileRom) return false; }
@@ -1300,14 +1320,16 @@
                 if (distinctKeywords.length > 0) {
                     const baseKeywords = distinctKeywords.map(w => w.endsWith('s') ? w.slice(0, -1) : w);
                     if (!baseKeywords.every(k => sanitizedFile.includes(k)) || !new RegExp(baseKeywords.join('.{0,35}')).test(sanitizedFile)) return false;
-                    // تم إضافة الكلمات الفاصلة هنا لمنع التداخل (مثل financiere و descriptive وغيرها)
-                    for (let word of ['assurance', 'approfondie', 'bancaire', 'international', 'internationale', 'islamique', 'portefeuille', 'tresorerie', 'patrimoine', 'financiere', 'financieres', 'commerciale', 'commerciales', 'descriptive', 'appliquee', 'analytique', 'nationale', 'statistique']) {
+                    
+                    // قائمة الممنوعات لضمان عدم تسرب أي ملفات لمادة أخرى
+                    for (let word of ['assurance', 'approfondie', 'bancaire', 'international', 'internationale', 'islamique', 'portefeuille', 'tresorerie', 'patrimoine', 'financiere', 'financieres', 'commerciale', 'commerciales', 'descriptive', 'appliquee', 'analytique', 'nationale', 'statistique', 'c#', 'java', 'web', 'python', 'php', 'reseaux']) {
                         if (sanitizedFile.includes(word) && !sanitizedSubject.includes(word)) return false;
                     }
                     return true;
                 }
                 return sanitizedFile.includes(sanitizedSubject);
             });
+   
 
             currentSubjectFiles = [...filteredGithub, ...supabaseFiles];
         }
