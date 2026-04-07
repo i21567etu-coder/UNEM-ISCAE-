@@ -935,79 +935,107 @@
             openAnalyticsDashboard(startDate, endDate);
         }
 
-        async function openAnalyticsDashboard(startDate = null, endDate = null) {
-            document.getElementById('upload-modal-overlay').classList.add('hidden');
-            document.getElementById('analytics-overlay').classList.remove('hidden');
-            const errDiv = document.getElementById('analytics-error');
-            errDiv.classList.add('hidden');
+async function openAnalyticsDashboard(startDate = null, endDate = null) {
+    document.getElementById('upload-modal-overlay').classList.add('hidden');
+    document.getElementById('analytics-overlay').classList.remove('hidden');
+    const errDiv = document.getElementById('analytics-error');
+    errDiv.classList.add('hidden');
 
-            if (!supabaseClient) { errDiv.textContent = "لم يتم الاتصال بقاعدة البيانات!"; errDiv.classList.remove('hidden'); return; }
+    if (!supabaseClient) { 
+        errDiv.textContent = "لم يتم الاتصال بقاعدة البيانات!"; 
+        errDiv.classList.remove('hidden'); 
+        return; 
+    }
 
-            try {
-                // --- إضافة التعديل الذكي: تحديد شهر افتراضي إذا لم يحدد الإدمن تاريخاً ---
-                if (!startDate || !endDate) {
-                    const today = new Date();
-                    const thirtyDaysAgo = new Date();
-                    thirtyDaysAgo.setDate(today.getDate() - 30); // تحديد 30 يوماً للخلف
+    try {
+        // تصفير الفلتر عند فتح اللوحة لضمان جلب كل شيء منذ البداية
+        if (!startDate && !endDate) {
+            document.getElementById('analytics-start-date').value = '';
+            document.getElementById('analytics-end-date').value = '';
+        }
 
-                    if (!startDate) startDate = thirtyDaysAgo.toISOString().split('T')[0];
-                    if (!endDate) endDate = today.toISOString().split('T')[0];
+        document.getElementById('stat-visits').textContent = "...";
+        document.getElementById('stat-results').textContent = "...";
+        document.getElementById('stat-comps').textContent = "...";
 
-                    // تحديث مربعات التاريخ في الواجهة لتعكس هذه الفترة
-                    document.getElementById('analytics-start-date').value = startDate;
-                    document.getElementById('analytics-end-date').value = endDate;
-                }
+        // مصفوفة لتجميع كل البيانات بدون استثناء
+        let allData = [];
+        let from = 0;
+        const batchSize = 1000; // جلب البيانات على دفعات (1000 في كل مرة) لتخطي حدود Supabase
+        let keepFetching = true;
 
-                // --- التعديل الجذري: رفع حد البيانات إلى 50000 بدل 5000 لضمان عدم اقتطاع الأيام ---
-                let query = supabaseClient.from('analytics').select('*').order('created_at', { ascending: false }).limit(50000);
+        // حلقة لجلب كامل البيانات المطلوبة بدقة تامة
+        while (keepFetching) {
+            let query = supabaseClient
+                .from('analytics')
+                .select('*')
+                .order('created_at', { ascending: false });
 
-                if (startDate) query = query.gte('created_at', startDate + 'T00:00:00.000Z');
-                if (endDate) query = query.lte('created_at', endDate + 'T23:59:59.999Z');
+            if (startDate) query = query.gte('created_at', startDate + 'T00:00:00.000Z');
+            if (endDate) query = query.lte('created_at', endDate + 'T23:59:59.999Z');
 
-                const { data, error } = await query;
-                if (error) throw error;
+            // تحديد نطاق الدفعة الحالية
+            query = query.range(from, from + batchSize - 1);
 
-                let totalVisits = 0, resultsVisits = 0, compVisits = 0;
-                let specCounts = {};
-                let levelCounts = {};
-                let dailyVisits = {};
+            const { data, error } = await query;
+            if (error) throw error;
 
-                data.forEach(row => {
-                    const dateStr = row.created_at.split('T')[0];
-                    
-                    if (row.action_type === 'زيارة الموقع') {
-                        totalVisits++;
-                        dailyVisits[dateStr] = (dailyVisits[dateStr] || 0) + 1;
-                    }
-                    if (row.action_type === 'دخول قسم' && row.action_detail === 'النتائج') resultsVisits++;
-                    if (row.action_type === 'دخول قسم' && row.action_detail === 'المسابقات') compVisits++;
-                    
-                    if (row.action_type === 'دخول تخصص') {
-                        specCounts[row.action_detail] = (specCounts[row.action_detail] || 0) + 1;
-                    }
-                    if (row.action_type === 'دخول مستوى') {
-                        levelCounts[row.action_detail] = (levelCounts[row.action_detail] || 0) + 1;
-                    }
-                });
+            // إضافة الدفعة الجديدة إلى إجمالي البيانات
+            allData = allData.concat(data);
 
-                document.getElementById('stat-visits').textContent = totalVisits;
-                document.getElementById('stat-results').textContent = resultsVisits;
-                document.getElementById('stat-comps').textContent = compVisits;
-
-                const sortedDates = Object.keys(dailyVisits).sort();
-                const sortedDailyVisits = {};
-                sortedDates.forEach(d => sortedDailyVisits[d] = dailyVisits[d]);
-
-                renderAnalyticsChart('dailyVisitsChart', 'line', 'الزيارات الفريدة للموقع', sortedDailyVisits);
-                renderAnalyticsChart('specChart', 'pie', 'التخصصات (زائر فريد)', specCounts);
-                renderAnalyticsChart('levelChart', 'doughnut', 'المستويات (زائر فريد)', levelCounts);
-
-            } catch(e) {
-                errDiv.textContent = "حدث خطأ أثناء جلب البيانات أو أن الجدول (analytics) غير موجود.";
-                errDiv.classList.remove('hidden');
+            // إذا كانت البيانات الراجعة أقل من 1000، هذا يعني أننا وصلنا لنهاية البيانات
+            if (data.length < batchSize) {
+                keepFetching = false;
+            } else {
+                from += batchSize; // الانتقال للدفعة التالية
             }
         }
 
+        let totalVisits = 0, resultsVisits = 0, compVisits = 0;
+        let specCounts = {};
+        let levelCounts = {};
+        let dailyVisits = {};
+
+        // الآن نستخدم allData التي تحتوي على جميع السجلات 100%
+        allData.forEach(row => {
+            // العودة لطريقتك الأصلية والآمنة جداً لاستخراج التاريخ وتجنب مشاكل توقيت الهواتف
+            const dateStr = row.created_at.split('T')[0];
+            
+            if (row.action_type === 'زيارة الموقع') {
+                totalVisits++;
+                dailyVisits[dateStr] = (dailyVisits[dateStr] || 0) + 1;
+            }
+            if (row.action_type === 'دخول قسم' && row.action_detail === 'النتائج') resultsVisits++;
+            if (row.action_type === 'دخول قسم' && row.action_detail === 'المسابقات') compVisits++;
+            
+            if (row.action_type === 'دخول تخصص') {
+                specCounts[row.action_detail] = (specCounts[row.action_detail] || 0) + 1;
+            }
+            if (row.action_type === 'دخول مستوى') {
+                levelCounts[row.action_detail] = (levelCounts[row.action_detail] || 0) + 1;
+            }
+        });
+
+        // عرض الأرقام الدقيقة
+        document.getElementById('stat-visits').textContent = totalVisits;
+        document.getElementById('stat-results').textContent = resultsVisits;
+        document.getElementById('stat-comps').textContent = compVisits;
+
+        const sortedDates = Object.keys(dailyVisits).sort();
+        const sortedDailyVisits = {};
+        sortedDates.forEach(d => sortedDailyVisits[d] = dailyVisits[d]);
+
+        // رسم المخططات
+        renderAnalyticsChart('dailyVisitsChart', 'line', 'الزيارات الفريدة للموقع', sortedDailyVisits);
+        renderAnalyticsChart('specChart', 'pie', 'التخصصات (زائر فريد)', specCounts);
+        renderAnalyticsChart('levelChart', 'doughnut', 'المستويات (زائر فريد)', levelCounts);
+
+    } catch(e) {
+        console.error(e);
+        errDiv.textContent = "حدث خطأ أثناء جلب البيانات أو أن الجدول (analytics) غير موجود.";
+        errDiv.classList.remove('hidden');
+    }
+}
         let activeCharts = {};
         function renderAnalyticsChart(canvasId, type, label, dataObj) {
             const ctx = document.getElementById(canvasId).getContext('2d');
