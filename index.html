@@ -554,8 +554,11 @@
     </div>
 
     <!-- نافذة الإحصائيات المدمجة -->
+    <!-- نافذة الإحصائيات المدمجة -->
     <div id="analytics-overlay" class="modal-overlay hidden" style="background: var(--bg-color);">
-        <div class="modal-content" style="max-width: 100%; width: 100%; height: 100%; border-radius: 0; padding: 25px; border: none; box-shadow: none; display: flex; flex-direction: column; overflow-y: auto;">
+        <!-- تم تحديد أقصى عرض 1400px وتوسيطها لتبدو رائعة على الكمبيوتر -->
+        <div class="modal-content" style="max-width: 1400px; margin: 0 auto; width: 100%; height: 100%; border-radius: 0; padding: 25px; border: none; box-shadow: none; display: flex; flex-direction: column; overflow-y: auto; background: transparent;">
+            
             <div class="header-with-back" style="margin-bottom: 20px;">
                 <button class="back-btn" onclick="closeAnalyticsDashboard()" style="padding: 10px 20px; font-size: 1rem;">رجوع للإدارة</button>
                 <h2 style="color: var(--primary-color); margin: 0; font-weight: 800; font-size: 1.5rem;">📊 الإحصائيات المباشرة</h2>
@@ -563,7 +566,7 @@
             </div>
 
             <!-- فلتر التاريخ -->
-            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; align-items: flex-end; background: var(--card-bg); padding: 15px; border-radius: 15px; border: 1px solid var(--border-color);">
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; align-items: flex-end; background: var(--card-bg); padding: 15px; border-radius: 15px; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);">
                 <div style="flex: 1; min-width: 150px; text-align: start;">
                     <label style="display: block; font-weight: 800; font-size: 0.9rem; margin-bottom: 5px; color: var(--text-primary);">من تاريخ:</label>
                     <input type="date" id="analytics-start-date" style="width: 100%; padding: 10px; border: 2px solid var(--border-color); border-radius: 10px; font-family: inherit; font-weight: 600; background: var(--bg-color); color: var(--text-primary); outline: none;">
@@ -575,38 +578,53 @@
                 <button onclick="applyAnalyticsFilter()" class="btn-submit" style="flex: 0 0 auto; width: auto; padding: 11px 20px; margin: 0; min-width: 120px;">تطبيق الفلتر</button>
             </div>
             
+            <!-- البطاقات العلوية -->
             <div style="display: flex; gap: 15px; justify-content: space-between; margin-bottom: 30px; flex-wrap: wrap;">
-                <div style="flex:1; min-width: 120px; background: rgba(15, 81, 50, 0.05); padding: 25px; border-radius: 15px; border: 1px solid var(--border-color); text-align: center;">
-                    <h3 id="stat-visits" style="margin: 0; font-size: 2.2rem; color: var(--primary-color);">0</h3>
+                <div style="flex:1; min-width: 200px; background: rgba(15, 81, 50, 0.05); padding: 25px; border-radius: 15px; border: 1px solid var(--border-color); text-align: center; transition: transform 0.3s;">
+                    <h3 id="stat-visits" style="margin: 0; font-size: 2.5rem; color: var(--primary-color);">0</h3>
                     <p style="margin: 10px 0 0 0; font-size: 1rem; font-weight: 800; color: var(--text-secondary);">زيارات الموقع الفريدة</p>
                 </div>
-                <div style="flex:1; min-width: 120px; background: rgba(15, 81, 50, 0.05); padding: 25px; border-radius: 15px; border: 1px solid var(--border-color); text-align: center;">
-                    <h3 id="stat-results" style="margin: 0; font-size: 2.2rem; color: var(--primary-color);">0</h3>
-                    <p style="margin: 10px 0 0 0; font-size: 1rem; font-weight: 800; color: var(--text-secondary);">دخول النتائج</p>
+                <div style="flex:1; min-width: 200px; background: rgba(15, 81, 50, 0.05); padding: 25px; border-radius: 15px; border: 1px solid var(--border-color); text-align: center; transition: transform 0.3s;">
+                    <h3 id="stat-results" style="margin: 0; font-size: 2.5rem; color: var(--primary-color);">0</h3>
+                    <p style="margin: 10px 0 0 0; font-size: 1rem; font-weight: 800; color: var(--text-secondary);">دخول النتائج (فريد)</p>
                 </div>
-                <div style="flex:1; min-width: 120px; background: rgba(15, 81, 50, 0.05); padding: 25px; border-radius: 15px; border: 1px solid var(--border-color); text-align: center;">
-                    <h3 id="stat-comps" style="margin: 0; font-size: 2.2rem; color: var(--primary-color);">0</h3>
-                    <p style="margin: 10px 0 0 0; font-size: 1rem; font-weight: 800; color: var(--text-secondary);">المسابقات</p>
-                </div>
-            </div>
-
-            <div style="background: var(--card-bg); padding: 20px; border-radius: 15px; border: 1px solid var(--border-color); margin-bottom: 30px; width: 100%;">
-                <h4 style="margin-top: 0; text-align: center; color: var(--text-primary); font-size: 1.2rem; font-weight: 800; margin-bottom: 20px;">الزيارات اليومية (الفريدة) خلال الفترة</h4>
-                <div style="position: relative; width: 100%; min-height: 300px;">
-                    <canvas id="dailyVisitsChart"></canvas>
+                <div style="flex:1; min-width: 200px; background: rgba(15, 81, 50, 0.05); padding: 25px; border-radius: 15px; border: 1px solid var(--border-color); text-align: center; transition: transform 0.3s;">
+                    <h3 id="stat-comps" style="margin: 0; font-size: 2.5rem; color: var(--primary-color);">0</h3>
+                    <p style="margin: 10px 0 0 0; font-size: 1rem; font-weight: 800; color: var(--text-secondary);">المسابقات (فريد)</p>
                 </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; flex: 1;">
-                <div style="background: var(--card-bg); padding: 20px; border-radius: 15px; border: 1px solid var(--border-color); display: flex; flex-direction: column;">
-                    <h4 style="margin-top: 0; text-align: center; color: var(--text-primary); font-size: 1.2rem; font-weight: 800; margin-bottom: 20px;">التخصصات (زائر فريد لكل تخصص)</h4>
-                    <div style="position: relative; flex: 1; min-height: 350px;">
+            <!-- شبكة الرسوم البيانية الخطية للكمبيوتر -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; margin-bottom: 20px;">
+                <div style="background: var(--card-bg); padding: 20px; border-radius: 15px; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);">
+                    <h4 style="margin-top: 0; text-align: center; color: var(--text-primary); font-size: 1.2rem; font-weight: 800; margin-bottom: 20px;">إجمالي الزيارات (شامل المتكرر)</h4>
+                    <div style="position: relative; width: 100%; height: 320px;">
+                        <canvas id="dailyVisitsChart"></canvas>
+                    </div>
+                </div>
+                
+                <div style="background: var(--card-bg); padding: 20px; border-radius: 15px; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);">
+                    <h4 style="margin-top: 0; text-align: center; color: var(--text-primary); font-size: 1.2rem; font-weight: 800; margin-bottom: 20px;">دخول قسم النتائج (شامل المتكرر)</h4>
+                    <div style="position: relative; width: 100%; height: 320px;">
+                        <canvas id="dailyResultsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- شبكة الرسوم البيانية الدائرية للكمبيوتر -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                <div style="background: var(--card-bg); padding: 20px; border-radius: 15px; border: 1px solid var(--border-color); display: flex; flex-direction: column; align-items: center; box-shadow: var(--shadow-sm);">
+                    <h4 style="margin-top: 0; text-align: center; color: var(--text-primary); font-size: 1.2rem; font-weight: 800; margin-bottom: 20px;">التخصصات (إجمالي الدخول)</h4>
+                    <!-- الحجم محدد بـ max-width ليحافظ على الدائرة -->
+                    <div style="position: relative; width: 100%; max-width: 350px; height: 350px;">
                         <canvas id="specChart"></canvas>
                     </div>
                 </div>
-                <div style="background: var(--card-bg); padding: 20px; border-radius: 15px; border: 1px solid var(--border-color); display: flex; flex-direction: column;">
-                    <h4 style="margin-top: 0; text-align: center; color: var(--text-primary); font-size: 1.2rem; font-weight: 800; margin-bottom: 20px;">المستويات (زائر فريد لكل مستوى)</h4>
-                    <div style="position: relative; flex: 1; min-height: 350px;">
+                
+                <div style="background: var(--card-bg); padding: 20px; border-radius: 15px; border: 1px solid var(--border-color); display: flex; flex-direction: column; align-items: center; box-shadow: var(--shadow-sm);">
+                    <h4 style="margin-top: 0; text-align: center; color: var(--text-primary); font-size: 1.2rem; font-weight: 800; margin-bottom: 20px;">المستويات (إجمالي الدخول)</h4>
+                    <!-- الحجم محدد بـ max-width ليحافظ على الدائرة -->
+                    <div style="position: relative; width: 100%; max-width: 350px; height: 350px;">
                         <canvas id="levelChart"></canvas>
                     </div>
                 </div>
@@ -890,36 +908,48 @@
         };
 
         // ================== نظام إحصائيات الدقيق والفريد للمتصفح ==================
+        // ================== نظام إحصائيات الدقيق والفريد للمتصفح ==================
         async function logSupabaseAnalytics(actionType, actionDetail) {
             if (!supabaseClient) return;
             
             try {
-                // فلترة تعتمد على الجهاز/المتصفح لحساب الزيارة الفريدة فقط
+                let isFirstTime = false;
+
                 if (actionType === 'زيارة الموقع') {
-                    if (localStorage.getItem('unem_has_visited')) return;
-                    localStorage.setItem('unem_has_visited', 'true');
+                    if (!localStorage.getItem('unem_has_visited')) {
+                        localStorage.setItem('unem_has_visited', 'true');
+                        isFirstTime = true;
+                    }
                 } 
                 else if (actionType === 'دخول تخصص') {
                     let loggedSpecs = JSON.parse(localStorage.getItem('unem_logged_specs') || '[]');
-                    if (loggedSpecs.includes(actionDetail)) return;
-                    loggedSpecs.push(actionDetail);
-                    localStorage.setItem('unem_logged_specs', JSON.stringify(loggedSpecs));
+                    if (!loggedSpecs.includes(actionDetail)) {
+                        loggedSpecs.push(actionDetail);
+                        localStorage.setItem('unem_logged_specs', JSON.stringify(loggedSpecs));
+                        isFirstTime = true;
+                    }
                 }
                 else if (actionType === 'دخول مستوى') {
                     let loggedLevels = JSON.parse(localStorage.getItem('unem_logged_levels') || '[]');
-                    if (loggedLevels.includes(actionDetail)) return;
-                    loggedLevels.push(actionDetail);
-                    localStorage.setItem('unem_logged_levels', JSON.stringify(loggedLevels));
+                    if (!loggedLevels.includes(actionDetail)) {
+                        loggedLevels.push(actionDetail);
+                        localStorage.setItem('unem_logged_levels', JSON.stringify(loggedLevels));
+                        isFirstTime = true;
+                    }
                 }
                 else if (actionType === 'دخول قسم') {
                     let loggedSections = JSON.parse(localStorage.getItem('unem_logged_sections') || '[]');
-                    if (loggedSections.includes(actionDetail)) return;
-                    loggedSections.push(actionDetail);
-                    localStorage.setItem('unem_logged_sections', JSON.stringify(loggedSections));
+                    if (!loggedSections.includes(actionDetail)) {
+                        loggedSections.push(actionDetail);
+                        localStorage.setItem('unem_logged_sections', JSON.stringify(loggedSections));
+                        isFirstTime = true;
+                    }
                 }
 
+                let finalActionType = isFirstTime ? actionType : actionType + ' (متكرر)';
+
                 await supabaseClient.from('analytics').insert([
-                    { action_type: actionType, action_detail: actionDetail }
+                    { action_type: finalActionType, action_detail: actionDetail }
                 ]);
             } catch (e) {}
         }
@@ -928,114 +958,122 @@
             logSupabaseAnalytics('زيارة الموقع', 'الصفحة الرئيسية');
         });
 
-        // تم التعديل لدعم فلتر التاريخ
         function applyAnalyticsFilter() {
             const startDate = document.getElementById('analytics-start-date').value;
             const endDate = document.getElementById('analytics-end-date').value;
             openAnalyticsDashboard(startDate, endDate);
         }
 
-async function openAnalyticsDashboard(startDate = null, endDate = null) {
-    document.getElementById('upload-modal-overlay').classList.add('hidden');
-    document.getElementById('analytics-overlay').classList.remove('hidden');
-    const errDiv = document.getElementById('analytics-error');
-    errDiv.classList.add('hidden');
+        async function openAnalyticsDashboard(startDate = null, endDate = null) {
+            document.getElementById('upload-modal-overlay').classList.add('hidden');
+            document.getElementById('analytics-overlay').classList.remove('hidden');
+            const errDiv = document.getElementById('analytics-error');
+            errDiv.classList.add('hidden');
 
-    if (!supabaseClient) { 
-        errDiv.textContent = "لم يتم الاتصال بقاعدة البيانات!"; 
-        errDiv.classList.remove('hidden'); 
-        return; 
-    }
+            if (!supabaseClient) { 
+                errDiv.textContent = "لم يتم الاتصال بقاعدة البيانات!"; 
+                errDiv.classList.remove('hidden'); 
+                return; 
+            }
 
-    try {
-        // تصفير الفلتر عند فتح اللوحة لضمان جلب كل شيء منذ البداية
-        if (!startDate && !endDate) {
-            document.getElementById('analytics-start-date').value = '';
-            document.getElementById('analytics-end-date').value = '';
-        }
+            try {
+                if (!startDate && !endDate) {
+                    document.getElementById('analytics-start-date').value = '';
+                    document.getElementById('analytics-end-date').value = '';
+                }
 
-        document.getElementById('stat-visits').textContent = "...";
-        document.getElementById('stat-results').textContent = "...";
-        document.getElementById('stat-comps').textContent = "...";
+                document.getElementById('stat-visits').textContent = "...";
+                document.getElementById('stat-results').textContent = "...";
+                document.getElementById('stat-comps').textContent = "...";
 
-        // مصفوفة لتجميع كل البيانات بدون استثناء
-        let allData = [];
-        let from = 0;
-        const batchSize = 1000; // جلب البيانات على دفعات (1000 في كل مرة) لتخطي حدود Supabase
-        let keepFetching = true;
+                let allData = [];
+                let from = 0;
+                const batchSize = 1000; 
+                let keepFetching = true;
 
-        // حلقة لجلب كامل البيانات المطلوبة بدقة تامة
-        while (keepFetching) {
-            let query = supabaseClient
-                .from('analytics')
-                .select('*')
-                .order('created_at', { ascending: false });
+                while (keepFetching) {
+                    let query = supabaseClient
+                        .from('analytics')
+                        .select('*')
+                        .order('created_at', { ascending: false });
 
-            if (startDate) query = query.gte('created_at', startDate + 'T00:00:00.000Z');
-            if (endDate) query = query.lte('created_at', endDate + 'T23:59:59.999Z');
+                    if (startDate) query = query.gte('created_at', startDate + 'T00:00:00.000Z');
+                    if (endDate) query = query.lte('created_at', endDate + 'T23:59:59.999Z');
 
-            // تحديد نطاق الدفعة الحالية
-            query = query.range(from, from + batchSize - 1);
+                    query = query.range(from, from + batchSize - 1);
 
-            const { data, error } = await query;
-            if (error) throw error;
+                    const { data, error } = await query;
+                    if (error) throw error;
 
-            // إضافة الدفعة الجديدة إلى إجمالي البيانات
-            allData = allData.concat(data);
+                    allData = allData.concat(data);
 
-            // إذا كانت البيانات الراجعة أقل من 1000، هذا يعني أننا وصلنا لنهاية البيانات
-            if (data.length < batchSize) {
-                keepFetching = false;
-            } else {
-                from += batchSize; // الانتقال للدفعة التالية
+                    if (data.length < batchSize) {
+                        keepFetching = false;
+                    } else {
+                        from += batchSize;
+                    }
+                }
+
+                let uniqueVisits = 0;
+                let uniqueResults = 0;
+                let uniqueComps = 0;
+
+                let dailyVisitsTotal = {};
+                let dailyResultsTotal = {}; 
+                let specCountsTotal = {};
+                let levelCountsTotal = {};
+
+                allData.forEach(row => {
+                    const dateStr = row.created_at.split('T')[0];
+                    const isUnique = !row.action_type.includes('(متكرر)');
+
+                    if (row.action_type.startsWith('زيارة الموقع')) {
+                        if (isUnique) uniqueVisits++; 
+                        dailyVisitsTotal[dateStr] = (dailyVisitsTotal[dateStr] || 0) + 1; 
+                    }
+
+                    if (row.action_type.startsWith('دخول قسم') && row.action_detail === 'النتائج') {
+                        if (isUnique) uniqueResults++;
+                        dailyResultsTotal[dateStr] = (dailyResultsTotal[dateStr] || 0) + 1;
+                    }
+
+                    if (row.action_type.startsWith('دخول قسم') && row.action_detail === 'المسابقات') {
+                        if (isUnique) uniqueComps++;
+                    }
+                    
+                    if (row.action_type.startsWith('دخول تخصص')) {
+                        specCountsTotal[row.action_detail] = (specCountsTotal[row.action_detail] || 0) + 1;
+                    }
+
+                    if (row.action_type.startsWith('دخول مستوى')) {
+                        levelCountsTotal[row.action_detail] = (levelCountsTotal[row.action_detail] || 0) + 1;
+                    }
+                });
+
+                document.getElementById('stat-visits').textContent = uniqueVisits;
+                document.getElementById('stat-results').textContent = uniqueResults;
+                document.getElementById('stat-comps').textContent = uniqueComps;
+
+                const sortedDatesVisits = Object.keys(dailyVisitsTotal).sort();
+                const sortedDailyVisits = {};
+                sortedDatesVisits.forEach(d => sortedDailyVisits[d] = dailyVisitsTotal[d]);
+
+                const sortedDatesResults = Object.keys(dailyResultsTotal).sort();
+                const sortedDailyResults = {};
+                sortedDatesResults.forEach(d => sortedDailyResults[d] = dailyResultsTotal[d]);
+
+                renderAnalyticsChart('dailyVisitsChart', 'line', 'إجمالي الزيارات (شامل المتكرر)', sortedDailyVisits);
+                renderAnalyticsChart('dailyResultsChart', 'line', 'دخول قسم النتائج (شامل المتكرر)', sortedDailyResults);
+                renderAnalyticsChart('specChart', 'pie', 'التخصصات (إجمالي الدخول)', specCountsTotal);
+                renderAnalyticsChart('levelChart', 'doughnut', 'المستويات (إجمالي الدخول)', levelCountsTotal);
+
+            } catch(e) {
+                console.error(e);
+                errDiv.textContent = "حدث خطأ أثناء جلب البيانات أو أن الجدول (analytics) غير موجود.";
+                errDiv.classList.remove('hidden');
             }
         }
 
-        let totalVisits = 0, resultsVisits = 0, compVisits = 0;
-        let specCounts = {};
-        let levelCounts = {};
-        let dailyVisits = {};
-
-        // الآن نستخدم allData التي تحتوي على جميع السجلات 100%
-        allData.forEach(row => {
-            // العودة لطريقتك الأصلية والآمنة جداً لاستخراج التاريخ وتجنب مشاكل توقيت الهواتف
-            const dateStr = row.created_at.split('T')[0];
-            
-            if (row.action_type === 'زيارة الموقع') {
-                totalVisits++;
-                dailyVisits[dateStr] = (dailyVisits[dateStr] || 0) + 1;
-            }
-            if (row.action_type === 'دخول قسم' && row.action_detail === 'النتائج') resultsVisits++;
-            if (row.action_type === 'دخول قسم' && row.action_detail === 'المسابقات') compVisits++;
-            
-            if (row.action_type === 'دخول تخصص') {
-                specCounts[row.action_detail] = (specCounts[row.action_detail] || 0) + 1;
-            }
-            if (row.action_type === 'دخول مستوى') {
-                levelCounts[row.action_detail] = (levelCounts[row.action_detail] || 0) + 1;
-            }
-        });
-
-        // عرض الأرقام الدقيقة
-        document.getElementById('stat-visits').textContent = totalVisits;
-        document.getElementById('stat-results').textContent = resultsVisits;
-        document.getElementById('stat-comps').textContent = compVisits;
-
-        const sortedDates = Object.keys(dailyVisits).sort();
-        const sortedDailyVisits = {};
-        sortedDates.forEach(d => sortedDailyVisits[d] = dailyVisits[d]);
-
-        // رسم المخططات
-        renderAnalyticsChart('dailyVisitsChart', 'line', 'الزيارات الفريدة للموقع', sortedDailyVisits);
-        renderAnalyticsChart('specChart', 'pie', 'التخصصات (زائر فريد)', specCounts);
-        renderAnalyticsChart('levelChart', 'doughnut', 'المستويات (زائر فريد)', levelCounts);
-
-    } catch(e) {
-        console.error(e);
-        errDiv.textContent = "حدث خطأ أثناء جلب البيانات أو أن الجدول (analytics) غير موجود.";
-        errDiv.classList.remove('hidden');
-    }
-}
         let activeCharts = {};
         function renderAnalyticsChart(canvasId, type, label, dataObj) {
             const ctx = document.getElementById(canvasId).getContext('2d');
@@ -1083,9 +1121,9 @@ async function openAnalyticsDashboard(startDate = null, endDate = null) {
                                     let label = context.dataset.label || '';
                                     if (label) { label += ': '; }
                                     if (context.parsed.y !== undefined) { 
-                                        label += context.parsed.y + (type === 'line' ? ' زائر' : ' (زائر)'); 
+                                        label += context.parsed.y + (type === 'line' ? ' زيارة' : ' (زيارة)'); 
                                     } else if (context.parsed !== null) { 
-                                        label += context.parsed + ' (زائر)'; 
+                                        label += context.parsed + ' (زيارة)'; 
                                     }
                                     return label;
                                 }
@@ -1104,7 +1142,10 @@ async function openAnalyticsDashboard(startDate = null, endDate = null) {
             document.getElementById('analytics-overlay').classList.add('hidden');
             document.getElementById('upload-modal-overlay').classList.remove('hidden');
         }
-        // =========================================================================
+function closeAnalyticsDashboard() {
+    document.getElementById('analytics-overlay').classList.add('hidden');
+    document.getElementById('upload-modal-overlay').classList.remove('hidden');
+}
 
         let tapCount = 0; let tapTimer;
         document.getElementById('copyright-year').addEventListener('click', () => {
@@ -1616,16 +1657,40 @@ async function openAnalyticsDashboard(startDate = null, endDate = null) {
         });
       }
     </script>
-    <!-- START PROTECTION CODE -->
+    <!-- START ADVANCED PROTECTION CODE -->
     <script>
     (function() {
+        // منع الزر الأيمن
         document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+        
+        // منع اختصارات لوحة المفاتيح
         document.onkeydown = function(e) {
+            // منع F12
             if(e.keyCode == 123) return false;
+            
             if(e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0) || e.keyCode == 'C'.charCodeAt(0))) return false;
-            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false;
-        }
+            
+            // منع Ctrl+U (عرض المصدر) و Ctrl+S (حفظ الصفحة) و Ctrl+P (طباعة) و Ctrl+C (نسخ)
+            if(e.ctrlKey && (e.keyCode == 'U'.charCodeAt(0) || e.keyCode == 'S'.charCodeAt(0) || e.keyCode == 'P'.charCodeAt(0) || e.keyCode == 'C'.charCodeAt(0))) {
+                e.preventDefault();
+                return false;
+            }
+        };
+
+        // منع عملية النسخ الفعلي حتى لو تم التحديد بطريقة ما
+        document.addEventListener('copy', function(e) {
+            e.preventDefault();
+            return false;
+        });
+        
+        // منع سحب وإفلات الصور والملفات
+        document.addEventListener('dragstart', function(e) {
+            e.preventDefault();
+            return false;
+        });
     })();
+    </script>
+    <!-- END ADVANCED PROTECTION CODE -->
     </script>
     <!-- END PROTECTION CODE -->
     
