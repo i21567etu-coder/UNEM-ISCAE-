@@ -53,7 +53,6 @@
             cursor: pointer; user-select: none;
         }
 
-        /* ===== تصميم زر الرئيسية البارز المحدث لمنع التداخل (على اليسار) ===== */
         .btn-home {
             background: #10b981; color: white !important; text-decoration: none;
             font-size: clamp(0.85rem, 3vw, 1rem); font-weight: bold; padding: 8px 12px; border-radius: 10px;
@@ -150,7 +149,6 @@
         
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* ===== تأثيرات الاحتفالية المتقدمة ===== */
         #celebrationOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; display: none; overflow: hidden; background: radial-gradient(ellipse at center, rgba(0, 92, 41, 0.15) 0%, transparent 70%); }
         .rim-confetti { position: absolute; top: -20px; z-index: 9998; animation: fallConfetti linear forwards; filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.6)); }
         .congrats-floating-text { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; z-index: 10000; width: 90%; max-width: 500px; pointer-events: none; animation: popAndFloat 8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
@@ -170,7 +168,6 @@
 
         @media (max-width: 600px) { .btn-group { flex-direction: column; } .info-row { font-size: 1rem; } .student-name { font-size: 1.4rem; } }
 
-        /* ===== تصميم التذييل المضاف ===== */
         .site-footer {
             text-align: center;
             padding: 20px 10px;
@@ -187,20 +184,15 @@
 
 <header id="main-header">
     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-        <!-- الجانب الأيسر: زر الرئيسية (يظهر دائما مع الكلمة ولن يتداخل) -->
         <div style="flex: 1; display: flex; justify-content: flex-start;">
             <a href="/" class="btn-home" onclick="event.stopPropagation();">
                 🏠 الرئيسية
             </a>
         </div>
-
-        <!-- المنتصف: العنوان -->
         <div style="text-align: center; flex: 2;">
             <h1>🎓 ISCAE Résultats</h1>
             <div class="top-dev">UNEM ISCAE</div>
         </div>
-
-        <!-- الجانب الأيمن: فارغ للحفاظ على توسيط العنوان بشكل مثالي -->
         <div style="flex: 1;"></div>
     </div>
 </header>
@@ -209,7 +201,6 @@
     <div class="modal-box">
         <span class="close-modal" onclick="closeAdmin()">✖</span>
         
-        <!-- واجهة تسجيل الدخول بالإيميل والباسورد -->
         <div id="admin-login-step">
             <h2>🔐 دخول الإدارة</h2>
             <div class="form-group">
@@ -301,7 +292,6 @@
     </div>
 </div>
 
-<!-- التذييل المضاف -->
 <div class="site-footer">
     Développé par UNEM ISCAE (MDA)
 </div>
@@ -351,7 +341,6 @@
     
     populateAcademicYears(); updateUploadSemesters(); updateT20Semesters();
 
-    // إظهار لوحة التحكم والتحقق من الجلسة
     let tapCount = 0;
     document.getElementById('main-header').addEventListener('click', async () => {
         tapCount++;
@@ -375,7 +364,6 @@
         document.getElementById('admin-modal').style.display = 'none';
     }
 
-    // تسجيل الدخول باستخدام حساب Supabase
     async function checkAdminAuth() {
         const email = document.getElementById('admin-email').value;
         const password = document.getElementById('admin-pass').value;
@@ -410,14 +398,12 @@
         }
     }
 
-    // تسجيل الخروج
     async function adminLogout() {
         await _supabase.auth.signOut();
         document.getElementById('admin-login-step').style.display = 'block';
         document.getElementById('admin-upload-step').style.display = 'none';
     }
 
-    // الرفع والترتيب الذكي
     async function uploadFiles() {
         const statusDiv = document.getElementById('upload-status');
         const academicYear = document.getElementById('up-year').value; 
@@ -481,7 +467,7 @@
             studentsArray.sort((a, b) => b.avgNum - a.avgNum);
             studentsArray.forEach((student, index) => { student.rank = index + 1; });
 
-            statusDiv.innerHTML = '⏳ جاري رفع الملفات إلى الخادم...';
+            statusDiv.innerHTML = '⏳ جاري رفع الملفات إلى الخادم وتحديث البيانات...';
 
             const uploadToStorage = async (fileData, fileName) => {
                 const { error } = await _supabase.storage.from('isc_results').upload(fileName, fileData);
@@ -497,6 +483,20 @@
             const jsonFileName = `RANKING_${major}_${level}_${semester}_${Date.now()}.json`;
             const rankingUrl = await uploadToStorage(jsonBlob, jsonFileName);
 
+            // ==========================================
+            // التعديل الجديد: حذف النتائج القديمة أولاً لنفس الفصل والتخصص (لتجاوز مشكلة التظلمات)
+            // ==========================================
+            await _supabase.from('results_metadata')
+                .delete()
+                .match({
+                    academic_year: academicYear,
+                    major: major,
+                    level: level,
+                    semester: semester
+                });
+            // ==========================================
+
+            // إدخال النتائج الجديدة (نتائج التظلمات ستحل محل القديمة المحذوفة للتو)
             const { error: dbError } = await _supabase.from('results_metadata').insert([{ 
                 academic_year: academicYear, major, level, semester, 
                 details_url: detailsUrl, ranking_url: rankingUrl 
@@ -504,8 +504,8 @@
             
             if (dbError) throw dbError;
             
-            globalFilesCache = null; 
-            statusDiv.innerHTML = `<span style="color:green">✅ تم الاستخراج والرفع بنجاح! (${studentsArray.length} طالب)</span>`;
+            globalFilesCache = null; // تفريغ الذاكرة المؤقتة ليتم سحب النتائج الجديدة فوراً
+            statusDiv.innerHTML = `<span style="color:green">✅ تم الاستخراج والرفع وتحديث قاعدة البيانات بنجاح! (${studentsArray.length} طالب)</span>`;
             document.getElementById('file-details').value = "";
         } catch (err) { 
             statusDiv.innerHTML = '<span style="color:red">❌ خطأ: ' + err.message + '</span>'; 
@@ -706,7 +706,8 @@
         closeTop20Modal(); resetView();
         const loader = document.getElementById('loader'); loader.style.display = 'block';
         try {
-            const { data } = await _supabase.from('results_metadata').select('*').eq('academic_year', document.getElementById('t20-year').value).eq('major', document.getElementById('t20-major').value).eq('level', document.getElementById('t20-level').value).eq('semester', document.getElementById('t20-semester').value).limit(1);
+            // أضفت هنا order('created_at', { ascending: false }) كطبقة حماية إضافية لجلب الأحدث دائماً
+            const { data } = await _supabase.from('results_metadata').select('*').eq('academic_year', document.getElementById('t20-year').value).eq('major', document.getElementById('t20-major').value).eq('level', document.getElementById('t20-level').value).eq('semester', document.getElementById('t20-semester').value).order('created_at', { ascending: false }).limit(1);
             if (!data[0]) { loader.style.display = 'none'; showError("لا توجد بيانات متاحة لهذا الفصل."); return; }
             const students = await fetchRankingData(data[0].ranking_url);
             loader.style.display = 'none';
@@ -752,13 +753,10 @@
     }
 </script>
 
-<!-- كود إضافي لتتبع الزيارات المباشرة للنتائج في الإحصائيات الرئيسية -->
 <script>
     window.addEventListener('load', async () => {
-        // نمنع تكرار الحساب لنفس الشخص مرتين
         if (localStorage.getItem('unem_direct_visit_results')) return;
         try {
-            // بيانات قاعدة بيانات الإحصائيات (الموجودة في المنصة الرئيسية)
             const STATS_URL = 'https://rcdaxtretxskeyghxugm.supabase.co';
             const STATS_KEY = 'sb_publishable_OupfdnKe5eQmqULV46O0wQ_xUglAncv'; 
             const statsClient = supabase.createClient(STATS_URL, STATS_KEY);
