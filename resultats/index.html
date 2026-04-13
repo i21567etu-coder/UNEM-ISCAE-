@@ -15,7 +15,7 @@
     <!-- Confetti library -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1"></script>
 
-    <!-- مكتبات المعالجة -->
+    <!-- مكتبات المعالجة (تتضمن pdf-lib للقص والدمج) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';</script>
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
@@ -216,7 +216,7 @@
         </div>
 
         <div id="admin-upload-step" style="display:none;">
-            <h2>📤 رفع النتائج (تلقائي الترتيب)</h2>
+            <h2>📤 رفع النتائج (دمج وترتيب تلقائي)</h2>
             <div class="form-group"><label>السنة الجامعية:</label><select id="up-year"></select></div>
             <div class="form-group">
                 <label>التخصص:</label>
@@ -235,9 +235,14 @@
             </div>
             <div class="form-group"><label>الفصل:</label><select id="up-semester"></select></div>
             
-            <div class="file-input-wrapper"><label>📄 ملف النتائج التفصيلي (PDF):</label><input type="file" id="file-details" accept="application/pdf"></div>
+            <div class="file-input-wrapper">
+                <!-- التعديل هنا: إضافة multiple لدعم رفع عدة ملفات للدمج -->
+                <label>📄 ملف أو ملفات النتائج (PDF):</label>
+                <input type="file" id="file-details" accept="application/pdf" multiple>
+                <small style="display:block; color:#666; font-size:0.85rem; margin-top:8px;">💡 يمكنك تحديد ملف واحد، أو تحديد عدة ملفات معاً (مثل BAL11 و BAL12) وسيقوم النظام بدمجها تلقائياً.</small>
+            </div>
             
-            <button class="admin-btn" style="margin-top:20px; background:var(--primary); color:white;" onclick="uploadFiles()">استخراج البيانات والرفع</button>
+            <button class="admin-btn" style="margin-top:20px; background:var(--primary); color:white;" onclick="uploadFiles()">دمج، استخراج البيانات والرفع</button>
             <div id="upload-status" style="margin-top:15px; font-weight:bold; font-size:0.9rem; text-align:center;"></div>
             
             <hr style="border: 1px solid #eee; margin: 20px 0;">
@@ -410,15 +415,49 @@
         const major = document.getElementById('up-major').value;
         const level = document.getElementById('up-level').value; 
         const semester = document.getElementById('up-semester').value;
-        const fileDetails = document.getElementById('file-details').files[0]; 
-
-        if (!fileDetails) { statusDiv.innerHTML = '<span style="color:red">يرجى اختيار ملف النتائج التفصيلي أولاً.</span>'; return; }
-
-        statusDiv.innerHTML = '⏳ جاري استخراج البيانات والترتيب بذكاء...';
         
+        // استدعاء جميع الملفات المحددة
+        const selectedFiles = document.getElementById('file-details').files; 
+
+        if (selectedFiles.length === 0) { 
+            statusDiv.innerHTML = '<span style="color:red">يرجى اختيار ملف (أو ملفات) النتائج أولاً.</span>'; 
+            return; 
+        }
+
         try {
-            const arrayBuffer = await fileDetails.arrayBuffer();
-            const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+            let finalPdfBytes;
+            let finalPdfBlob;
+
+            // إذا كان هناك ملف واحد فقط، نأخذه كما هو
+            if (selectedFiles.length === 1) {
+                statusDiv.innerHTML = '⏳ جاري تهيئة الملف وقراءته...';
+                finalPdfBytes = await selectedFiles[0].arrayBuffer();
+                finalPdfBlob = selectedFiles[0]; // نحتفظ به كـ File object لرفعه لاحقاً
+            } 
+            // إذا كان هناك عدة ملفات، نقوم بدمجها أولاً
+            else {
+                statusDiv.innerHTML = `⏳ جاري دمج ${selectedFiles.length} ملفات تلقائياً...`;
+                const { PDFDocument } = PDFLib;
+                const mergedPdf = await PDFDocument.create();
+
+                // ترتيب الملفات أبجدياً لضمان أن BAL11 يُدمج قبل BAL12
+                const sortedFiles = Array.from(selectedFiles).sort((a, b) => a.name.localeCompare(b.name));
+
+                for (const file of sortedFiles) {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const pdfDoc = await PDFDocument.load(arrayBuffer);
+                    const copiedPages = await mergedPdf.copyPages(pdfDoc, pdfDoc.getPageIndices());
+                    copiedPages.forEach((page) => mergedPdf.addPage(page));
+                }
+                
+                finalPdfBytes = await mergedPdf.save();
+                finalPdfBlob = new Blob([finalPdfBytes], { type: 'application/pdf' });
+            }
+
+            statusDiv.innerHTML = '⏳ جاري استخراج البيانات والترتيب بذكاء...';
+            
+            // قراءة النص من الملف (سواء كان دمجاً أو ملفاً واحداً)
+            const pdf = await pdfjsLib.getDocument({ data: finalPdfBytes }).promise;
             let fullText = "";
             for (let i = 1; i <= pdf.numPages; i++) {
                 const page = await pdf.getPage(i);
@@ -460,7 +499,7 @@
 
             let studentsArray = Array.from(studentsMap.values());
             if(studentsArray.length === 0) {
-                statusDiv.innerHTML = '<span style="color:red">❌ لم يتم العثور على أي طالب. يرجى التأكد من الملف.</span>';
+                statusDiv.innerHTML = '<span style="color:red">❌ لم يتم العثور على أي طالب. يرجى التأكد من الملفات.</span>';
                 return;
             }
 
@@ -477,15 +516,14 @@
             };
 
             const detailsFileName = `DETAILS_${major}_${level}_${semester}_${Date.now()}.pdf`;
-            const detailsUrl = await uploadToStorage(fileDetails, detailsFileName);
+            // رفع الملف النهائي (سواء كان مدمجاً أو مفرداً)
+            const detailsUrl = await uploadToStorage(finalPdfBlob, detailsFileName);
 
             const jsonBlob = new Blob([JSON.stringify(studentsArray)], { type: 'application/json' });
             const jsonFileName = `RANKING_${major}_${level}_${semester}_${Date.now()}.json`;
             const rankingUrl = await uploadToStorage(jsonBlob, jsonFileName);
 
-            // ==========================================
-            // التعديل الجديد: حذف النتائج القديمة أولاً لنفس الفصل والتخصص (لتجاوز مشكلة التظلمات)
-            // ==========================================
+            // حذف النتائج القديمة (ميزة التظلمات السابقة)
             await _supabase.from('results_metadata')
                 .delete()
                 .match({
@@ -494,9 +532,8 @@
                     level: level,
                     semester: semester
                 });
-            // ==========================================
 
-            // إدخال النتائج الجديدة (نتائج التظلمات ستحل محل القديمة المحذوفة للتو)
+            // إدخال البيانات الجديدة
             const { error: dbError } = await _supabase.from('results_metadata').insert([{ 
                 academic_year: academicYear, major, level, semester, 
                 details_url: detailsUrl, ranking_url: rankingUrl 
@@ -504,8 +541,8 @@
             
             if (dbError) throw dbError;
             
-            globalFilesCache = null; // تفريغ الذاكرة المؤقتة ليتم سحب النتائج الجديدة فوراً
-            statusDiv.innerHTML = `<span style="color:green">✅ تم الاستخراج والرفع وتحديث قاعدة البيانات بنجاح! (${studentsArray.length} طالب)</span>`;
+            globalFilesCache = null; 
+            statusDiv.innerHTML = `<span style="color:green">✅ تم المعالجة والرفع وتحديث قاعدة البيانات بنجاح! (${studentsArray.length} طالب)</span>`;
             document.getElementById('file-details').value = "";
         } catch (err) { 
             statusDiv.innerHTML = '<span style="color:red">❌ خطأ: ' + err.message + '</span>'; 
@@ -706,7 +743,6 @@
         closeTop20Modal(); resetView();
         const loader = document.getElementById('loader'); loader.style.display = 'block';
         try {
-            // أضفت هنا order('created_at', { ascending: false }) كطبقة حماية إضافية لجلب الأحدث دائماً
             const { data } = await _supabase.from('results_metadata').select('*').eq('academic_year', document.getElementById('t20-year').value).eq('major', document.getElementById('t20-major').value).eq('level', document.getElementById('t20-level').value).eq('semester', document.getElementById('t20-semester').value).order('created_at', { ascending: false }).limit(1);
             if (!data[0]) { loader.style.display = 'none'; showError("لا توجد بيانات متاحة لهذا الفصل."); return; }
             const students = await fetchRankingData(data[0].ranking_url);
