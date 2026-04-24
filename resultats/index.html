@@ -289,7 +289,7 @@
 
     <div id="top20-container" class="result-card" style="scroll-margin-top: 20px;">
         <h2 style="color:var(--primary); text-align:center;">🏆 قائمة العشرون الأوائل</h2>
-        <p id="top20-info" style="text-align:center; color:#666; direction:ltr; font-weight:bold"></p>
+        <p id="top20-info" style="text-align:center; color:#666; direction:ltr; font-weight:bold;"></p>
         <div style="overflow-x:auto;">
             <table>
                 <thead><tr><th>#</th><th>Matricule</th><th>Nom et Prénom</th><th>Moyenne</th></tr></thead>
@@ -608,9 +608,7 @@
 
             loader.style.display = 'none';
             if (foundResults.length > 0) {
-                // التعديل هنا: تمرير النتيجة الأولى (الأحدث) فقط في مصفوفة
-                displayResults([foundResults[0]]); 
-                
+                displayResults(foundResults);
                 const latestResult = foundResults[0].student;
                 const latestIsValid = latestResult.decision.toLowerCase().includes('valid') || latestResult.decision.toLowerCase().includes('admis');
                 const latestAvg = parseFloat(latestResult.avg) || 0;
@@ -856,6 +854,6 @@
             localStorage.setItem('unem_direct_visit_results', 'true');
         } catch (e) {}
     });
-</script>
+ </script>
 </body>
 </html>
