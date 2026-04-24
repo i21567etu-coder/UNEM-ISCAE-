@@ -15,7 +15,7 @@
     <!-- Confetti library -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1"></script>
 
-    <!-- مكتبات المعالجة (تتضمن pdf-lib للقص والدمج) -->
+    <!-- مكتبات المعالجة -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';</script>
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
@@ -125,12 +125,15 @@
         .decision-valid { color: #059669; background: #d1fae5; padding: 2px 8px; border-radius: 5px; }
         .decision-ratt { color: #dc2626; background: #fee2e2; padding: 2px 8px; border-radius: 5px; }
 
-        .download-btn { display: block; width: 100%; text-align: center; background: #1e293b; color: white; padding: 15px; text-decoration: none; border-radius: 10px; margin-top: 25px; font-weight: bold; transition: 0.3s; box-sizing: border-box; cursor: pointer; border: none; }
-        .download-btn:hover { background: #334155; }
-        .download-btn.loading { background: #94a3b8; cursor: wait; }
+        .view-details-btn { display: block; width: 100%; text-align: center; background: #1e293b; color: white; padding: 15px; text-decoration: none; border-radius: 10px; margin-top: 25px; font-weight: bold; transition: 0.3s; box-sizing: border-box; cursor: pointer; border: none; font-size: 1.1rem; }
+        .view-details-btn:hover { background: #334155; }
+        .view-details-btn.loading { background: #94a3b8; cursor: wait; }
 
         .share-btn { display: block; width: 100%; text-align: center; background: #25D366; color: white; padding: 15px; text-decoration: none; border-radius: 10px; margin-top: 10px; font-weight: bold; transition: 0.3s; box-sizing: border-box; cursor: pointer; border: none; font-size: 1.1rem; }
         .share-btn:hover { background: #128C7E; transform: translateY(-2px); }
+
+        .details-canvas-container { margin-top: 15px; display: none; text-align: center; animation: slideUp 0.4s ease; }
+        .details-canvas-container canvas { width: 100%; max-width: 100%; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 10px; border: 1px solid #e2e8f0; }
 
         table { width: 100%; border-collapse: collapse; margin-top: 15px; direction: ltr; }
         th { background: #f0fdf4; color: var(--primary); padding: 12px; text-align: left; border-bottom: 2px solid var(--primary); }
@@ -236,10 +239,9 @@
             <div class="form-group"><label>الفصل:</label><select id="up-semester"></select></div>
             
             <div class="file-input-wrapper">
-                <!-- التعديل هنا: إضافة multiple لدعم رفع عدة ملفات للدمج -->
                 <label>📄 ملف أو ملفات النتائج (PDF):</label>
                 <input type="file" id="file-details" accept="application/pdf" multiple>
-                <small style="display:block; color:#666; font-size:0.85rem; margin-top:8px;">💡 يمكنك تحديد ملف واحد، أو تحديد عدة ملفات معاً (مثل BAL11 و BAL12) وسيقوم النظام بدمجها تلقائياً.</small>
+                <small style="display:block; color:#666; font-size:0.85rem; margin-top:8px;">💡 يمكنك تحديد ملف واحد، أو تحديد عدة ملفات معاً وسيقوم النظام بدمجها تلقائياً.</small>
             </div>
             
             <button class="admin-btn" style="margin-top:20px; background:var(--primary); color:white;" onclick="uploadFiles()">دمج، استخراج البيانات والرفع</button>
@@ -416,7 +418,6 @@
         const level = document.getElementById('up-level').value; 
         const semester = document.getElementById('up-semester').value;
         
-        // استدعاء جميع الملفات المحددة
         const selectedFiles = document.getElementById('file-details').files; 
 
         if (selectedFiles.length === 0) { 
@@ -428,19 +429,15 @@
             let finalPdfBytes;
             let finalPdfBlob;
 
-            // إذا كان هناك ملف واحد فقط، نأخذه كما هو
             if (selectedFiles.length === 1) {
                 statusDiv.innerHTML = '⏳ جاري تهيئة الملف وقراءته...';
                 finalPdfBytes = await selectedFiles[0].arrayBuffer();
-                finalPdfBlob = selectedFiles[0]; // نحتفظ به كـ File object لرفعه لاحقاً
-            } 
-            // إذا كان هناك عدة ملفات، نقوم بدمجها أولاً
-            else {
+                finalPdfBlob = selectedFiles[0]; 
+            } else {
                 statusDiv.innerHTML = `⏳ جاري دمج ${selectedFiles.length} ملفات تلقائياً...`;
                 const { PDFDocument } = PDFLib;
                 const mergedPdf = await PDFDocument.create();
 
-                // ترتيب الملفات أبجدياً لضمان أن BAL11 يُدمج قبل BAL12
                 const sortedFiles = Array.from(selectedFiles).sort((a, b) => a.name.localeCompare(b.name));
 
                 for (const file of sortedFiles) {
@@ -456,7 +453,6 @@
 
             statusDiv.innerHTML = '⏳ جاري استخراج البيانات والترتيب بذكاء...';
             
-            // قراءة النص من الملف (سواء كان دمجاً أو ملفاً واحداً)
             const pdf = await pdfjsLib.getDocument({ data: finalPdfBytes }).promise;
             let fullText = "";
             for (let i = 1; i <= pdf.numPages; i++) {
@@ -516,24 +512,16 @@
             };
 
             const detailsFileName = `DETAILS_${major}_${level}_${semester}_${Date.now()}.pdf`;
-            // رفع الملف النهائي (سواء كان مدمجاً أو مفرداً)
             const detailsUrl = await uploadToStorage(finalPdfBlob, detailsFileName);
 
             const jsonBlob = new Blob([JSON.stringify(studentsArray)], { type: 'application/json' });
             const jsonFileName = `RANKING_${major}_${level}_${semester}_${Date.now()}.json`;
             const rankingUrl = await uploadToStorage(jsonBlob, jsonFileName);
 
-            // حذف النتائج القديمة (ميزة التظلمات السابقة)
             await _supabase.from('results_metadata')
                 .delete()
-                .match({
-                    academic_year: academicYear,
-                    major: major,
-                    level: level,
-                    semester: semester
-                });
+                .match({ academic_year: academicYear, major: major, level: level, semester: semester });
 
-            // إدخال البيانات الجديدة
             const { error: dbError } = await _supabase.from('results_metadata').insert([{ 
                 academic_year: academicYear, major, level, semester, 
                 details_url: detailsUrl, ranking_url: rankingUrl 
@@ -727,10 +715,14 @@
             const cardId = 'card_' + Math.random().toString(36).substr(2, 9);
             const card = document.createElement('div'); card.id = cardId; card.className = 'result-card'; card.style.display = 'block';
             let shareBtnHtml = ''; if (isValid) shareBtnHtml = `<button class="share-btn" onclick="shareResultCard('${cardId}', '${f.semester}', this)"><i class="fas fa-share-alt"></i> مشاركة النتيجة</button>`;
+            
+            // التعديل: استبدال زر التحميل بزر العرض المباشر وإضافة حاوية (Container) للصورة المدمجة
             card.innerHTML = `
                 <div class="card-header-custom"><div class="semester-badge">${f.academic_year} | ${f.major} - ${f.semester}</div><h2 class="student-name">${s.name}</h2></div>
                 <div class="student-info"><div class="info-row"><span>رقم التسجيل:</span> <span class="info-val">${s.id}</span></div><div class="info-row"><span>المعدل:</span> <span class="info-val" style="color:var(--primary);">${s.avg}</span></div><div class="info-row"><span>الترتيب:</span> <span class="info-val" style="color:var(--secondary);">${s.rank}</span></div><div class="info-row"><span>القرار:</span> <span class="info-val ${isValid?'decision-valid':'decision-ratt'}">${s.decision}</span></div></div>
-                <button class="download-btn" onclick="downloadPrecisePDF('${s.id}', '${f.details_url}', this)">📥 تنزيل كشف النقاط</button>${shareBtnHtml}`;
+                <button class="view-details-btn" onclick="viewPreciseDetails('${s.id}', '${f.details_url}', this, '${cardId}')">👁️ عرض كشف النقاط التفصيلي</button>
+                <div id="details-container-${cardId}" class="details-canvas-container"></div>
+                ${shareBtnHtml}`;
             container.appendChild(card);
         });
     }
@@ -759,11 +751,33 @@
 
     function triggerQuickSearch(id) { document.getElementById('matricule').value = id; searchAllSemesters(); }
 
-    async function downloadPrecisePDF(studentId, pdfUrl, btnElement) {
-        btnElement.disabled = true; btnElement.innerText = "⏳ جاري القص الدقيق...";
+    // التعديل الكبير: عرض الـ PDF كصورة مباشرة داخل الموقع بدلاً من تنزيله
+    async function viewPreciseDetails(studentId, pdfUrl, btnElement, cardId) {
+        const container = document.getElementById(`details-container-${cardId}`);
+        
+        // إذا كان معروضاً، قم بإخفائه
+        if (container.innerHTML !== '') {
+            if(container.style.display === 'block') {
+                container.style.display = 'none';
+                btnElement.innerText = "👁️ عرض كشف النقاط التفصيلي";
+            } else {
+                container.style.display = 'block';
+                btnElement.innerText = "👁️ إخفاء كشف النقاط التفصيلي";
+            }
+            return;
+        }
+
+        btnElement.disabled = true; 
+        btnElement.innerText = "⏳ جاري استخراج التفاصيل لعرضها...";
+
         try {
-            const existingPdfBytes = await fetch(pdfUrl).then(res => res.arrayBuffer()); const loadingTask = pdfjsLib.getDocument({ data: existingPdfBytes }); const pdfDocjs = await loadingTask.promise;
+            // استخدام نفس الذكاء القديم في القص لتحديد المربع الخاص بالطالب
+            const existingPdfBytes = await fetch(pdfUrl).then(res => res.arrayBuffer()); 
+            const loadingTask = pdfjsLib.getDocument({ data: existingPdfBytes }); 
+            const pdfDocjs = await loadingTask.promise;
+            
             let startPage = -1, startY = 0, endY = 0, spansToNextPage = false, nextPageEndY = 0;
+            
             for (let i = 1; i <= pdfDocjs.numPages; i++) {
                 const page = await pdfDocjs.getPage(i); const content = await page.getTextContent(); const items = content.items;
                 for (let j=0; j<items.length; j++) {
@@ -777,15 +791,52 @@
                 }
                 if (startPage !== -1) break;
             }
-            const { PDFDocument } = PDFLib; const pdfDoc = await PDFDocument.load(existingPdfBytes); const newPdf = await PDFDocument.create();
-            const[page1] = await newPdf.copyPages(pdfDoc,[startPage]); const { width, height } = page1.getSize();
-            const cropTop = Math.min(height, startY + 35); const cropBottom = spansToNextPage ? 0 : endY; 
-            page1.setCropBox(0, cropBottom, width, cropTop - cropBottom); newPdf.addPage(page1);
-            if (spansToNextPage) { const[page2] = await newPdf.copyPages(pdfDoc,[startPage + 1]); page2.setCropBox(0, nextPageEndY, width, height - nextPageEndY); newPdf.addPage(page2); }
-            const pdfBytes = await newPdf.save(); const blob = new Blob([pdfBytes], { type: 'application/pdf' }); const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob); link.download = `Resultat_${studentId}.pdf`; link.click();
-        } catch (error) { alert("حدث خطأ في معالجة الملف."); }
-        finally { btnElement.disabled = false; btnElement.innerText = "📥 تنزيل كشف النقاط"; }
+
+            const { PDFDocument } = PDFLib; 
+            const pdfDoc = await PDFDocument.load(existingPdfBytes); 
+            const newPdf = await PDFDocument.create();
+            
+            const[page1] = await newPdf.copyPages(pdfDoc,[startPage]); 
+            const { width, height } = page1.getSize();
+            const cropTop = Math.min(height, startY + 35); 
+            const cropBottom = spansToNextPage ? 0 : endY; 
+            
+            page1.setCropBox(0, cropBottom, width, cropTop - cropBottom); 
+            newPdf.addPage(page1);
+            
+            if (spansToNextPage) { 
+                const[page2] = await newPdf.copyPages(pdfDoc,[startPage + 1]); 
+                page2.setCropBox(0, nextPageEndY, width, height - nextPageEndY); 
+                newPdf.addPage(page2); 
+            }
+            
+            // تحويل الـ PDF المقصوص إلى صورة (Canvas)
+            const pdfBytes = await newPdf.save();
+            const croppedPdfjs = await pdfjsLib.getDocument({ data: pdfBytes }).promise;
+            
+            container.innerHTML = ''; 
+
+            for(let p = 1; p <= croppedPdfjs.numPages; p++) {
+                const page = await croppedPdfjs.getPage(p);
+                const viewport = page.getViewport({ scale: 2.0 }); // دقة عالية
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                
+                await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+                container.appendChild(canvas);
+            }
+            
+            container.style.display = 'block';
+            btnElement.innerText = "👁️ إخفاء كشف النقاط التفصيلي";
+
+        } catch (error) { 
+            alert("حدث خطأ في عرض التفاصيل."); 
+            btnElement.innerText = "👁️ عرض كشف النقاط التفصيلي";
+        } finally { 
+            btnElement.disabled = false; 
+        }
     }
 </script>
 
