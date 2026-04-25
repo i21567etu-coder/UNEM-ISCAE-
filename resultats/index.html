@@ -230,6 +230,10 @@
                     <option value="IG">Informatique de Gestion (IG)</option>
                     <option value="TCM">Techniques Commerciales (TCM)</option>
                     <option value="SAE">SAE</option>
+                    <option value="DI">DI</option>
+                    <option value="FCFP">FCFP</option>
+                    <option value="IGFP">IGFP</option>
+                    <option value="RT">RT</option>
                 </select>
             </div>
             <div class="form-group">
@@ -260,7 +264,18 @@
         <div class="form-group"><label>السنة الجامعية:</label><select id="t20-year"></select></div>
         <div class="form-group">
             <label>التخصص (Filière)</label>
-            <select id="t20-major"><option value="BA">Banque Assurance (BA)</option><option value="FC">Finance Comptabilité (FC)</option><option value="GRH">Gestion des RH (GRH)</option><option value="IG">Informatique de Gestion (IG)</option><option value="TCM">Techniques Commerciales (TCM)</option><option value="SAE">SAE</option></select>
+            <select id="t20-major">
+                <option value="BA">Banque Assurance (BA)</option>
+                <option value="FC">Finance Comptabilité (FC)</option>
+                <option value="GRH">Gestion des RH (GRH)</option>
+                <option value="IG">Informatique de Gestion (IG)</option>
+                <option value="TCM">Techniques Commerciales (TCM)</option>
+                <option value="SAE">SAE</option>
+                <option value="DI">DI</option>
+                <option value="FCFP">FCFP</option>
+                <option value="IGFP">IGFP</option>
+                <option value="RT">RT</option>
+            </select>
         </div>
         <div class="form-group">
             <label>المستوى (Niveau)</label>
@@ -716,7 +731,6 @@
             const card = document.createElement('div'); card.id = cardId; card.className = 'result-card'; card.style.display = 'block';
             let shareBtnHtml = ''; if (isValid) shareBtnHtml = `<button class="share-btn" onclick="shareResultCard('${cardId}', '${f.semester}', this)"><i class="fas fa-share-alt"></i> مشاركة النتيجة</button>`;
             
-            // التعديل: استبدال زر التحميل بزر العرض المباشر وإضافة حاوية (Container) للصورة المدمجة
             card.innerHTML = `
                 <div class="card-header-custom"><div class="semester-badge">${f.academic_year} | ${f.major} - ${f.semester}</div><h2 class="student-name">${s.name}</h2></div>
                 <div class="student-info"><div class="info-row"><span>رقم التسجيل:</span> <span class="info-val">${s.id}</span></div><div class="info-row"><span>المعدل:</span> <span class="info-val" style="color:var(--primary);">${s.avg}</span></div><div class="info-row"><span>الترتيب:</span> <span class="info-val" style="color:var(--secondary);">${s.rank}</span></div><div class="info-row"><span>القرار:</span> <span class="info-val ${isValid?'decision-valid':'decision-ratt'}">${s.decision}</span></div></div>
@@ -751,11 +765,9 @@
 
     function triggerQuickSearch(id) { document.getElementById('matricule').value = id; searchAllSemesters(); }
 
-    // التعديل الكبير: عرض الـ PDF كصورة مباشرة داخل الموقع بدلاً من تنزيله
     async function viewPreciseDetails(studentId, pdfUrl, btnElement, cardId) {
         const container = document.getElementById(`details-container-${cardId}`);
         
-        // إذا كان معروضاً، قم بإخفائه
         if (container.innerHTML !== '') {
             if(container.style.display === 'block') {
                 container.style.display = 'none';
@@ -771,7 +783,6 @@
         btnElement.innerText = "⏳ جاري استخراج التفاصيل لعرضها...";
 
         try {
-            // استخدام نفس الذكاء القديم في القص لتحديد المربع الخاص بالطالب
             const existingPdfBytes = await fetch(pdfUrl).then(res => res.arrayBuffer()); 
             const loadingTask = pdfjsLib.getDocument({ data: existingPdfBytes }); 
             const pdfDocjs = await loadingTask.promise;
@@ -810,7 +821,6 @@
                 newPdf.addPage(page2); 
             }
             
-            // تحويل الـ PDF المقصوص إلى صورة (Canvas)
             const pdfBytes = await newPdf.save();
             const croppedPdfjs = await pdfjsLib.getDocument({ data: pdfBytes }).promise;
             
@@ -818,7 +828,7 @@
 
             for(let p = 1; p <= croppedPdfjs.numPages; p++) {
                 const page = await croppedPdfjs.getPage(p);
-                const viewport = page.getViewport({ scale: 2.0 }); // دقة عالية
+                const viewport = page.getViewport({ scale: 2.0 }); 
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
                 canvas.width = viewport.width;
