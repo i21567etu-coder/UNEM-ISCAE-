@@ -330,6 +330,217 @@
     const cheerSound = new Audio('https://actions.google.com/sounds/v1/crowds/crowd_cheer.ogg');
     popSound.volume = 0.8; cheerSound.volume = 0.5;
 
+    /* ============================================================
+       PDF SPLITTER — One student per page, precise slicing
+       Same algorithm used in the standalone splitter.
+       ============================================================ */
+    const SPLIT_SCALE = 2;
+    const STUDENT_ID_RE = /^I\d{4,7}$/;
+
+    // Reliably find where the page header ends, using the header text fingerprint.
+    // The page header always contains "Page X / Y" and a date like "dd/mm/yyyy".
+    // We use them as anchors and include any items that share their visual line.
+    function detectHeaderBottom(items, canvasHeight) {
+        if (!items.length) return 0;
+        const looksLikeHeader = (s) =>
+            /Page\s+\d+\s*\/\s*\d+/i.test(s) ||
+            /\d{1,2}\/\d{1,2}\/\d{2,4}/.test(s) ||
+            /^L\d\b/.test(s) || /^M\d\b/.test(s);
+        const signals = items.filter(it => it.yTop < canvasHeight * 0.18 && looksLikeHeader(it.str));
+        if (!signals.length) {
+            const veryTop = items.filter(it => it.yTop < canvasHeight * 0.04);
+            if (!veryTop.length) return 0;
+            return Math.max(...veryTop.map(it => it.yBottom)) + 3;
+        }
+        const bandMinTop    = Math.min(...signals.map(it => it.yTop));
+        const bandMaxBottom = Math.max(...signals.map(it => it.yBottom));
+        const tolerance = 4;
+        const headerBand = items.filter(it =>
+            it.yBottom <= bandMaxBottom + tolerance &&
+            it.yTop    >= bandMinTop - tolerance
+        );
+        const bottom = Math.max(...headerBand.map(it => it.yBottom));
+        return Math.min(bottom + 3, canvasHeight * 0.12);
+    }
+
+    // Renders all pages of a PDF to canvases and collects positioned text items.
+    async function renderPdfPagesWithText(pdf, onProgress) {
+        const pages = [];
+        for (let i = 1; i <= pdf.numPages; i++) {
+            if (onProgress) onProgress(i, pdf.numPages);
+            const page = await pdf.getPage(i);
+            const viewport = page.getViewport({ scale: SPLIT_SCALE });
+            const canvas = document.createElement('canvas');
+            canvas.width  = viewport.width;
+            canvas.height = viewport.height;
+            const ctx = canvas.getContext('2d');
+            await page.render({ canvasContext: ctx, viewport }).promise;
+
+            const tc = await page.getTextContent();
+            const items = tc.items
+                .filter(it => it.str && it.str.trim().length)
+                .map(it => {
+                    const tx = pdfjsLib.Util.transform(viewport.transform, it.transform);
+                    const x = tx[4];
+                    const yBaseline = tx[5];
+                    const height = Math.abs(tx[3]) || Math.abs(tx[0]) || 10;
+                    return {
+                        x,
+                        yTop: yBaseline - height,
+                        yBottom: yBaseline,
+                        str: it.str.trim()
+                    };
+                });
+            pages.push({ canvas, viewport, items });
+        }
+        return pages;
+    }
+
+    // Computes per-student segments (start page/Y → end page/Y) from rendered pages.
+    function computeStudentSegments(pages) {
+        const headerBottom = pages.map(p => detectHeaderBottom(p.items, p.canvas.height));
+
+        const allMatchesRaw = [];
+        pages.forEach((p, pageIdx) => {
+            for (const it of p.items) {
+                if (STUDENT_ID_RE.test(it.str)) {
+                    allMatchesRaw.push({ pageIdx, yTop: it.yTop, x: it.x, id: it.str });
+                }
+            }
+        });
+        if (allMatchesRaw.length === 0) return { segments: [], headerBottom };
+
+        const globalMinX = Math.min(...allMatchesRaw.map(m => m.x));
+        const studentMatches = allMatchesRaw.filter(m => Math.abs(m.x - globalMinX) < 30);
+        studentMatches.sort((a, b) => a.pageIdx - b.pageIdx || a.yTop - b.yTop);
+
+        const segments = [];
+        for (let i = 0; i < studentMatches.length; i++) {
+            const cur  = studentMatches[i];
+            const next = studentMatches[i + 1];
+            const startPage = cur.pageIdx;
+            const startY    = Math.max(headerBottom[startPage], cur.yTop - 4);
+            let endPage, endY;
+            if (next) {
+                endPage = next.pageIdx;
+                endY    = Math.max(0, next.yTop);
+            } else {
+                endPage = pages.length - 1;
+                endY    = pages[endPage].canvas.height;
+            }
+            segments.push({ id: cur.id, startPage, startY, endPage, endY });
+        }
+        return { segments, headerBottom };
+    }
+
+    // Stitches one student's slices into a single canvas.
+    function buildStudentCanvas(pages, headerBottom, seg) {
+        const slices = [];
+        if (seg.startPage === seg.endPage) {
+            slices.push({ pageIdx: seg.startPage, yStart: seg.startY, yEnd: seg.endY });
+        } else {
+            slices.push({ pageIdx: seg.startPage, yStart: seg.startY, yEnd: pages[seg.startPage].canvas.height });
+            for (let p = seg.startPage + 1; p < seg.endPage; p++) {
+                slices.push({ pageIdx: p, yStart: headerBottom[p], yEnd: pages[p].canvas.height });
+            }
+            slices.push({ pageIdx: seg.endPage, yStart: headerBottom[seg.endPage], yEnd: seg.endY });
+        }
+        const validSlices = slices.filter(sl => sl.yEnd - sl.yStart > 4);
+        if (validSlices.length === 0) return null;
+
+        const width = pages[validSlices[0].pageIdx].canvas.width;
+        const totalHeight = validSlices.reduce((acc, sl) => acc + (sl.yEnd - sl.yStart), 0);
+        const combined = document.createElement('canvas');
+        combined.width  = width;
+        combined.height = totalHeight;
+        const cctx = combined.getContext('2d');
+        cctx.fillStyle = '#ffffff';
+        cctx.fillRect(0, 0, combined.width, combined.height);
+        let yOffset = 0;
+        for (const sl of validSlices) {
+            const src = pages[sl.pageIdx].canvas;
+            const sliceH = sl.yEnd - sl.yStart;
+            cctx.drawImage(src, 0, sl.yStart, width, sliceH, 0, yOffset, width, sliceH);
+            yOffset += sliceH;
+        }
+        return combined;
+    }
+
+    // Builds a brand-new PDF where every student is on its own A4 page.
+    // Returns { pdfBytes: Uint8Array, pageMap: { 'I12345': 0, ... } }
+    async function splitPdfByStudent(arrayBuffer, onStatus) {
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        const pages = await renderPdfPagesWithText(pdf, (i, total) => {
+            if (onStatus) onStatus(`جاري تحليل الصفحة ${i} من ${total}...`);
+        });
+        const { segments, headerBottom } = computeStudentSegments(pages);
+        if (segments.length === 0) {
+            throw new Error('لم يتم العثور على أي طالب في الملف.');
+        }
+
+        const { PDFDocument } = PDFLib;
+        const newPdf = await PDFDocument.create();
+        const pageMap = {};
+
+        const PAGE_W = 595.28; // A4 width  in pt
+        const PAGE_H = 841.89; // A4 height in pt
+        const MARGIN = 28;
+
+        for (let s = 0; s < segments.length; s++) {
+            if (onStatus) onStatus(`جاري إنشاء صفحة الطالب ${s + 1} من ${segments.length}...`);
+            const seg = segments[s];
+            const combined = buildStudentCanvas(pages, headerBottom, seg);
+            if (!combined) continue;
+
+            const dataUrl = combined.toDataURL('image/jpeg', 0.92);
+            const base64 = dataUrl.split(',')[1];
+            const bin = atob(base64);
+            const bytes = new Uint8Array(bin.length);
+            for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+
+            const jpg = await newPdf.embedJpg(bytes);
+            const page = newPdf.addPage([PAGE_W, PAGE_H]);
+
+            const availW = PAGE_W - 2 * MARGIN;
+            const availH = PAGE_H - 2 * MARGIN;
+            const ratio = combined.height / combined.width;
+            let imgW = availW;
+            let imgH = imgW * ratio;
+            if (imgH > availH) {
+                imgH = availH;
+                imgW = imgH / ratio;
+            }
+            const x = (PAGE_W - imgW) / 2;
+            const y = PAGE_H - MARGIN - imgH; // pdf-lib uses bottom-left origin
+
+            page.drawImage(jpg, { x, y, width: imgW, height: imgH });
+            pageMap[seg.id] = newPdf.getPageCount() - 1;
+
+            // Yield to UI
+            await new Promise(r => setTimeout(r, 0));
+        }
+
+        const pdfBytes = await newPdf.save();
+        return { pdfBytes, pageMap };
+    }
+
+    // Legacy fallback: when the PDF is NOT yet split (older uploads),
+    // run the same algorithm to slice out a single student's content
+    // into a stitched canvas appended to `container`.
+    async function renderStudentSliceLegacy(pdf, targetId, container) {
+        const pages = await renderPdfPagesWithText(pdf, null);
+        const { segments, headerBottom } = computeStudentSegments(pages);
+        const seg = segments.find(s => s.id === targetId);
+        if (!seg) throw new Error('Student not found');
+        const combined = buildStudentCanvas(pages, headerBottom, seg);
+        if (!combined) throw new Error('Empty slice');
+        container.innerHTML = '';
+        container.appendChild(combined);
+    }
+    /* ============================================================
+       END PDF SPLITTER
+       ============================================================ */
+
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW failed', err)); });
     }
@@ -342,10 +553,18 @@
 
     function populateAcademicYears() {
         const now = new Date(); const year = now.getFullYear(); const month = now.getMonth();
-        const startYear = month >= 8 ? year : year - 1; 
-        const currentAcYear = `${startYear}-${startYear + 1}`; const prevAcYear = `${startYear - 1}-${startYear}`;
-        const optionsHTML = `<option value="${currentAcYear}">${currentAcYear}</option><option value="${prevAcYear}">${prevAcYear}</option>`;
-        document.getElementById('up-year').innerHTML = optionsHTML; document.getElementById('t20-year').innerHTML = optionsHTML;
+        const startYear = month >= 8 ? year : year - 1;
+        const currentAcYear = `${startYear}-${startYear + 1}`;
+        const nextAcYear    = `${startYear + 1}-${startYear + 2}`;
+
+        // Admin upload form: current + next academic years.
+        document.getElementById('up-year').innerHTML =
+            `<option value="${currentAcYear}">${currentAcYear}</option>` +
+            `<option value="${nextAcYear}">${nextAcYear}</option>`;
+
+        // Public Top 20 form: only the current academic year.
+        document.getElementById('t20-year').innerHTML =
+            `<option value="${currentAcYear}">${currentAcYear}</option>`;
     }
 
     function updateUploadSemesters() { populateSemesters('up-level', 'up-semester'); }
@@ -517,6 +736,28 @@
             studentsArray.sort((a, b) => b.avgNum - a.avgNum);
             studentsArray.forEach((student, index) => { student.rank = index + 1; });
 
+            // === NEW: rebuild the PDF so each student is on its own page ===
+            // The output PDF replaces the one we upload, and we record the
+            // page number for every student so retrieval is instant later.
+            statusDiv.innerHTML = '⏳ جاري إعادة تنظيم الملف (طالب لكل صفحة)...';
+            try {
+                const splitResult = await splitPdfByStudent(finalPdfBytes, (msg) => {
+                    statusDiv.innerHTML = '⏳ ' + msg;
+                });
+                // Inject the page index into every student record.
+                studentsArray.forEach(s => {
+                    if (Object.prototype.hasOwnProperty.call(splitResult.pageMap, s.id)) {
+                        s.pageIndex = splitResult.pageMap[s.id];
+                    }
+                });
+                // Replace the upload payload with the reorganized PDF.
+                finalPdfBlob = new Blob([splitResult.pdfBytes], { type: 'application/pdf' });
+            } catch (splitErr) {
+                console.warn('Splitter failed, uploading original PDF as-is:', splitErr);
+                statusDiv.innerHTML = '⚠️ تعذرت إعادة التنظيم تلقائياً، سيتم رفع الملف الأصلي.';
+            }
+            // === END NEW ===
+
             statusDiv.innerHTML = '⏳ جاري رفع الملفات إلى الخادم وتحديث البيانات...';
 
             const uploadToStorage = async (fileData, fileName) => {
@@ -604,12 +845,27 @@
         const loader = document.getElementById('loader'); loader.style.display = 'block';
         try {
             let files;
-            if (globalFilesCache) { files = globalFilesCache; } 
+            if (globalFilesCache) { files = globalFilesCache; }
             else {
                 const { data, error } = await _supabase.from('results_metadata').select('*').order('created_at', { ascending: false });
-                if (error) throw error; globalFilesCache = data; files = data;
+                if (error) throw error;
+                // Defensive de-duplication: after appeals (التظلمات) the admin
+                // re-uploads the same (year, major, level, semester) tuple and
+                // we ALWAYS want only the most recent record to be displayed.
+                // Records are ordered desc by created_at, so the first
+                // occurrence of every tuple is the freshest one.
+                const seen = new Set();
+                const deduped = [];
+                for (const f of data) {
+                    const key = `${f.academic_year}|${f.major}|${f.level}|${f.semester}`;
+                    if (seen.has(key)) continue;
+                    seen.add(key);
+                    deduped.push(f);
+                }
+                globalFilesCache = deduped;
+                files = deduped;
             }
-            
+
             const cleanInput = matricule.replace(/\s+/g, '');
             const searchPromises = files.map(file => searchStudentInPDF(file, cleanInput));
             const rawResults = await Promise.all(searchPromises);
@@ -734,7 +990,7 @@
             card.innerHTML = `
                 <div class="card-header-custom"><div class="semester-badge">${f.academic_year} | ${f.major} - ${f.semester}</div><h2 class="student-name">${s.name}</h2></div>
                 <div class="student-info"><div class="info-row"><span>رقم التسجيل:</span> <span class="info-val">${s.id}</span></div><div class="info-row"><span>المعدل:</span> <span class="info-val" style="color:var(--primary);">${s.avg}</span></div><div class="info-row"><span>الترتيب:</span> <span class="info-val" style="color:var(--secondary);">${s.rank}</span></div><div class="info-row"><span>القرار:</span> <span class="info-val ${isValid?'decision-valid':'decision-ratt'}">${s.decision}</span></div></div>
-                <button class="view-details-btn" onclick="viewPreciseDetails('${s.id}', '${f.details_url}', this, '${cardId}')">👁️ عرض كشف النقاط التفصيلي</button>
+                <button class="view-details-btn" onclick="viewPreciseDetails('${s.id}', '${f.details_url}', this, '${cardId}', ${Number.isInteger(s.pageIndex) ? s.pageIndex : 'null'})">👁️ عرض كشف النقاط التفصيلي</button>
                 <div id="details-container-${cardId}" class="details-canvas-container"></div>
                 ${shareBtnHtml}`;
             container.appendChild(card);
@@ -765,11 +1021,12 @@
 
     function triggerQuickSearch(id) { document.getElementById('matricule').value = id; searchAllSemesters(); }
 
-    async function viewPreciseDetails(studentId, pdfUrl, btnElement, cardId) {
+    async function viewPreciseDetails(studentId, pdfUrl, btnElement, cardId, pageIndex) {
         const container = document.getElementById(`details-container-${cardId}`);
-        
+
+        // Toggle if already rendered
         if (container.innerHTML !== '') {
-            if(container.style.display === 'block') {
+            if (container.style.display === 'block') {
                 container.style.display = 'none';
                 btnElement.innerText = "👁️ عرض كشف النقاط التفصيلي";
             } else {
@@ -779,73 +1036,39 @@
             return;
         }
 
-        btnElement.disabled = true; 
+        btnElement.disabled = true;
         btnElement.innerText = "⏳ جاري استخراج التفاصيل لعرضها...";
 
         try {
-            const existingPdfBytes = await fetch(pdfUrl).then(res => res.arrayBuffer()); 
-            const loadingTask = pdfjsLib.getDocument({ data: existingPdfBytes }); 
-            const pdfDocjs = await loadingTask.promise;
-            
-            let startPage = -1, startY = 0, endY = 0, spansToNextPage = false, nextPageEndY = 0;
-            
-            for (let i = 1; i <= pdfDocjs.numPages; i++) {
-                const page = await pdfDocjs.getPage(i); const content = await page.getTextContent(); const items = content.items;
-                for (let j=0; j<items.length; j++) {
-                    if (items[j].str.replace(/\s+/g, '').includes(studentId)) {
-                        startPage = i - 1; startY = items[j].transform[5];
-                        let nextStudents = items.filter(itm => itm.str.replace(/\s+/g, '').match(/I\d{4,}/) && itm.transform[5] < startY - 10);
-                        if (nextStudents.length > 0) { nextStudents.sort((a, b) => b.transform[5] - a.transform[5]); endY = nextStudents[0].transform[5] + 5; } 
-                        else { endY = 20; if (i < pdfDocjs.numPages) { const nextPage = await pdfDocjs.getPage(i + 1); const nextContent = await nextPage.getTextContent(); let page2Students = nextContent.items.filter(itm => itm.str.replace(/\s+/g, '').match(/I\d{4,}/)); if (page2Students.length > 0) { spansToNextPage = true; page2Students.sort((a, b) => b.transform[5] - a.transform[5]); nextPageEndY = page2Students[0].transform[5] + 5; } } }
-                        break;
-                    }
-                }
-                if (startPage !== -1) break;
-            }
+            const existingPdfBytes = await fetch(pdfUrl).then(res => res.arrayBuffer());
+            const pdfDocjs = await pdfjsLib.getDocument({ data: existingPdfBytes }).promise;
 
-            const { PDFDocument } = PDFLib; 
-            const pdfDoc = await PDFDocument.load(existingPdfBytes); 
-            const newPdf = await PDFDocument.create();
-            
-            const[page1] = await newPdf.copyPages(pdfDoc,[startPage]); 
-            const { width, height } = page1.getSize();
-            const cropTop = Math.min(height, startY + 35); 
-            const cropBottom = spansToNextPage ? 0 : endY; 
-            
-            page1.setCropBox(0, cropBottom, width, cropTop - cropBottom); 
-            newPdf.addPage(page1);
-            
-            if (spansToNextPage) { 
-                const[page2] = await newPdf.copyPages(pdfDoc,[startPage + 1]); 
-                page2.setCropBox(0, nextPageEndY, width, height - nextPageEndY); 
-                newPdf.addPage(page2); 
-            }
-            
-            const pdfBytes = await newPdf.save();
-            const croppedPdfjs = await pdfjsLib.getDocument({ data: pdfBytes }).promise;
-            
-            container.innerHTML = ''; 
-
-            for(let p = 1; p <= croppedPdfjs.numPages; p++) {
-                const page = await croppedPdfjs.getPage(p);
-                const viewport = page.getViewport({ scale: 2.0 }); 
+            // Branch 1: NEW uploads — PDF is already organized one student per page,
+            // and we know the exact page index. Render that single page directly.
+            if (Number.isInteger(pageIndex) && pageIndex >= 0 && pageIndex < pdfDocjs.numPages) {
+                const page = await pdfDocjs.getPage(pageIndex + 1);
+                const viewport = page.getViewport({ scale: 2.0 });
                 const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                canvas.width = viewport.width;
+                canvas.width  = viewport.width;
                 canvas.height = viewport.height;
-                
-                await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+                await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+                container.innerHTML = '';
                 container.appendChild(canvas);
+            } else {
+                // Branch 2: LEGACY uploads — original raw minutes PDF.
+                // Use the precise splitter algorithm to slice out this single
+                // student (handles multi-page students, header trimming, etc.).
+                await renderStudentSliceLegacy(pdfDocjs, studentId, container);
             }
-            
+
             container.style.display = 'block';
             btnElement.innerText = "👁️ إخفاء كشف النقاط التفصيلي";
-
-        } catch (error) { 
-            alert("حدث خطأ في عرض التفاصيل."); 
+        } catch (error) {
+            console.error(error);
+            alert("حدث خطأ في عرض التفاصيل.");
             btnElement.innerText = "👁️ عرض كشف النقاط التفصيلي";
-        } finally { 
-            btnElement.disabled = false; 
+        } finally {
+            btnElement.disabled = false;
         }
     }
 </script>
