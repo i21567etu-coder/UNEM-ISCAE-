@@ -315,9 +315,51 @@
             .modal-overlay { width: calc(100vw / 0.85) !important; height: calc(100dvh / 0.85) !important; }
             .container { max-width: 1500px; }
         }
+
+        /* ===== شريط الإعلانات ===== */
+        #announcement-bar {
+            display:none; background:linear-gradient(90deg,#1e3a8a,#2563eb,#1e3a8a);
+            color:white; text-align:center; padding:9px 50px; font-size:0.92rem;
+            font-weight:700; position:relative; z-index:200;
+            box-shadow:0 2px 8px rgba(37,99,235,0.4); flex-shrink:0;
+        }
+        body.dark-mode #announcement-bar { background:linear-gradient(90deg,#1e3a8a,#1d4ed8,#1e3a8a); }
+        #announcement-bar.show { display:block; }
+        #announcement-bar.clickable { cursor:pointer; }
+        #announcement-bar.clickable:hover { filter:brightness(1.12); }
+        #announcement-bar .ann-close-btn {
+            position:absolute; inset-inline-end:12px; top:50%; transform:translateY(-50%);
+            background:rgba(255,255,255,0.25); border:none; color:white; width:28px; height:28px;
+            border-radius:50%; cursor:pointer; font-size:1.15rem; font-weight:900;
+            display:flex; align-items:center; justify-content:center; transition:var(--transition);
+            z-index:2;
+        }
+        #announcement-bar .ann-close-btn:hover { background:rgba(255,255,255,0.45); transform:translateY(-50%) scale(1.1); }
+        #announcement-bar .ann-link-hint {
+            font-size:0.78rem; opacity:0.82; margin-inline-start:7px; font-weight:600;
+            border:1px solid rgba(255,255,255,0.45); border-radius:20px; padding:1px 8px; vertical-align:middle;
+        }
+        #ann-admin-section { border-top:2px dashed var(--border-color); padding-top:18px; margin-top:18px; }
+        #ann-admin-section h3 { color:var(--primary-color); font-weight:800; margin:0 0 14px; font-size:1.05rem; text-align:center; }
+        .ann-list-item { background:var(--bg-color); border:1px solid var(--border-color); border-radius:10px; padding:10px 14px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+        .ann-list-item .ann-msg { font-weight:700; font-size:0.9rem; color:var(--text-primary); flex:1; word-break:break-word; }
+        .ann-list-item .ann-dates { font-size:0.75rem; color:var(--text-secondary); font-weight:600; margin-top:3px; }
+        .ann-list-item .ann-link-tag { font-size:0.73rem; color:#2563eb; font-weight:700; word-break:break-all; margin-top:2px; }
+        .ann-list-item .ann-del-btn { background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); color:#ef4444; border-radius:8px; padding:5px 10px; cursor:pointer; font-size:0.8rem; font-weight:800; flex-shrink:0; transition:var(--transition); }
+        .ann-list-item .ann-del-btn:hover { background:#ef4444; color:white; }
+        .ann-active-badge { display:inline-block; background:#10b981; color:white; font-size:0.7rem; padding:2px 7px; border-radius:20px; margin-inline-start:6px; font-weight:800; vertical-align:middle; }
+        .ann-expired-badge { background:#94a3b8; }
     </style>
 </head>
 <body>
+
+    <!-- شريط الإعلانات -->
+    <div id="announcement-bar">
+        <span id="announcement-icon">&#128226;</span>
+        <span id="announcement-text"></span>
+        <span id="announcement-link-hint" class="ann-link-hint" style="display:none;">اضغط للمزيد &#8593;</span>
+        <button class="ann-close-btn" onclick="event.stopPropagation(); closeAnnouncementBar();" title="إغلاق">&#x00D7;</button>
+    </div>
 
     <div class="top-slogan" data-i18n="slogan">الوطني يد تبني و أخرى تناضل</div>
 
@@ -356,14 +398,8 @@
                     <p data-i18n="card_results_desc">الاستعلام عن النتائج</p>
                 </div>
 
-                <!-- تم التعديل هنا ليوجه لـ /chalange مباشرة -->
-                <div class="semester-card" onclick="logSupabaseAnalytics('دخول قسم', 'المسابقات'); window.location.href='/chalange'">
-                    <div class="icon-box"><i class="fas fa-trophy"></i></div>
-                    <h3 data-i18n="card_competitions">المسابقات الثقافية والرياضية</h3>
-                    <p data-i18n="card_competitions_desc">التسجيل ومتابعة المنافسات</p>
-                </div>
 
-                <div class="semester-card" onclick="openUnionModal()">
+                <div class="semester-card wide-card" onclick="openUnionModal()" style="--theme-color:#16a34a; --theme-light:rgba(22,163,74,0.2); background-color:rgba(22,163,74,0.04);">
                     <div class="icon-box"><i class="fas fa-info-circle"></i></div>
                     <h3 data-i18n="card_about">عن الاتحاد</h3>
                     <p data-i18n="card_about_desc">نبذة تعريفية وتاريخية</p>
@@ -549,6 +585,34 @@
                 <div id="upload-status" class="status-msg"></div>
                 <button type="submit" id="upload-submit-btn" class="btn-submit" data-i18n="btn_upload">بدء الرفع</button>
             </form>
+
+            <!-- قسم إدارة الإعلانات -->
+            <div id="ann-admin-section">
+                <h3>&#128226; إدارة شريط الإعلانات</h3>
+                <div class="form-group" style="margin-bottom:10px;">
+                    <label style="font-weight:800;font-size:0.9rem;display:block;margin-bottom:5px;">نص الإعلان</label>
+                    <input type="text" id="ann-input-msg" placeholder="أدخل نص الإعلان..." style="width:100%;padding:10px;border:2px solid var(--border-color);border-radius:10px;font-family:inherit;font-weight:600;font-size:0.92rem;color:var(--text-primary);background:var(--bg-color);box-sizing:border-box;">
+                </div>
+                <div class="form-group" style="margin-bottom:10px;">
+                    <label style="font-weight:800;font-size:0.9rem;display:block;margin-bottom:5px;">&#128279; رابط (اختياري — يفتح عند الضغط على الإعلان)</label>
+                    <input type="url" id="ann-input-url" placeholder="https://example.com" style="width:100%;padding:10px;border:2px solid var(--border-color);border-radius:10px;font-family:inherit;font-weight:600;font-size:0.88rem;color:var(--text-primary);background:var(--bg-color);box-sizing:border-box;direction:ltr;">
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+                    <div>
+                        <label style="font-weight:800;font-size:0.85rem;display:block;margin-bottom:5px;">&#128197; تاريخ البداية</label>
+                        <input type="datetime-local" id="ann-input-start" style="width:100%;padding:10px;border:2px solid var(--border-color);border-radius:10px;font-family:inherit;font-weight:600;background:var(--bg-color);color:var(--text-primary);box-sizing:border-box;">
+                    </div>
+                    <div>
+                        <label style="font-weight:800;font-size:0.85rem;display:block;margin-bottom:5px;">&#128197; تاريخ الانتهاء</label>
+                        <input type="datetime-local" id="ann-input-end" style="width:100%;padding:10px;border:2px solid var(--border-color);border-radius:10px;font-family:inherit;font-weight:600;background:var(--bg-color);color:var(--text-primary);box-sizing:border-box;">
+                    </div>
+                </div>
+                <button onclick="saveAnnouncement()" class="btn-submit" style="margin-bottom:14px;background:linear-gradient(135deg,#1e3a8a,#2563eb);">&#10133; حفظ ونشر الإعلان</button>
+                <div id="ann-status" class="status-msg" style="margin-bottom:10px;"></div>
+                <div id="ann-list-container">
+                    <p id="ann-loading-msg" style="text-align:center;color:var(--text-secondary);font-size:0.85rem;font-weight:700;">&#9203; جاري التحميل...</p>
+                </div>
+            </div>
             <button onclick="closeUploadModal()" class="btn-submit btn-cancel" style="margin-top: 8px;" data-i18n="btn_close">إغلاق</button>
         </div>
     </div>
@@ -587,10 +651,6 @@
                 <div style="flex:1; min-width: 200px; background: rgba(15, 81, 50, 0.05); padding: 25px; border-radius: 15px; border: 1px solid var(--border-color); text-align: center; transition: transform 0.3s;">
                     <h3 id="stat-results" style="margin: 0; font-size: 2.5rem; color: var(--primary-color);">0</h3>
                     <p style="margin: 10px 0 0 0; font-size: 1rem; font-weight: 800; color: var(--text-secondary);">دخول النتائج (فريد)</p>
-                </div>
-                <div style="flex:1; min-width: 200px; background: rgba(15, 81, 50, 0.05); padding: 25px; border-radius: 15px; border: 1px solid var(--border-color); text-align: center; transition: transform 0.3s;">
-                    <h3 id="stat-comps" style="margin: 0; font-size: 2.5rem; color: var(--primary-color);">0</h3>
-                    <p style="margin: 10px 0 0 0; font-size: 1rem; font-weight: 800; color: var(--text-secondary);">المسابقات (فريد)</p>
                 </div>
             </div>
 
@@ -686,8 +746,6 @@
                 search_placeholder: "ابحث عن مادة أو ملف (يكفي حرف واحد)...",
                 card_summaries: "الملخصات والأرشيف",
                 card_summaries_desc: "جميع التخصصات (L1, L2, L3)",
-                card_competitions: "المسابقات الثقافية والرياضية",
-                card_competitions_desc: "التسجيل ومتابعة المنافسات",
                 card_results: "نتائج المعهد",
                 card_results_desc: "الاستعلام عن النتائج",
                 card_about: "عن الاتحاد",
@@ -765,8 +823,6 @@
                 search_placeholder: "Rechercher une matière ou un fichier...",
                 card_summaries: "Résumés et Archives",
                 card_summaries_desc: "Toutes les filières (L1, L2, L3)",
-                card_competitions: "Compétitions Culturelles et Sportives",
-                card_competitions_desc: "Inscription et suivi des compétitions",
                 card_results: "Résultats de l'Institut",
                 card_results_desc: "Consulter les résultats",
                 card_about: "À propos de l'Union",
@@ -887,8 +943,8 @@
         document.getElementById('copyright-year').textContent = new Date().getFullYear();
         setLanguage(currentLang);
 
-        const SUPABASE_URL = 'https://rcdaxtretxskeyghxugm.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_OupfdnKe5eQmqULV46O0wQ_xUglAncv'; 
+        const SUPABASE_URL = 'https://cbaswqaufawdsvadizyi.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNiYXN3cWF1ZmF3ZHN2YWRpenlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4Mzg1MTQsImV4cCI6MjA5MzQxNDUxNH0.tv-u05JTkUFFkdYgR4gUyRb0TZKtDEwEwRQLRQSljHU'; 
         let supabaseClient; try { supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } catch (e) {}
 
         const repoOwner = "i21567etu-coder"; 
@@ -956,6 +1012,7 @@
 
         window.addEventListener('load', () => {
             logSupabaseAnalytics('زيارة الموقع', 'الصفحة الرئيسية');
+            loadActiveAnnouncement();
         });
 
         function applyAnalyticsFilter() {
@@ -984,7 +1041,6 @@
 
                 document.getElementById('stat-visits').textContent = "...";
                 document.getElementById('stat-results').textContent = "...";
-                document.getElementById('stat-comps').textContent = "...";
 
                 let allData = [];
                 let from = 0;
@@ -1016,7 +1072,6 @@
 
                 let uniqueVisits = 0;
                 let uniqueResults = 0;
-                let uniqueComps = 0;
 
                 let dailyVisitsTotal = {};
                 let dailyResultsTotal = {}; 
@@ -1037,9 +1092,6 @@
                         dailyResultsTotal[dateStr] = (dailyResultsTotal[dateStr] || 0) + 1;
                     }
 
-                    if (row.action_type.startsWith('دخول قسم') && row.action_detail === 'المسابقات') {
-                        if (isUnique) uniqueComps++;
-                    }
                     
                     if (row.action_type.startsWith('دخول تخصص')) {
                         specCountsTotal[row.action_detail] = (specCountsTotal[row.action_detail] || 0) + 1;
@@ -1052,7 +1104,6 @@
 
                 document.getElementById('stat-visits').textContent = uniqueVisits;
                 document.getElementById('stat-results').textContent = uniqueResults;
-                document.getElementById('stat-comps').textContent = uniqueComps;
 
                 const sortedDatesVisits = Object.keys(dailyVisitsTotal).sort();
                 const sortedDailyVisits = {};
@@ -1164,6 +1215,101 @@ function closeAnalyticsDashboard() {
             else { isAdminLoggedIn = true; document.getElementById('admin-login-overlay').classList.add('hidden'); errorMsg.classList.add('hidden'); loginBtn.textContent = i18n[currentLang]['btn_login']; loginBtn.disabled = false; openUploadModal(); }
         }
         function closeAdminLogin() { document.getElementById('admin-login-overlay').classList.add('hidden'); }
+
+        // ==================== إدارة شريط الإعلانات ====================
+        let _shownAnnId = null;
+        let _shownAnnUrl = null;
+
+        async function loadActiveAnnouncement() {
+            if (!supabaseClient) return;
+            try {
+                const now = new Date().toISOString();
+                const { data } = await supabaseClient
+                    .from('announcements').select('*')
+                    .lte('start_date', now).gte('end_date', now)
+                    .order('created_at', { ascending: false }).limit(1);
+                if (!data || !data.length) return;
+                const ann = data[0];
+                if (String(localStorage.getItem('unem_dismissed_ann')) === String(ann.id)) return;
+                _shownAnnId = ann.id;
+                _shownAnnUrl = ann.link_url || null;
+                document.getElementById('announcement-text').textContent = ann.message;
+                const bar = document.getElementById('announcement-bar');
+                const hint = document.getElementById('announcement-link-hint');
+                if (_shownAnnUrl) {
+                    bar.classList.add('clickable');
+                    bar.onclick = function(e) { if (!e.target.classList.contains('ann-close-btn')) window.open(_shownAnnUrl, '_blank', 'noopener'); };
+                    hint.style.display = 'inline';
+                } else {
+                    bar.classList.remove('clickable');
+                    bar.onclick = null;
+                    hint.style.display = 'none';
+                }
+                bar.classList.add('show');
+            } catch(e) {}
+        }
+
+        function closeAnnouncementBar() {
+            document.getElementById('announcement-bar').classList.remove('show');
+            if (_shownAnnId) localStorage.setItem('unem_dismissed_ann', String(_shownAnnId));
+        }
+
+        async function loadAnnouncementsAdmin() {
+            const container = document.getElementById('ann-list-container');
+            if (!supabaseClient || !container) return;
+            const loadMsg = document.getElementById('ann-loading-msg');
+            try {
+                const { data } = await supabaseClient.from('announcements').select('*').order('created_at', { ascending: false });
+                if (loadMsg) loadMsg.style.display = 'none';
+                if (!data || !data.length) {
+                    container.innerHTML = '<p style="text-align:center;color:var(--text-secondary);font-size:0.85rem;font-weight:700;">لا توجد إعلانات حالياً.</p>';
+                    return;
+                }
+                const now = new Date();
+                container.innerHTML = data.map(ann => {
+                    const active = new Date(ann.start_date) <= now && new Date(ann.end_date) >= now;
+                    const badge = active
+                        ? '<span class="ann-active-badge">نشط</span>'
+                        : '<span class="ann-active-badge ann-expired-badge">منتهي</span>';
+                    const s = new Date(ann.start_date).toLocaleString('ar-MA');
+                    const e = new Date(ann.end_date).toLocaleString('ar-MA');
+                    const linkLine = ann.link_url ? `<div class="ann-link-tag">🔗 ${ann.link_url}</div>` : '';
+                    return `<div class="ann-list-item"><div style="flex:1;"><div class="ann-msg">${ann.message}${badge}</div>${linkLine}<div class="ann-dates">من: ${s} — إلى: ${e}</div></div><button class="ann-del-btn" onclick="deleteAnnouncement(${ann.id})">🗑 حذف</button></div>`;
+                }).join('');
+            } catch(e) { if (loadMsg) loadMsg.textContent = 'حدث خطأ في التحميل.'; }
+        }
+
+        async function saveAnnouncement() {
+            const msg   = document.getElementById('ann-input-msg').value.trim();
+            const url   = document.getElementById('ann-input-url').value.trim();
+            const start = document.getElementById('ann-input-start').value;
+            const end   = document.getElementById('ann-input-end').value;
+            const status = document.getElementById('ann-status');
+            if (!msg || !start || !end) { status.textContent = '⚠️ يرجى ملء نص الإعلان والتواريخ.'; status.className = 'status-msg error'; return; }
+            if (new Date(start) >= new Date(end)) { status.textContent = '⚠️ تاريخ البداية يجب أن يكون قبل تاريخ الانتهاء.'; status.className = 'status-msg error'; return; }
+            if (!supabaseClient) return;
+            try {
+                const row = { message: msg, start_date: new Date(start).toISOString(), end_date: new Date(end).toISOString() };
+                if (url) row.link_url = url;
+                const { error } = await supabaseClient.from('announcements').insert([row]);
+                if (error) throw error;
+                status.textContent = '✅ تم نشر الإعلان بنجاح!'; status.className = 'status-msg success';
+                document.getElementById('ann-input-msg').value = '';
+                document.getElementById('ann-input-url').value = '';
+                document.getElementById('ann-input-start').value = '';
+                document.getElementById('ann-input-end').value = '';
+                loadAnnouncementsAdmin(); loadActiveAnnouncement();
+                setTimeout(() => { status.textContent = ''; }, 4000);
+            } catch(e) { status.textContent = '❌ خطأ: ' + (e.message || e); status.className = 'status-msg error'; }
+        }
+
+        async function deleteAnnouncement(id) {
+            if (!confirm('هل تريد حذف هذا الإعلان؟')) return;
+            if (!supabaseClient) return;
+            await supabaseClient.from('announcements').delete().eq('id', id);
+            loadAnnouncementsAdmin(); loadActiveAnnouncement();
+        }
+
 
         function hideAll() { document.querySelectorAll('.section-box').forEach(el => el.classList.add('hidden')); }
         
@@ -1459,7 +1605,7 @@ function closeAnalyticsDashboard() {
         
         function openWebViewer(url, title) { document.getElementById('web-viewer-title').textContent = title; document.getElementById('web-frame').src = url; document.getElementById('web-viewer-overlay').classList.remove('hidden'); }
         function closeWebViewer() { document.getElementById('web-viewer-overlay').classList.add('hidden'); document.getElementById('web-frame').src = ''; }
-        function openUploadModal() { document.getElementById('upload-modal-overlay').classList.remove('hidden'); updateUploadSubjects(); }
+        function openUploadModal() { document.getElementById('upload-modal-overlay').classList.remove('hidden'); updateUploadSubjects(); loadAnnouncementsAdmin(); }
         function closeUploadModal() { document.getElementById('upload-modal-overlay').classList.add('hidden'); document.getElementById('upload-status').textContent = ''; document.getElementById('upload-form').reset(); }
 
         function updateUploadSubjects() {
