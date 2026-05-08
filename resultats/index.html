@@ -24,133 +24,551 @@
     <!-- مكتبة Supabase -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 
+    <!-- خطوط احترافية للعربية والفرنسية -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
     <style>
         :root { 
             --primary: #005C29;
+            --primary-dark: #00461f;
+            --primary-light: #10b981;
             --secondary: #2563eb;
-            --bg-gradient: linear-gradient(135deg, #f0fdf4 0%, #e6f7ed 100%);
-            --text: #1a2e1a;
-            --radius: 15px;
+            --secondary-dark: #1d4ed8;
+            --accent: #f59e0b;
+            --bg-gradient: linear-gradient(160deg, #f7fcf9 0%, #eef9f3 50%, #e6f7ed 100%);
+            --header-gradient: linear-gradient(135deg, #003d1a 0%, #005C29 50%, #047a36 100%);
+            --text: #0f172a;
+            --text-muted: #475569;
+            --border-light: #e6f0ea;
+            --radius: 18px;
+            --radius-sm: 12px;
+            --shadow-sm: 0 2px 8px rgba(0, 92, 41, 0.06);
+            --shadow-md: 0 8px 24px rgba(0, 92, 41, 0.08);
+            --shadow-lg: 0 20px 50px rgba(0, 92, 41, 0.12);
         }
 
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-gradient); margin: 0; padding: 15px; color: var(--text); direction: rtl; padding-bottom: 50px; }
+        * { box-sizing: border-box; }
+
+        body { 
+            font-family: 'Cairo', 'Tajawal', 'Inter', 'Segoe UI', Tahoma, sans-serif; 
+            background: var(--bg-gradient); 
+            background-attachment: fixed;
+            margin: 0; 
+            padding: 0; 
+            color: var(--text); 
+            direction: rtl; 
+            padding-bottom: 50px; 
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            line-height: 1.6;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                radial-gradient(circle at 15% 20%, rgba(16, 185, 129, 0.06) 0%, transparent 35%),
+                radial-gradient(circle at 85% 80%, rgba(37, 99, 235, 0.05) 0%, transparent 35%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body > * { position: relative; z-index: 1; }
         
         .loader { 
             display: none; 
             text-align: center; 
-            padding: 20px; 
-            font-weight: bold; 
+            padding: 24px; 
+            font-weight: 700; 
             color: var(--primary); 
-            font-size: 1.1rem;
+            font-size: 1.05rem;
             animation: pulse 1.5s infinite;
         }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.55; } 100% { opacity: 1; } }
         
         header { 
-            background: var(--primary); color: white; padding: 15px; 
-            text-align: center; border-bottom: 4px solid var(--secondary);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-radius: 0 0 15px 15px;
-            cursor: pointer; user-select: none;
+            background: var(--header-gradient); 
+            color: white; 
+            padding: 20px 18px; 
+            text-align: center; 
+            box-shadow: 0 8px 30px rgba(0, 70, 31, 0.25); 
+            border-radius: 0 0 24px 24px;
+            cursor: pointer; 
+            user-select: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        header::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent) 0%, var(--secondary) 50%, var(--primary-light) 100%);
         }
 
         .btn-home {
-            background: #10b981; color: white !important; text-decoration: none;
-            font-size: clamp(0.85rem, 3vw, 1rem); font-weight: bold; padding: 8px 12px; border-radius: 10px;
-            transition: all 0.3s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-            display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: white !important; 
+            text-decoration: none;
+            font-size: clamp(0.85rem, 3vw, 1rem); 
+            font-weight: 700; 
+            padding: 9px 16px; 
+            border-radius: 12px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            display: inline-flex; 
+            align-items: center; 
+            gap: 6px; 
+            white-space: nowrap;
         }
         .btn-home:hover {
-            background: #059669; transform: scale(1.05);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+            background: rgba(255, 255, 255, 0.25); 
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.25);
         }
 
-        header h1 { margin: 0; font-size: clamp(1.1rem, 4vw, 1.8rem); pointer-events: none; }
+        header h1 { 
+            margin: 0; 
+            font-size: clamp(1.2rem, 4.2vw, 2rem); 
+            pointer-events: none; 
+            font-weight: 900;
+            letter-spacing: 0.5px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
         
-        .top-dev { color: #ffffff; font-size: 0.8rem; margin-top: 5px; font-weight: bold; letter-spacing: 0.5px; opacity: 0.9; }
+        .top-dev { 
+            color: rgba(255, 255, 255, 0.9); 
+            font-size: 0.78rem; 
+            margin-top: 6px; 
+            font-weight: 700; 
+            letter-spacing: 1.2px; 
+            text-transform: uppercase;
+        }
         
-        .container { max-width: 800px; margin: 20px auto; padding: 5px; }
+        .container { max-width: 820px; margin: 28px auto; padding: 0 14px; }
         
-        .search-box { background: white; padding: 25px; border-radius: var(--radius); box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 30px; text-align: center; }
+        .search-box { 
+            background: white; 
+            padding: 32px 28px; 
+            border-radius: var(--radius); 
+            box-shadow: var(--shadow-lg);
+            margin-bottom: 32px; 
+            text-align: center;
+            border: 1px solid var(--border-light);
+            position: relative;
+            overflow: hidden;
+        }
 
-        .form-group { margin-bottom: 15px; text-align: right; }
-        label { display: block; margin-bottom: 8px; font-weight: bold; color: var(--primary); }
-        
-        select, input { width: 100%; padding: 12px; border: 2px solid #bbf7d0; border-radius: 10px; font-size: 1rem; box-sizing: border-box; outline: none; }
-        select:focus, input:focus { border-color: var(--primary); }
-        
-        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
-        
-        button { flex: 1; padding: 15px; border: none; border-radius: 10px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        
-        .btn-search { background: var(--primary); color: white; font-size: 1.1rem; }
-        .btn-top20 { background: var(--secondary); color: #ffffff; }
-        button:hover { transform: translateY(-2px); opacity: 0.95; }
+        .search-box::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 50%, var(--secondary) 100%);
+        }
 
-        #results-container { display: flex; flex-direction: column; gap: 20px; }
+        .search-box h3 {
+            color: var(--primary);
+            margin-top: 0;
+            margin-bottom: 8px;
+            font-size: 1.4rem;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+        }
+
+        .search-box > p {
+            color: var(--text-muted);
+            font-size: 0.92rem;
+            margin-bottom: 22px;
+            line-height: 1.6;
+        }
+
+        .form-group { margin-bottom: 16px; text-align: right; }
+        label { display: block; margin-bottom: 8px; font-weight: 700; color: var(--primary); font-size: 0.95rem; }
+        
+        select, input { 
+            width: 100%; 
+            padding: 13px 14px; 
+            border: 2px solid #d8eee2; 
+            border-radius: var(--radius-sm); 
+            font-size: 1rem; 
+            font-family: inherit;
+            background: #fafffd;
+            color: var(--text);
+            outline: none; 
+            transition: all 0.25s ease;
+        }
+        select:focus, input:focus { 
+            border-color: var(--primary); 
+            background: white;
+            box-shadow: 0 0 0 4px rgba(0, 92, 41, 0.08); 
+        }
+
+        input::placeholder { color: #94a3b8; }
+        
+        .btn-group { display: flex; gap: 12px; margin-top: 22px; }
+        
+        button { 
+            flex: 1; 
+            padding: 15px 16px; 
+            border: none; 
+            border-radius: var(--radius-sm); 
+            font-size: 1rem; 
+            font-weight: 700; 
+            font-family: inherit;
+            cursor: pointer; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            position: relative;
+            letter-spacing: 0.2px;
+        }
+        
+        .btn-search { 
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); 
+            color: white; 
+            font-size: 1.08rem; 
+            box-shadow: 0 6px 18px rgba(0, 92, 41, 0.28);
+        }
+        .btn-search:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 26px rgba(0, 92, 41, 0.36);
+        }
+        .btn-top20 { 
+            background: linear-gradient(135deg, var(--secondary) 0%, #3b82f6 100%); 
+            color: #ffffff;
+            box-shadow: 0 6px 18px rgba(37, 99, 235, 0.25);
+        }
+        .btn-top20:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 26px rgba(37, 99, 235, 0.32);
+        }
+
+        #results-container { display: flex; flex-direction: column; gap: 22px; }
 
         .result-card { 
-            background: white; border-radius: var(--radius); padding: 25px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08); display: none; 
-            animation: slideUp 0.5s ease; border-top: 6px solid var(--primary);
-            position: relative; scroll-margin-top: 20px; transition: all 0.3s ease;
+            background: white; 
+            border-radius: var(--radius); 
+            padding: 28px 26px; 
+            box-shadow: var(--shadow-lg); 
+            display: none; 
+            animation: slideUp 0.55s cubic-bezier(0.16, 1, 0.3, 1); 
+            border: 1px solid var(--border-light);
+            position: relative; 
+            scroll-margin-top: 20px; 
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .result-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 50%, var(--secondary) 100%);
+        }
+
+        .result-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 25px 60px rgba(0, 92, 41, 0.16);
+        }
+
+        /* تنبيه دورة الإستدراك (ثنائي اللغة) */
+        .rattrapage-notice {
+            background: linear-gradient(135deg, #fff8e6 0%, #fef3c7 100%);
+            border: 1.5px solid #f59e0b;
+            border-radius: var(--radius-sm);
+            padding: 14px 16px;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.12);
+            animation: noticePulse 2.5s ease-in-out infinite;
+        }
+
+        .rattrapage-notice .notice-icon {
+            font-size: 1.6rem;
+            line-height: 1;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .rattrapage-notice .notice-text {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .rattrapage-notice .notice-ar {
+            color: #92400e;
+            font-weight: 800;
+            font-size: 0.98rem;
+            line-height: 1.5;
+            direction: rtl;
+            text-align: right;
+        }
+
+        .rattrapage-notice .notice-fr {
+            color: #b45309;
+            font-weight: 600;
+            font-size: 0.88rem;
+            line-height: 1.5;
+            direction: ltr;
+            text-align: left;
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            font-style: italic;
+        }
+
+        @keyframes noticePulse {
+            0%, 100% { box-shadow: 0 4px 12px rgba(245, 158, 11, 0.12); }
+            50% { box-shadow: 0 6px 20px rgba(245, 158, 11, 0.28); }
         }
 
         .card-header-custom {
             text-align: center;
-            border-bottom: 2px solid #eee;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
+            border-bottom: 2px solid var(--border-light);
+            margin-bottom: 22px;
+            padding-bottom: 18px;
         }
         .semester-badge { 
             display: inline-block;
-            background: #f0fdf4; color: var(--primary); 
-            padding: 6px 15px; border-radius: 20px; font-size: 0.95rem; 
-            font-weight: bold; border: 1px solid #bbf7d0; direction: ltr; 
-            margin-bottom: 12px;
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); 
+            color: var(--primary); 
+            padding: 7px 18px; 
+            border-radius: 22px; 
+            font-size: 0.92rem; 
+            font-weight: 700; 
+            border: 1px solid #bbf7d0; 
+            direction: ltr; 
+            margin-bottom: 14px;
+            letter-spacing: 0.3px;
+            box-shadow: 0 2px 6px rgba(0, 92, 41, 0.08);
         }
+        /* اسم الطالب الطويل: ينزل إلى السطر التالي عند الحاجة في بطاقة النتائج */
         .student-name { 
             color: var(--primary); 
             margin: 0; 
-            font-size: 1.6rem; 
-            width: 100%;
+            font-size: 1.65rem; 
             direction: ltr;
             line-height: 1.4;
-            word-wrap: break-word;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+            display: block;
+            white-space: normal;
+            word-break: break-word;
             overflow-wrap: break-word;
+            max-width: 100%;
         }
 
-        .info-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 1.1rem; color: var(--text); }
-        .info-val { font-weight: bold; color: #000; }
+        .info-row { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            margin-bottom: 14px; 
+            font-size: 1.05rem; 
+            color: var(--text-muted);
+            padding: 10px 14px;
+            background: #fafffd;
+            border-radius: 10px;
+            border: 1px solid #f0f7f3;
+            transition: background 0.2s ease;
+        }
+        .info-row:hover { background: #f5fbf8; }
+        .info-row > span:first-child { font-weight: 600; }
+        .info-val { font-weight: 800; color: #0f172a; font-size: 1.05rem; }
 
-        .decision-valid { color: #059669; background: #d1fae5; padding: 2px 8px; border-radius: 5px; }
-        .decision-ratt { color: #dc2626; background: #fee2e2; padding: 2px 8px; border-radius: 5px; }
+        .decision-valid { color: #047857; background: #d1fae5; padding: 4px 12px; border-radius: 8px; font-weight: 800; }
+        .decision-ratt { color: #b91c1c; background: #fee2e2; padding: 4px 12px; border-radius: 8px; font-weight: 800; }
 
-        .view-details-btn { display: block; width: 100%; text-align: center; background: #1e293b; color: white; padding: 15px; text-decoration: none; border-radius: 10px; margin-top: 25px; font-weight: bold; transition: 0.3s; box-sizing: border-box; cursor: pointer; border: none; font-size: 1.1rem; }
-        .view-details-btn:hover { background: #334155; }
+        .view-details-btn { 
+            display: block; 
+            width: 100%; 
+            text-align: center; 
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); 
+            color: white; 
+            padding: 15px; 
+            text-decoration: none; 
+            border-radius: var(--radius-sm); 
+            margin-top: 22px; 
+            font-weight: 700; 
+            transition: all 0.3s ease; 
+            box-sizing: border-box; 
+            cursor: pointer; 
+            border: none; 
+            font-size: 1.05rem;
+            font-family: inherit;
+            box-shadow: 0 6px 16px rgba(15, 23, 42, 0.2);
+        }
+        .view-details-btn:hover { 
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%); 
+            transform: translateY(-2px);
+            box-shadow: 0 10px 22px rgba(15, 23, 42, 0.28);
+        }
         .view-details-btn.loading { background: #94a3b8; cursor: wait; }
 
-        .share-btn { display: block; width: 100%; text-align: center; background: #25D366; color: white; padding: 15px; text-decoration: none; border-radius: 10px; margin-top: 10px; font-weight: bold; transition: 0.3s; box-sizing: border-box; cursor: pointer; border: none; font-size: 1.1rem; }
-        .share-btn:hover { background: #128C7E; transform: translateY(-2px); }
+        .share-btn { 
+            display: block; 
+            width: 100%; 
+            text-align: center; 
+            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); 
+            color: white; 
+            padding: 15px; 
+            text-decoration: none; 
+            border-radius: var(--radius-sm); 
+            margin-top: 12px; 
+            font-weight: 700; 
+            transition: all 0.3s ease; 
+            box-sizing: border-box; 
+            cursor: pointer; 
+            border: none; 
+            font-size: 1.05rem;
+            font-family: inherit;
+            box-shadow: 0 6px 16px rgba(37, 211, 102, 0.28);
+        }
+        .share-btn:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 10px 22px rgba(37, 211, 102, 0.4);
+        }
 
-        .details-canvas-container { margin-top: 15px; display: none; text-align: center; animation: slideUp 0.4s ease; }
-        .details-canvas-container canvas { width: 100%; max-width: 100%; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 10px; border: 1px solid #e2e8f0; }
+        .details-canvas-container { margin-top: 18px; display: none; text-align: center; animation: slideUp 0.4s ease; }
+        .details-canvas-container canvas { 
+            width: 100%; 
+            max-width: 100%; 
+            border-radius: var(--radius-sm); 
+            box-shadow: 0 10px 28px rgba(0,0,0,0.12); 
+            margin-bottom: 10px; 
+            border: 1px solid var(--border-light); 
+        }
 
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; direction: ltr; }
-        th { background: #f0fdf4; color: var(--primary); padding: 12px; text-align: left; border-bottom: 2px solid var(--primary); }
-        td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; }
-        tr:nth-child(even) { background: #fafafa; }
+        table { width: 100%; border-collapse: collapse; margin-top: 16px; direction: ltr; }
+        th { 
+            background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); 
+            color: var(--primary); 
+            padding: 14px 12px; 
+            text-align: left; 
+            border-bottom: 2px solid var(--primary); 
+            font-weight: 800;
+            font-size: 0.95rem;
+            letter-spacing: 0.3px;
+        }
+        td { padding: 13px 12px; border-bottom: 1px solid #eef2ef; text-align: left; font-weight: 500; }
+        tr:nth-child(even) { background: #fafffd; }
+        tr:hover { background: #f0fdf4; }
         
-        .error { color: #dc2626; text-align: center; display: none; margin-top: 10px; padding: 15px; background: #fee2e2; border-radius: 8px; border: 1px solid #fecaca; }
-        .clickable-id { color: var(--secondary); text-decoration: underline; font-weight: bold; cursor: pointer; }
+        .error { 
+            color: #b91c1c; 
+            text-align: center; 
+            display: none; 
+            margin-top: 12px; 
+            padding: 16px; 
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); 
+            border-radius: var(--radius-sm); 
+            border: 1.5px solid #fecaca;
+            font-weight: 700;
+        }
+        .clickable-id { 
+            color: var(--secondary); 
+            text-decoration: none; 
+            font-weight: 800; 
+            cursor: pointer;
+            border-bottom: 1.5px dashed var(--secondary);
+            transition: all 0.2s ease;
+        }
+        .clickable-id:hover { color: var(--secondary-dark); border-bottom-style: solid; }
         
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
-        .modal-box { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 500px; text-align: right; border: 2px solid var(--secondary); box-shadow: 0 0 20px rgba(37, 99, 235, 0.3); position: relative; max-height: 90vh; overflow-y: auto; }
-        .modal-box h2 { color: var(--primary); margin-top: 0; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-        .admin-btn { background: #0f172a; color: #60a5fa; margin-top: 10px; width: 100%; padding: 10px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .close-modal { position: absolute; top: 20px; left: 20px; cursor: pointer; font-size: 1.5rem; color: #aaa; }
-        .file-input-wrapper { margin-top: 10px; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px dashed #cbd5e1; }
+        .modal-overlay { 
+            position: fixed; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%; 
+            background: rgba(15, 23, 42, 0.78); 
+            z-index: 2000; 
+            display: none; 
+            justify-content: center; 
+            align-items: center; 
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            animation: fadeIn 0.25s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .modal-box { 
+            background: white; 
+            padding: 32px 28px; 
+            border-radius: 22px; 
+            width: 92%; 
+            max-width: 520px; 
+            text-align: right; 
+            border: 1px solid rgba(37, 99, 235, 0.15); 
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255,255,255,0.05) inset; 
+            position: relative; 
+            max-height: 90vh; 
+            overflow-y: auto;
+            animation: modalSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes modalSlideUp {
+            from { opacity: 0; transform: translateY(30px) scale(0.96); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .modal-box h2 { 
+            color: var(--primary); 
+            margin-top: 0; 
+            border-bottom: 2px solid var(--border-light); 
+            padding-bottom: 14px; 
+            font-weight: 800;
+            font-size: 1.35rem;
+        }
+        .admin-btn { 
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); 
+            color: #93c5fd; 
+            margin-top: 12px; 
+            width: 100%; 
+            padding: 13px; 
+            border: none; 
+            border-radius: var(--radius-sm); 
+            font-weight: 700; 
+            font-family: inherit;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+        .admin-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(15, 23, 42, 0.25); }
+        .close-modal { 
+            position: absolute; 
+            top: 18px; left: 18px; 
+            cursor: pointer; 
+            font-size: 1.4rem; 
+            color: #94a3b8;
+            width: 34px; height: 34px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+        }
+        .close-modal:hover { background: #f1f5f9; color: #0f172a; }
+        .file-input-wrapper { 
+            margin-top: 12px; 
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); 
+            padding: 14px; 
+            border-radius: var(--radius-sm); 
+            border: 1.5px dashed #cbd5e1; 
+        }
         
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
         
         #celebrationOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; display: none; overflow: hidden; background: radial-gradient(ellipse at center, rgba(0, 92, 41, 0.15) 0%, transparent 70%); }
         .rim-confetti { position: absolute; top: -20px; z-index: 9998; animation: fallConfetti linear forwards; filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.6)); }
@@ -169,18 +587,108 @@
         @keyframes glowPulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.7; } }
         @keyframes shineEffect { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
 
-        @media (max-width: 600px) { .btn-group { flex-direction: column; } .info-row { font-size: 1rem; } .student-name { font-size: 1.4rem; } }
+        @media (max-width: 600px) { 
+            .btn-group { flex-direction: column; } 
+            .info-row { font-size: 0.98rem; padding: 9px 12px; } 
+            .student-name { font-size: 1.35rem; }
+            .container { padding: 0 10px; }
+            .search-box { padding: 24px 18px; }
+            .result-card { padding: 22px 18px; }
+            .modal-box { padding: 24px 20px; }
+            .rattrapage-notice { padding: 12px 14px; gap: 10px; }
+            .rattrapage-notice .notice-icon { font-size: 1.4rem; }
+            .rattrapage-notice .notice-ar { font-size: 0.9rem; }
+            .rattrapage-notice .notice-fr { font-size: 0.82rem; }
+        }
 
         .site-footer {
             text-align: center;
-            padding: 20px 10px;
-            margin-top: 30px;
+            padding: 28px 14px;
+            margin-top: 36px;
             color: var(--primary);
-            font-size: 1rem;
-            font-weight: bold;
-            opacity: 0.8;
+            font-size: 0.95rem;
+            font-weight: 700;
+            opacity: 0.85;
+            direction: ltr;
+            letter-spacing: 0.5px;
+        }
+
+        .site-footer::before {
+            content: '';
+            display: block;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 100%);
+            margin: 0 auto 14px;
+            border-radius: 2px;
+        }
+
+        /* ── NNI Verification Box (Résultat Annuel only) ── */
+        .nni-verify-box {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border: 1.5px solid #0ea5e9;
+            border-radius: var(--radius-sm);
+            padding: 22px 20px;
+            text-align: center;
+            box-shadow: 0 4px 14px rgba(14, 165, 233, 0.12);
+            animation: slideUp 0.35s ease;
+        }
+        .nni-verify-icon { font-size: 2.2rem; margin-bottom: 8px; }
+        .nni-verify-title {
+            color: #0369a1;
+            font-weight: 800;
+            font-size: 1.1rem;
+            margin: 0 0 6px;
+        }
+        .nni-verify-sub {
+            color: #0c4a6e;
+            font-size: 0.88rem;
+            margin: 0 0 16px;
+            line-height: 1.6;
+        }
+        .nni-input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid #7dd3fc;
+            border-radius: var(--radius-sm);
+            font-size: 1.1rem;
+            font-family: 'Inter', monospace;
+            font-weight: 700;
+            letter-spacing: 2px;
+            background: white;
+            color: var(--text);
+            outline: none;
+            transition: all 0.25s ease;
+            text-align: center;
             direction: ltr;
         }
+        .nni-input:focus { border-color: #0284c7; box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.12); }
+        .nni-input.nni-input-error { border-color: #dc2626 !important; box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.1) !important; animation: shake 0.4s ease; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-6px); }
+            40% { transform: translateX(6px); }
+            60% { transform: translateX(-4px); }
+            80% { transform: translateX(4px); }
+        }
+        .nni-submit-btn {
+            margin-top: 14px;
+            width: 100%;
+            padding: 13px;
+            background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 1rem;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.28);
+        }
+        .nni-submit-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(14, 165, 233, 0.36); }
+        .nni-submit-btn:disabled { background: #94a3b8; cursor: wait; transform: none; box-shadow: none; }
+        .nni-error-msg { display: none; color: #dc2626; font-weight: 700; font-size: 0.9rem; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -250,7 +758,42 @@
             
             <button class="admin-btn" style="margin-top:20px; background:var(--primary); color:white;" onclick="uploadFiles()">دمج، استخراج البيانات والرفع</button>
             <div id="upload-status" style="margin-top:15px; font-weight:bold; font-size:0.9rem; text-align:center;"></div>
-            
+
+            <hr style="border: 2px dashed #cbd5e1; margin: 25px 0;">
+
+            <h2 style="color:#7c3aed;">📅 رفع النتائج السنوية (Résultat Annuel)</h2>
+            <div class="form-group"><label>السنة الجامعية:</label><select id="up-annual-year"></select></div>
+            <div class="form-group">
+                <label>التخصص:</label>
+                <select id="up-annual-major">
+                    <option value="BA">Banque Assurance (BA)</option>
+                    <option value="FC">Finance Comptabilité (FC)</option>
+                    <option value="GRH">Gestion des RH (GRH)</option>
+                    <option value="IG">Informatique de Gestion (IG)</option>
+                    <option value="TCM">Techniques Commerciales (TCM)</option>
+                    <option value="SAE">SAE</option>
+                    <option value="DI">DI</option>
+                    <option value="FCFP">FCFP</option>
+                    <option value="IGFP">IGFP</option>
+                    <option value="RT">RT</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>المستوى:</label>
+                <select id="up-annual-level">
+                    <option value="L1">Licence 1 (L1)</option>
+                    <option value="L2">Licence 2 (L2)</option>
+                    <option value="L3">Licence 3 (L3)</option>
+                </select>
+            </div>
+            <div class="file-input-wrapper">
+                <label>📄 ملف أو ملفات النتائج السنوية (PDF):</label>
+                <input type="file" id="file-annual" accept="application/pdf" multiple>
+                <small style="display:block; color:#666; font-size:0.85rem; margin-top:8px;">💡 يمكنك تحديد ملف واحد، أو تحديد عدة ملفات معاً وسيقوم النظام بدمجها تلقائياً.</small>
+            </div>
+            <button class="admin-btn" style="margin-top:20px; background:#7c3aed; color:white;" onclick="uploadAnnualFiles()">دمج، استخراج البيانات والرفع (سنوي)</button>
+            <div id="upload-annual-status" style="margin-top:15px; font-weight:bold; font-size:0.9rem; text-align:center;"></div>
+
             <hr style="border: 1px solid #eee; margin: 20px 0;">
             <button class="admin-btn" style="background:#dc2626; color:white;" onclick="adminLogout()">تسجيل الخروج 🚪</button>
         </div>
@@ -260,7 +803,7 @@
 <div id="top20-modal" class="modal-overlay">
     <div class="modal-box">
         <span class="close-modal" onclick="closeTop20Modal()">✖</span>
-        <h2>🏆 تصفية العشرون الأوائل</h2>
+        <h2>🏆 تصفية العشرون الأوائل (par semestre)</h2>
         <div class="form-group"><label>السنة الجامعية:</label><select id="t20-year"></select></div>
         <div class="form-group">
             <label>التخصص (Filière)</label>
@@ -286,6 +829,38 @@
     </div>
 </div>
 
+<div id="top20-annual-modal" class="modal-overlay">
+    <div class="modal-box">
+        <span class="close-modal" onclick="closeAnnualTop20Modal()">✖</span>
+        <h2>🏆 تصفية العشرون الأوائل (Annuelle)</h2>
+        <div class="form-group"><label>السنة الجامعية:</label><select id="t20-annual-year"></select></div>
+        <div class="form-group">
+            <label>التخصص (Filière)</label>
+            <select id="t20-annual-major">
+                <option value="BA">Banque Assurance (BA)</option>
+                <option value="FC">Finance Comptabilité (FC)</option>
+                <option value="GRH">Gestion des RH (GRH)</option>
+                <option value="IG">Informatique de Gestion (IG)</option>
+                <option value="TCM">Techniques Commerciales (TCM)</option>
+                <option value="SAE">SAE</option>
+                <option value="DI">DI</option>
+                <option value="FCFP">FCFP</option>
+                <option value="IGFP">IGFP</option>
+                <option value="RT">RT</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>المستوى (Niveau)</label>
+            <select id="t20-annual-level">
+                <option value="L1">Licence 1 (L1)</option>
+                <option value="L2">Licence 2 (L2)</option>
+                <option value="L3">Licence 3 (L3)</option>
+            </select>
+        </div>
+        <button class="admin-btn" style="background:#7c3aed; color:#fff; font-size:1.1rem; padding:12px;" onclick="fetchAndShowAnnualTop20()">عرض القائمة</button>
+    </div>
+</div>
+
 <div class="container">
     <div class="search-box">
         <h3 style="color:var(--primary); margin-top:0;">استعلام سريع عن النتائج</h3>
@@ -293,7 +868,10 @@
         <form id="searchForm">
             <div class="form-group"><input type="text" id="matricule" placeholder="رقم التسجيل (مثال: I21567)" style="text-transform: uppercase; text-align: center; direction: ltr; font-size:1.2rem; padding:15px; font-weight:bold;"></div>
             <div class="btn-group"><button type="button" class="btn-search" onclick="searchAllSemesters()">🔍 إبحث عن نتائجي</button></div>
-            <div class="btn-group" style="margin-top: 10px;"><button type="button" class="btn-top20" onclick="openTop20Modal()">🏆 عرض العشرون الأوائل</button></div>
+            <div id="top20-btn-group" class="btn-group" style="margin-top: 10px; display: none;">
+                <button type="button" id="top20-sem-btn" class="btn-top20" onclick="openTop20Modal()" style="display:none;">🏆 الأوائل (par semestre)</button>
+                <button type="button" id="top20-ann-btn" class="btn-top20" style="background:#7c3aed; display:none;" onclick="openAnnualTop20Modal()">🏆 الأوائل (Annuelle)</button>
+            </div>
         </form>
         <div id="loader" class="loader">⏳ جاري البحث...</div>
         <div id="error-msg" class="error"></div>
@@ -319,12 +897,13 @@
 </div>
 
 <script>
-    const SUPABASE_URL = 'https://chjxwcliodlevzorjush.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNoanh3Y2xpb2RsZXZ6b3JqdXNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3MjUzNDIsImV4cCI6MjA3OTMwMTM0Mn0.PVvBRAMsscwbnDQt5Qg6Ni9z39WeI981aBCkMnZOnJQ';
+    const SUPABASE_URL = 'https://epogtfrpcfwckmicexji.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwb2d0ZnJwY2Z3Y2ttaWNleGppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5OTcyMjYsImV4cCI6MjA5MzU3MzIyNn0.1hImKAGBuSTYaWblu7tJ7-MDMOeZWuFaZkOtz4EcHwY';
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     
     let globalFilesCache = null; 
-    let rankingDataCache = {}; 
+    let rankingDataCache = {};
+    let pdfDocCache = {};
 
     const popSound = new Audio('https://actions.google.com/sounds/v1/cartoon/pop.ogg');
     const cheerSound = new Audio('https://actions.google.com/sounds/v1/crowds/crowd_cheer.ogg');
@@ -334,8 +913,22 @@
        PDF SPLITTER — One student per page, precise slicing
        Same algorithm used in the standalone splitter.
        ============================================================ */
-    const SPLIT_SCALE = 2;
+    const SPLIT_SCALE = 1.5;
     const STUDENT_ID_RE = /^I\d{4,7}$/;
+
+    function normalizeStudentId(value) {
+        return String(value || '').trim().replace(/\s+/g, '').toUpperCase();
+    }
+
+    function getVisualRowTop(items, match) {
+        const centerY = (match.yTop + match.yBottom) / 2;
+        const rowItems = items.filter(it => {
+            const sameVisualBand = Math.abs(it.yTop - match.yTop) <= 10;
+            const overlapsCenter = it.yTop <= centerY + 4 && it.yBottom >= centerY - 4;
+            return sameVisualBand || overlapsCenter;
+        });
+        return rowItems.length ? Math.min(...rowItems.map(it => it.yTop)) : match.yTop;
+    }
 
     // Reliably find where the page header ends, using the header text fingerprint.
     // The page header always contains "Page X / Y" and a date like "dd/mm/yyyy".
@@ -404,7 +997,7 @@
         pages.forEach((p, pageIdx) => {
             for (const it of p.items) {
                 if (STUDENT_ID_RE.test(it.str)) {
-                    allMatchesRaw.push({ pageIdx, yTop: it.yTop, x: it.x, id: it.str });
+                    allMatchesRaw.push({ pageIdx, yTop: it.yTop, yBottom: it.yBottom, x: it.x, id: normalizeStudentId(it.str) });
                 }
             }
         });
@@ -419,11 +1012,17 @@
             const cur  = studentMatches[i];
             const next = studentMatches[i + 1];
             const startPage = cur.pageIdx;
-            const startY    = Math.max(headerBottom[startPage], cur.yTop - 4);
+            const curRowTop = getVisualRowTop(pages[startPage].items, cur);
+            const startY    = Math.max(headerBottom[startPage], curRowTop - 4);
             let endPage, endY;
             if (next) {
                 endPage = next.pageIdx;
-                endY    = Math.max(0, next.yTop);
+                // [EDIT 3] Stop above the visual top of the NEXT STUDENT'S ENTIRE ROW.
+                // Safety margin increased to -6px to prevent any pixel leakage from
+                // the next student's row (names/averages can sit slightly above the ID).
+                // This fixes the "Résultat Annulé" data-leak bug.
+                const nextRowTop = getVisualRowTop(pages[endPage].items, next);
+                endY    = Math.max(0, nextRowTop - 6);
             } else {
                 endPage = pages.length - 1;
                 endY    = pages[endPage].canvas.height;
@@ -466,8 +1065,62 @@
         return combined;
     }
 
+    // Extracts the positioned text of a single student segment as a compact
+    // { w, rows:[{cells:[{x,s}]}] } structure that can be rendered instantly
+    // as HTML — no PDF/image fetch required.
+    function extractStudentLines(pages, headerBottom, seg) {
+        const W = pages[seg.startPage].canvas.width;
+        const collected = [];
+        for (let p = seg.startPage; p <= seg.endPage; p++) {
+            const yMin = (p === seg.startPage) ? Math.max(headerBottom[p], seg.startY - 4) : headerBottom[p];
+            const yMax = (p === seg.endPage)   ? seg.endY : pages[p].canvas.height;
+            for (const it of pages[p].items) {
+                // [EDIT 3] Strict containment: the item must lie FULLY inside [yMin, yMax].
+                // Using <= yMax (not <) and requiring yBottom <= yMax ensures no item
+                // that even touches the boundary of the next student leaks into this slice.
+                if (it.yTop >= yMin && it.yBottom <= yMax) {
+                    // [EDIT 3] Additional guard: if this item looks like a student ID
+                    // different from our target student, stop collecting immediately.
+                    // This prevents the next student's registration number from leaking.
+                    const isOtherStudentId = STUDENT_ID_RE.test(it.str) &&
+                        normalizeStudentId(it.str) !== seg.id;
+                    if (isOtherStudentId) continue;
+                    collected.push({ p, y: it.yTop, x: it.x, str: it.str });
+                }
+            }
+        }
+        const rows = [];
+        collected.forEach(it => {
+            const found = rows.find(r => r.p === it.p && Math.abs(r.y - it.y) < 6);
+            if (found) found.cells.push({ x: it.x, str: it.str });
+            else rows.push({ p: it.p, y: it.y, cells: [{ x: it.x, str: it.str }] });
+        });
+        rows.sort((a, b) => a.p - b.p || a.y - b.y);
+        // Compute a stitched Y (subtracting header bands and offsetting by previous pages)
+        let totalH = 0;
+        const pageOffset = {};
+        for (let p = seg.startPage; p <= seg.endPage; p++) {
+            pageOffset[p] = totalH;
+            const yStart = (p === seg.startPage) ? Math.max(headerBottom[p], seg.startY - 4) : headerBottom[p];
+            const yEnd   = (p === seg.endPage)   ? seg.endY : pages[p].canvas.height;
+            totalH += Math.max(0, yEnd - yStart);
+            // shift items on this page by yStart
+            rows.forEach(r => {
+                if (r.p === p) r._stitchedY = pageOffset[p] + (r.y - yStart);
+            });
+        }
+        return {
+            w: Math.round(W),
+            h: Math.round(totalH),
+            rows: rows.map(r => ({
+                y: Math.round(r._stitchedY || r.y),
+                cells: r.cells.sort((a, b) => a.x - b.x).map(c => ({ x: Math.round(c.x), s: c.str }))
+            }))
+        };
+    }
+
     // Builds a brand-new PDF where every student is on its own A4 page.
-    // Returns { pdfBytes: Uint8Array, pageMap: { 'I12345': 0, ... } }
+    // Returns { pdfBytes, pageMap, canvasMap, detailsMap }
     async function splitPdfByStudent(arrayBuffer, onStatus) {
         const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
         const pages = await renderPdfPagesWithText(pdf, (i, total) => {
@@ -480,10 +1133,12 @@
 
         const { PDFDocument } = PDFLib;
         const newPdf = await PDFDocument.create();
-        const pageMap = {};
+        const pageMap   = {};
+        const canvasMap = {};
+        const detailsMap = {};   // studentId → { w, rows:[...] } extracted text data
 
-        const PAGE_W = 595.28; // A4 width  in pt
-        const PAGE_H = 841.89; // A4 height in pt
+        const PAGE_W = 595.28;
+        const PAGE_H = 841.89;
         const MARGIN = 28;
 
         for (let s = 0; s < segments.length; s++) {
@@ -492,7 +1147,11 @@
             const combined = buildStudentCanvas(pages, headerBottom, seg);
             if (!combined) continue;
 
-            const dataUrl = combined.toDataURL('image/jpeg', 0.92);
+            canvasMap[seg.id]  = combined;
+            try { detailsMap[seg.id] = extractStudentLines(pages, headerBottom, seg); }
+            catch (e) { /* fallback to image rendering */ }
+
+            const dataUrl = combined.toDataURL('image/jpeg', 0.82);
             const base64 = dataUrl.split(',')[1];
             const bin = atob(base64);
             const bytes = new Uint8Array(bin.length);
@@ -511,23 +1170,59 @@
                 imgW = imgH / ratio;
             }
             const x = (PAGE_W - imgW) / 2;
-            const y = PAGE_H - MARGIN - imgH; // pdf-lib uses bottom-left origin
+            const y = PAGE_H - MARGIN - imgH;
 
             page.drawImage(jpg, { x, y, width: imgW, height: imgH });
             pageMap[seg.id] = newPdf.getPageCount() - 1;
 
-            // Yield to UI
             await new Promise(r => setTimeout(r, 0));
         }
 
         const pdfBytes = await newPdf.save();
-        return { pdfBytes, pageMap };
+        return { pdfBytes, pageMap, canvasMap, detailsMap };
+    }
+
+    // ---------------------------------------------------------------
+    // Upload per-student JPEG images to Supabase storage in parallel
+    // batches of 5.  Returns { studentId → publicUrl }.
+    // These images are created from the canvases already built by
+    // splitPdfByStudent — no extra rendering work is needed.
+    // ---------------------------------------------------------------
+    async function uploadCanvasImages(canvasMap, prefix, onStatus) {
+        const thumbMap = {};
+        const entries  = Object.entries(canvasMap);
+        const BATCH    = 20; // higher concurrency = much faster upload
+        let done = 0;
+        for (let i = 0; i < entries.length; i += BATCH) {
+            const batch = entries.slice(i, i + BATCH);
+            await Promise.all(batch.map(async ([id, canvas]) => {
+                try {
+                    const blob     = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.82));
+                    const fileName = `${prefix}_${id}.jpg`;
+                    const { error } = await _supabase.storage
+                        .from('isc_results')
+                        .upload(fileName, blob, { upsert: true, contentType: 'image/jpeg', cacheControl: '3600' });
+                    if (!error) {
+                        const { data } = _supabase.storage
+                            .from('isc_results')
+                            .getPublicUrl(fileName);
+                        thumbMap[id] = data.publicUrl;
+                    }
+                } catch (e) { /* skip — display falls back to PDF */ }
+                done++;
+                if (onStatus) onStatus(`جاري رفع صور الكشوفات ${done} من ${entries.length}...`);
+            }));
+        }
+        return thumbMap;
     }
 
     // Legacy fallback: when the PDF is NOT yet split (older uploads),
     // run the same algorithm to slice out a single student's content
     // into a stitched canvas appended to `container`.
     async function renderStudentSliceLegacy(pdf, targetId, container) {
+        // [EDIT 3] Always clear old canvas/data before rendering a new student slice
+        container.innerHTML = '';
+        container.style.display = 'none';
         const pages = await renderPdfPagesWithText(pdf, null);
         const { segments, headerBottom } = computeStudentSegments(pages);
         const seg = segments.find(s => s.id === targetId);
@@ -551,20 +1246,104 @@
         'L3': { 'S5': 'Semestre 5', 'S6': 'Semestre 6' }
     };
 
+    // --------------------------------------------------------------
+    // Public search restriction (à partir du mois de janvier)
+    // --------------------------------------------------------------
+    // Les résultats restent disponibles jusqu'au mois de janvier.
+    // Dès le 1er janvier (et jusqu'à la fin août), la recherche publique
+    // est limitée à la SEULE année académique en cours : seuls les
+    // résultats de cette année-là sont retournés à l'utilisateur.
+    // Entre septembre et décembre, toutes les années restent accessibles.
+    function getCurrentAcademicYear() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth(); // 0-based
+        const startYear = month >= 8 ? year : year - 1;
+        return `${startYear}-${startYear + 1}`;
+    }
+
+    function shouldRestrictToCurrentAcademicYear() {
+        const now = new Date();
+        const month = now.getMonth(); // 0-based : janvier = 0, décembre = 11
+        // Janvier (0) jusqu'à août (7) : restriction active.
+        // Septembre (8) à décembre (11) : pas de restriction (historique visible).
+        return month >= 0 && month <= 7;
+    }
+
+    // --------------------------------------------------------------
+    // Display mode (mode d'affichage des boutons « Top 20 » + recherche)
+    // --------------------------------------------------------------
+    // Le site fonctionne en deux modes mutuellement exclusifs en fonction
+    // du DERNIER enregistrement publié dans `results_metadata` :
+    //   • mode 'annual'   → seul le bouton « Annuelle » est visible
+    //                        et la recherche n'expose que les résultats annuels.
+    //   • mode 'semester' → seul le bouton « par semestre » est visible
+    //                        et la recherche n'expose que les résultats semestriels.
+    //   • mode 'none'     → aucun bouton n'est visible (rien n'a encore été publié).
+    // Dans tous les cas la recherche d'un étudiant ne renvoie que LE
+    // résultat le plus récent (un seul card).
+    let currentDisplayMode = 'none';
+
+    async function determineDisplayMode() {
+        try {
+            const { data, error } = await _supabase
+                .from('results_metadata')
+                .select('semester, created_at')
+                .order('created_at', { ascending: false })
+                .limit(1);
+            if (error) throw error;
+            if (!data || data.length === 0) {
+                currentDisplayMode = 'none';
+            } else {
+                currentDisplayMode = (data[0].semester === 'ANNUEL') ? 'annual' : 'semester';
+            }
+        } catch (e) {
+            console.error('determineDisplayMode error:', e);
+            currentDisplayMode = 'none';
+        }
+        applyDisplayMode();
+    }
+
+    function applyDisplayMode() {
+        const wrapper = document.getElementById('top20-btn-group');
+        const semBtn  = document.getElementById('top20-sem-btn');
+        const annBtn  = document.getElementById('top20-ann-btn');
+        if (!wrapper || !semBtn || !annBtn) return;
+
+        if (currentDisplayMode === 'annual') {
+            semBtn.style.display = 'none';
+            annBtn.style.display = '';
+            wrapper.style.display = 'flex';
+        } else if (currentDisplayMode === 'semester') {
+            semBtn.style.display = '';
+            annBtn.style.display = 'none';
+            wrapper.style.display = 'flex';
+        } else {
+            semBtn.style.display = 'none';
+            annBtn.style.display = 'none';
+            wrapper.style.display = 'none';
+        }
+    }
+
     function populateAcademicYears() {
         const now = new Date(); const year = now.getFullYear(); const month = now.getMonth();
         const startYear = month >= 8 ? year : year - 1;
         const currentAcYear = `${startYear}-${startYear + 1}`;
         const nextAcYear    = `${startYear + 1}-${startYear + 2}`;
 
-        // Admin upload form: current + next academic years.
-        document.getElementById('up-year').innerHTML =
+        const adminOptsHTML =
             `<option value="${currentAcYear}">${currentAcYear}</option>` +
             `<option value="${nextAcYear}">${nextAcYear}</option>`;
-
-        // Public Top 20 form: only the current academic year.
-        document.getElementById('t20-year').innerHTML =
+        const publicOptsHTML =
             `<option value="${currentAcYear}">${currentAcYear}</option>`;
+
+        // Admin upload forms (semester + annual): current + next academic years.
+        document.getElementById('up-year').innerHTML        = adminOptsHTML;
+        document.getElementById('up-annual-year').innerHTML = adminOptsHTML;
+
+        // Public Top 20 forms (semester + annual): only the current academic year.
+        document.getElementById('t20-year').innerHTML        = publicOptsHTML;
+        document.getElementById('t20-annual-year').innerHTML = publicOptsHTML;
     }
 
     function updateUploadSemesters() { populateSemesters('up-level', 'up-semester'); }
@@ -581,6 +1360,7 @@
     }
     
     populateAcademicYears(); updateUploadSemesters(); updateT20Semesters();
+    determineDisplayMode();
 
     let tapCount = 0;
     document.getElementById('main-header').addEventListener('click', async () => {
@@ -752,6 +1532,14 @@
                 });
                 // Replace the upload payload with the reorganized PDF.
                 finalPdfBlob = new Blob([splitResult.pdfBytes], { type: 'application/pdf' });
+
+                // ── Skip per-student JPEG thumbnail upload ──
+                // The structured `detailsMap` (extracted text) renders instantly
+                // as HTML, and the split PDF is opened with HTTP range requests
+                // for fallback. Uploading hundreds of JPEGs was the slowest step.
+                if (splitResult.detailsMap) {
+                    studentsArray.forEach(s => { if (splitResult.detailsMap[s.id]) s.details = splitResult.detailsMap[s.id]; });
+                }
             } catch (splitErr) {
                 console.warn('Splitter failed, uploading original PDF as-is:', splitErr);
                 statusDiv.innerHTML = '⚠️ تعذرت إعادة التنظيم تلقائياً، سيتم رفع الملف الأصلي.';
@@ -768,15 +1556,17 @@
             };
 
             const detailsFileName = `DETAILS_${major}_${level}_${semester}_${Date.now()}.pdf`;
-            const detailsUrl = await uploadToStorage(finalPdfBlob, detailsFileName);
-
             const jsonBlob = new Blob([JSON.stringify(studentsArray)], { type: 'application/json' });
             const jsonFileName = `RANKING_${major}_${level}_${semester}_${Date.now()}.json`;
-            const rankingUrl = await uploadToStorage(jsonBlob, jsonFileName);
+            // Upload PDF + JSON in parallel for faster total upload time
+            const [detailsUrl, rankingUrl] = await Promise.all([
+                uploadToStorage(finalPdfBlob, detailsFileName),
+                uploadToStorage(jsonBlob, jsonFileName)
+            ]);
 
             await _supabase.from('results_metadata')
                 .delete()
-                .match({ academic_year: academicYear, major: major, level: level, semester: semester });
+                .match({ academic_year: academicYear, major, level, semester });
 
             const { error: dbError } = await _supabase.from('results_metadata').insert([{ 
                 academic_year: academicYear, major, level, semester, 
@@ -785,7 +1575,9 @@
             
             if (dbError) throw dbError;
             
-            globalFilesCache = null; 
+            globalFilesCache = null;
+            currentDisplayMode = 'semester';
+            applyDisplayMode();
             statusDiv.innerHTML = `<span style="color:green">✅ تم المعالجة والرفع وتحديث قاعدة البيانات بنجاح! (${studentsArray.length} طالب)</span>`;
             document.getElementById('file-details').value = "";
         } catch (err) { 
@@ -795,8 +1587,13 @@
     }
 
     function resetView() {
-        document.getElementById('results-container').innerHTML = ''; document.getElementById('top20-container').style.display = 'none';
-        document.getElementById('error-msg').style.display = 'none'; closeCelebration();
+        document.getElementById('results-container').innerHTML = '';
+        document.getElementById('top20-container').style.display = 'none';
+        document.getElementById('error-msg').style.display = 'none';
+        // [EDIT 3] Clear old detailsDataMap to prevent reuse of cached data
+        // from a previous student search across multiple search operations.
+        window.__detailsDataMap = {};
+        closeCelebration();
     }
 
     async function fetchRankingData(url) {
@@ -866,20 +1663,58 @@
                 files = deduped;
             }
 
+            // À partir du mois de janvier, ne renvoyer que les résultats
+            // de l'année académique en cours (les autres restent en base
+            // mais ne sont plus exposés à la recherche publique).
+            if (shouldRestrictToCurrentAcademicYear()) {
+                const currentAcYear = getCurrentAcademicYear();
+                files = files.filter(f => f.academic_year === currentAcYear);
+            }
+
+            // Filtrage selon le mode d'affichage actif :
+            //   • mode 'annual'   → on ne garde que les fichiers ANNUEL
+            //   • mode 'semester' → on ne garde que les fichiers semestriels
+            //   • mode 'none'     → aucun filtrage (sécurité, ne devrait pas arriver
+            //                       car la recherche n'est utile qu'après une publication)
+            if (currentDisplayMode === 'annual') {
+                files = files.filter(f => f.semester === 'ANNUEL');
+            } else if (currentDisplayMode === 'semester') {
+                files = files.filter(f => f.semester !== 'ANNUEL');
+            }
+
             const cleanInput = matricule.replace(/\s+/g, '');
             const searchPromises = files.map(file => searchStudentInPDF(file, cleanInput));
             const rawResults = await Promise.all(searchPromises);
             let foundResults = rawResults.filter(res => res !== null);
-            
+
+            // Trier du plus récent au plus ancien d'après la date de publication
+            // (`created_at`) afin de pouvoir ne garder que LE résultat le plus
+            // récent. En cas d'égalité (ou champ manquant), on retombe sur
+            // l'ordre métier historique : année ↓, ANNUEL en premier, puis
+            // S6 → S1.
             foundResults.sort((a, b) => {
+                const aTime = a.file.created_at || '';
+                const bTime = b.file.created_at || '';
+                if (aTime !== bTime) return aTime > bTime ? -1 : 1;
                 if (a.file.academic_year !== b.file.academic_year) return a.file.academic_year > b.file.academic_year ? -1 : 1;
+                const aIsAnnual = a.file.semester === 'ANNUEL';
+                const bIsAnnual = b.file.semester === 'ANNUEL';
+                if (aIsAnnual && !bIsAnnual) return -1;
+                if (bIsAnnual && !aIsAnnual) return 1;
                 if (a.file.semester !== b.file.semester) return a.file.semester > b.file.semester ? -1 : 1;
                 return 0;
             });
 
+            // Afficher TOUS les résultats trouvés pour cet étudiant
+            // (toutes années, tous semestres), du plus récent au plus ancien.
+            // Les étudiants de L2/L3 doivent voir l'ensemble de leurs résultats,
+            // pas uniquement celui du dernier semestre publié.
+
             loader.style.display = 'none';
             if (foundResults.length > 0) {
                 displayResults(foundResults);
+                // Preload the PDF in the background so the details button is instant
+                setTimeout(() => preloadPdfDocuments(foundResults), 300);
                 const latestResult = foundResults[0].student;
                 const latestIsValid = latestResult.decision.toLowerCase().includes('valid') || latestResult.decision.toLowerCase().includes('admis');
                 const latestAvg = parseFloat(latestResult.avg) || 0;
@@ -965,8 +1800,11 @@
             wrapper.remove(); 
             canvas.toBlob(async (blob) => {
                 const file = new File([blob], "ISCAE_Result.png", { type: "image/png" });
+                const isAnnual = semesterRaw === 'ANNUEL';
                 let cleanSemNum = semesterRaw.replace(/\D/g, ''); if(!cleanSemNum) cleanSemNum = semesterRaw;
-                const shareText = `الحمدلله الذي بفضله تتم الصالحات\nSemestre ${cleanSemNum} Validé 🎓✅\n\nطالع نتائج ISCAE عبر الرابط:\n${siteUrl}`;
+                const shareText = isAnnual
+                    ? `الحمدلله الذي بفضله تتم الصالحات\nAnnée Validée 🎓✅\n\nطالع نتائج ISCAE عبر الرابط:\n${siteUrl}`
+                    : `الحمدلله الذي بفضله تتم الصالحات\nSemestre ${cleanSemNum} Validé 🎓✅\n\nطالع نتائج ISCAE عبر الرابط:\n${siteUrl}`;
                 if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
                     try { await navigator.share({ title: 'نتيجة ISCAE', text: shareText, files: [file] }); } catch (err) { console.log('User cancelled share'); }
                 } else {
@@ -978,19 +1816,54 @@
         } catch (err) { console.error(err); alert("حدث خطأ أثناء إنشاء الصورة."); if(wrapper.parentNode) wrapper.remove(); btnElement.innerHTML = originalText; btnElement.disabled = false; }
     }
 
+    // إظهار تنبيه دورة الإستدراك ابتداءً من 20 يونيو إلى 30 سبتمبر (فترة ما قبل دورة الإستدراك)
+    function shouldShowRattrapageNotice() {
+        const now = new Date();
+        const month = now.getMonth(); // 0-based: يونيو = 5، سبتمبر = 8
+        const day = now.getDate();
+        if (month === 5 && day >= 20) return true;   // June 20+
+        if (month >= 6 && month <= 8) return true;   // July, August, September
+        return false;
+    }
+
+    function buildRattrapageNoticeHtml() {
+        return `
+            <div class="rattrapage-notice" role="note" aria-label="تنبيه قبل دورة الإستدراك">
+                <div class="notice-icon">⚠️</div>
+                <div class="notice-text">
+                    <div class="notice-ar">تنبيه: هذه النتائج هي نتائج ما قبل دورة الإستدراك.</div>
+                    <div class="notice-fr">Avis : Ces résultats sont avant la session de rattrapage.</div>
+                </div>
+            </div>`;
+    }
+
+    // Map of cardId → student "details" object (positioned text rows) so the
+    // details button can render the relevé instantly as HTML — no PDF/image
+    // fetch needed when the data was extracted at upload time.
+    window.__detailsDataMap = window.__detailsDataMap || {};
+
     function displayResults(results) {
         const container = document.getElementById('results-container');
+        const showRattrapage = shouldShowRattrapageNotice();
         results.forEach(res => {
             const s = res.student; const f = res.file;
             const isValid = s.decision.toLowerCase().includes('valid') || s.decision.toLowerCase().includes('admis');
             const cardId = 'card_' + Math.random().toString(36).substr(2, 9);
+            if (s.details && s.details.rows && s.details.rows.length) {
+                window.__detailsDataMap[cardId] = s.details;
+            }
             const card = document.createElement('div'); card.id = cardId; card.className = 'result-card'; card.style.display = 'block';
             let shareBtnHtml = ''; if (isValid) shareBtnHtml = `<button class="share-btn" onclick="shareResultCard('${cardId}', '${f.semester}', this)"><i class="fas fa-share-alt"></i> مشاركة النتيجة</button>`;
-            
+
+            const isAnnual = (f.semester === 'ANNUEL');
+            const semesterLabel = isAnnual ? `${f.level} - Annuel` : f.semester;
+            const rattrapageHtml = (!isAnnual && showRattrapage) ? buildRattrapageNoticeHtml() : '';
+
             card.innerHTML = `
-                <div class="card-header-custom"><div class="semester-badge">${f.academic_year} | ${f.major} - ${f.semester}</div><h2 class="student-name">${s.name}</h2></div>
+                ${rattrapageHtml}
+                <div class="card-header-custom"><div class="semester-badge">${f.academic_year} | ${f.major} - ${semesterLabel}</div><h2 class="student-name">${s.name}</h2></div>
                 <div class="student-info"><div class="info-row"><span>رقم التسجيل:</span> <span class="info-val">${s.id}</span></div><div class="info-row"><span>المعدل:</span> <span class="info-val" style="color:var(--primary);">${s.avg}</span></div><div class="info-row"><span>الترتيب:</span> <span class="info-val" style="color:var(--secondary);">${s.rank}</span></div><div class="info-row"><span>القرار:</span> <span class="info-val ${isValid?'decision-valid':'decision-ratt'}">${s.decision}</span></div></div>
-                <button class="view-details-btn" onclick="viewPreciseDetails('${s.id}', '${f.details_url}', this, '${cardId}', ${Number.isInteger(s.pageIndex) ? s.pageIndex : 'null'})">👁️ عرض كشف النقاط التفصيلي</button>
+                <button class="view-details-btn" data-annual="${isAnnual ? '1' : '0'}" data-nni="${(s.nni || '').replace(/['"\\]/g, '')}" data-thumb="${(s.thumbUrl || '').replace(/['"\\]/g, '')}" onclick="viewPreciseDetails('${s.id}', '${f.details_url}', this, '${cardId}', ${Number.isInteger(s.pageIndex) ? s.pageIndex : 'null'})">👁️ عرض كشف النقاط التفصيلي</button>
                 <div id="details-container-${cardId}" class="details-canvas-container"></div>
                 ${shareBtnHtml}`;
             container.appendChild(card);
@@ -1000,6 +1873,8 @@
     function showError(msg) { const errEl = document.getElementById('error-msg'); errEl.innerText = msg; errEl.style.display = 'block'; }
     function openTop20Modal() { document.getElementById('top20-modal').style.display = 'flex'; }
     function closeTop20Modal() { document.getElementById('top20-modal').style.display = 'none'; }
+    function openAnnualTop20Modal() { document.getElementById('top20-annual-modal').style.display = 'flex'; }
+    function closeAnnualTop20Modal() { document.getElementById('top20-annual-modal').style.display = 'none'; }
 
     async function fetchAndShowTop20() {
         closeTop20Modal(); resetView();
@@ -1019,57 +1894,743 @@
         } catch (e) { loader.style.display = 'none'; console.error(e); }
     }
 
+    // ========================================================================
+    //  ANNUAL RESULTS — upload, parse, and Top-20 retrieval (Résultat Annuel)
+    // ========================================================================
+    //
+    //  Annual PVs (e.g. PV_Annuel_L12BA) bundle BOTH semesters of a level on
+    //  the same student page. Each student record is delimited by the
+    //  "RELEVE DE NOTES" header and contains:
+    //      Nom et prénom: <NAME>
+    //      Numéro d'inscription : I<digits>
+    //      Filière : L<n> <Major name>
+    //      Moyenne annuelle L<n> : <NN.NN>
+    //      Décision du jury : Admis(e) | Ajourné(e)
+    //
+    //  We reuse the same storage table (`results_metadata`) with the special
+    //  `semester='ANNUEL'` value so all downstream code (search, dedup,
+    //  details-PDF retrieval, share button, …) works for free.
+    // ========================================================================
+
+    function parseAnnualPdfText(fullText) {
+        // Split the full extracted text on the "RELEVE DE NOTES" boundary —
+        // each annual student page starts with that title.
+        const segments = fullText.split(/RELEVE\s+DE\s+NOTES/i);
+        const studentsMap = new Map();
+
+        for (const segment of segments) {
+            // --- Matricule (Numéro d'inscription) -----------------------------
+            const idMatch = segment.match(/Num[ée]ro\s+d['′'`’ ]*\s*inscription\s*:?\s*(I\s*\d{4,7})/i);
+            if (!idMatch) continue;
+            const id = idMatch[1].replace(/\s+/g, '').toUpperCase();
+
+            // --- Annual average -----------------------------------------------
+            // Accept "Moyenne annuelle L1/L2/L3 : 11.03" (or comma decimal).
+            const avgMatch = segment.match(/Moyenne\s+annuelle\s+L\d?\s*:?\s*(\d{1,2}[.,]\d{1,2})/i);
+            if (!avgMatch) continue;
+            const avgStr = avgMatch[1].replace(',', '.');
+            const avg    = parseFloat(avgStr);
+            if (!(avg >= 0 && avg <= 20)) continue;
+
+            // --- Student name -------------------------------------------------
+            // Capture everything after "Nom et prénom:" up to the next label
+            // (Date and place of birth, Numéro d'inscription, Filière, NNI)
+            // or a long whitespace gap, whichever comes first.
+            let name = '';
+            const nameMatch = segment.match(/Nom\s+et\s+pr[ée]nom\s*:?\s*([^]+?)(?=\s+Date\s+et|\s+Num[ée]ro|\s+Fili[èe]re|\s+NNI|\s{6,})/i);
+            if (nameMatch) {
+                name = nameMatch[1].trim().replace(/\s+/g, ' ');
+            }
+
+            // --- Decision -----------------------------------------------------
+            const decMatch = segment.match(/D[ée]cision\s+du\s+jury\s*:?\s*(Admis(?:\s*\(e\))?|Ajourn[ée](?:\s*\(e\))?|Validé(?:\(e\))?)/i);
+            const decision = decMatch ? decMatch[1].trim() : 'Inconnu';
+
+            // --- NNI (Numéro National d'Identification) -----------------------
+            // Appears on the same line as matricule: "NNI : 5187656613"
+            const nniMatch = segment.match(/NNI\s*:?\s*(\d{7,15})/i);
+            const nni = nniMatch ? nniMatch[1].trim() : '';
+
+            if (!studentsMap.has(id)) {
+                studentsMap.set(id, { id, name, avg: avgStr, avgNum: avg, decision, nni });
+            }
+        }
+
+        return Array.from(studentsMap.values());
+    }
+
+    async function uploadAnnualFiles() {
+        const statusDiv = document.getElementById('upload-annual-status');
+        const academicYear = document.getElementById('up-annual-year').value;
+        const major        = document.getElementById('up-annual-major').value;
+        const level        = document.getElementById('up-annual-level').value;
+        const semester     = 'ANNUEL';
+
+        const selectedFiles = document.getElementById('file-annual').files;
+
+        if (selectedFiles.length === 0) {
+            statusDiv.innerHTML = '<span style="color:red">يرجى اختيار ملف (أو ملفات) النتائج السنوية أولاً.</span>';
+            return;
+        }
+
+        try {
+            let finalPdfBytes;
+            let finalPdfBlob;
+
+            // --- Merge if multiple PDFs were selected -------------------------
+            if (selectedFiles.length === 1) {
+                statusDiv.innerHTML = '⏳ جاري تهيئة الملف وقراءته...';
+                finalPdfBytes = await selectedFiles[0].arrayBuffer();
+                finalPdfBlob  = selectedFiles[0];
+            } else {
+                statusDiv.innerHTML = `⏳ جاري دمج ${selectedFiles.length} ملفات تلقائياً...`;
+                const { PDFDocument } = PDFLib;
+                const mergedPdf = await PDFDocument.create();
+
+                const sortedFiles = Array.from(selectedFiles).sort((a, b) => a.name.localeCompare(b.name));
+                for (const file of sortedFiles) {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const pdfDoc      = await PDFDocument.load(arrayBuffer);
+                    const copiedPages = await mergedPdf.copyPages(pdfDoc, pdfDoc.getPageIndices());
+                    copiedPages.forEach((page) => mergedPdf.addPage(page));
+                }
+
+                finalPdfBytes = await mergedPdf.save();
+                finalPdfBlob  = new Blob([finalPdfBytes], { type: 'application/pdf' });
+            }
+
+            // --- Extract text & parse annual records --------------------------
+            statusDiv.innerHTML = '⏳ جاري استخراج البيانات السنوية...';
+            const pdf = await pdfjsLib.getDocument({ data: finalPdfBytes }).promise;
+            let fullText = "";
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page        = await pdf.getPage(i);
+                const textContent = await page.getTextContent();
+                fullText += textContent.items.map(item => item.str).join(" ") + " ";
+            }
+            fullText = fullText.replace(/\s+/g, " ");
+
+            let studentsArray = parseAnnualPdfText(fullText);
+            if (studentsArray.length === 0) {
+                statusDiv.innerHTML = '<span style="color:red">❌ لم يتم العثور على أي طالب. تأكد أن الملفات هي PV_Annuel.</span>';
+                return;
+            }
+
+            // --- Sort & rank --------------------------------------------------
+            studentsArray.sort((a, b) => b.avgNum - a.avgNum);
+            studentsArray.forEach((student, index) => { student.rank = index + 1; });
+
+            // --- Reorganize PDF: one student per page (same engine as semester)
+            statusDiv.innerHTML = '⏳ جاري إعادة تنظيم الملف (طالب لكل صفحة)...';
+            try {
+                const splitResult = await splitPdfByStudent(finalPdfBytes, (msg) => {
+                    statusDiv.innerHTML = '⏳ ' + msg;
+                });
+                studentsArray.forEach(s => {
+                    if (Object.prototype.hasOwnProperty.call(splitResult.pageMap, s.id)) {
+                        s.pageIndex = splitResult.pageMap[s.id];
+                    }
+                });
+                finalPdfBlob = new Blob([splitResult.pdfBytes], { type: 'application/pdf' });
+
+                // ── Skip per-student JPEG thumbnail upload (huge speed win) ──
+                if (splitResult.detailsMap) {
+                    studentsArray.forEach(s => { if (splitResult.detailsMap[s.id]) s.details = splitResult.detailsMap[s.id]; });
+                }
+            } catch (splitErr) {
+                console.warn('Annual splitter failed, uploading original PDF as-is:', splitErr);
+                statusDiv.innerHTML = '⚠️ تعذرت إعادة التنظيم تلقائياً، سيتم رفع الملف الأصلي.';
+            }
+
+            // --- Upload PDF + ranking JSON, refresh metadata row --------------
+            statusDiv.innerHTML = '⏳ جاري رفع الملفات إلى الخادم وتحديث البيانات...';
+
+            const uploadToStorage = async (fileData, fileName) => {
+                const { error } = await _supabase.storage.from('isc_results').upload(fileName, fileData);
+                if (error) throw error;
+                const { data } = _supabase.storage.from('isc_results').getPublicUrl(fileName);
+                return data.publicUrl;
+            };
+
+            const detailsFileName = `DETAILS_${major}_${level}_${semester}_${Date.now()}.pdf`;
+            const jsonBlob        = new Blob([JSON.stringify(studentsArray)], { type: 'application/json' });
+            const jsonFileName    = `RANKING_${major}_${level}_${semester}_${Date.now()}.json`;
+            // Upload PDF + JSON in parallel for faster total upload time
+            const [detailsUrl, rankingUrl] = await Promise.all([
+                uploadToStorage(finalPdfBlob, detailsFileName),
+                uploadToStorage(jsonBlob, jsonFileName)
+            ]);
+
+            await _supabase.from('results_metadata')
+                .delete()
+                .match({ academic_year: academicYear, major, level, semester });
+
+            const { error: dbError } = await _supabase.from('results_metadata').insert([{
+                academic_year: academicYear, major, level, semester,
+                details_url: detailsUrl, ranking_url: rankingUrl
+            }]);
+            if (dbError) throw dbError;
+
+            globalFilesCache = null;
+            currentDisplayMode = 'annual';
+            applyDisplayMode();
+            statusDiv.innerHTML = `<span style="color:green">✅ تم رفع النتائج السنوية وتحديث قاعدة البيانات بنجاح! (${studentsArray.length} طالب)</span>`;
+            document.getElementById('file-annual').value = "";
+        } catch (err) {
+            statusDiv.innerHTML = '<span style="color:red">❌ خطأ: ' + err.message + '</span>';
+            console.error(err);
+        }
+    }
+
+    async function fetchAndShowAnnualTop20() {
+        closeAnnualTop20Modal(); resetView();
+        const loader = document.getElementById('loader'); loader.style.display = 'block';
+        try {
+            const academicYear = document.getElementById('t20-annual-year').value;
+            const major        = document.getElementById('t20-annual-major').value;
+            const level        = document.getElementById('t20-annual-level').value;
+
+            const { data } = await _supabase.from('results_metadata').select('*')
+                .eq('academic_year', academicYear)
+                .eq('major', major)
+                .eq('level', level)
+                .eq('semester', 'ANNUEL')
+                .order('created_at', { ascending: false }).limit(1);
+
+            if (!data[0]) { loader.style.display = 'none'; showError("لا توجد نتائج سنوية متاحة لهذا التخصص والمستوى."); return; }
+
+            const students = await fetchRankingData(data[0].ranking_url);
+            loader.style.display = 'none';
+            if (!students || students.length === 0) { showError("تعذر قراءة البيانات السنوية."); return; }
+
+            const top20 = students.sort((a, b) => a.rank - b.rank).slice(0, 20);
+            const tbody = document.getElementById('top20-body'); tbody.innerHTML = '';
+            top20.forEach(s => {
+                tbody.innerHTML += `<tr><td>${s.rank}</td><td><a onclick="triggerQuickSearch('${s.id}')" class="clickable-id">${s.id}</a></td><td>${s.name}</td><td>${s.avg}</td></tr>`;
+            });
+            document.getElementById('top20-info').innerText = `${data[0].academic_year} | ${data[0].major} - ${data[0].level} - Annuel`;
+            document.getElementById('top20-container').style.display = 'block';
+            setTimeout(() => { document.getElementById('top20-container').scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 200);
+        } catch (e) { loader.style.display = 'none'; console.error(e); }
+    }
+
     function triggerQuickSearch(id) { document.getElementById('matricule').value = id; searchAllSemesters(); }
 
-    async function viewPreciseDetails(studentId, pdfUrl, btnElement, cardId, pageIndex) {
-        const container = document.getElementById(`details-container-${cardId}`);
+    // ---------------------------------------------------------------
+    // Preload: silently open the PDF document structure in the
+    // background using HTTP Range Requests (url mode).
+    // For new-format uploads (pageIndex known) this downloads only
+    // the cross-reference table (~few KB) and caches the document
+    // object so the first click is near-instant.
+    // For legacy uploads (no pageIndex) we still do the full fetch
+    // because the splitter needs every page.
+    // ---------------------------------------------------------------
+    async function preloadPdfDocuments(results) {
+        for (const res of results) {
+            const url = res.file && res.file.details_url;
+            if (!url || pdfDocCache[url]) continue;
+            const hasPageIndex = Number.isInteger(res.student && res.student.pageIndex)
+                                 && res.student.pageIndex >= 0;
+            try {
+                if (hasPageIndex) {
+                    // Range-request mode: pdf.js fetches only the trailer/xref
+                    // initially — the actual page bytes are downloaded on demand.
+                    pdfDocCache[url] = await pdfjsLib.getDocument({
+                        url:              url,
+                        rangeChunkSize:   65536,   // 64 KB chunks
+                        disableAutoFetch: true,    // don't pre-fetch all pages
+                        disableStream:    false
+                    }).promise;
+                } else {
+                    // Legacy mode: download full file in the background.
+                    const bytes = await fetch(url).then(r => r.arrayBuffer());
+                    pdfDocCache[url] = await pdfjsLib.getDocument({ data: new Uint8Array(bytes) }).promise;
+                }
+            } catch (e) { /* silent — user will see error on explicit click if needed */ }
+        }
+    }
 
-        // Toggle if already rendered
-        if (container.innerHTML !== '') {
-            if (container.style.display === 'block') {
-                container.style.display = 'none';
-                btnElement.innerText = "👁️ عرض كشف النقاط التفصيلي";
+    // ---------------------------------------------------------------
+    // Core renderer.
+    //
+    // Fast path — thumbUrl available (new uploads):
+    //   Shows a pre-rendered JPEG image stored at upload time.
+    //   No PDF download at all — loads in ~1 second.
+    //
+    // Slow path A — pageIndex known, no thumbUrl:
+    //   Uses HTTP Range Requests to fetch only the needed page.
+    //
+    // Slow path B — legacy uploads (no pageIndex, no thumbUrl):
+    //   Downloads the full PDF and slices the student's section.
+    // ---------------------------------------------------------------
+    // Renders structured "details" data (extracted at upload time) as
+    // positioned absolute spans inside a sized box — looks like the original
+    // layout but is just HTML, so it appears instantly.
+    function removeOtherStudentsFromDetails(details, studentId) {
+        const targetId = normalizeStudentId(studentId);
+        if (!details || !Array.isArray(details.rows)) return details;
+        const rows = [];
+        for (const row of details.rows) {
+            const idsInRow = (row.cells || [])
+                .map(c => normalizeStudentId(c.s))
+                .filter(s => STUDENT_ID_RE.test(s));
+            if (idsInRow.some(id => id !== targetId)) break;
+            rows.push(row);
+        }
+        return { ...details, rows };
+    }
+
+    // Merges continuation rows into their parent rows.
+    // A continuation row is one where ALL cells sit at x-positions that
+    // already appear in the immediately preceding row, AND the row has
+    // no numeric-only cell (i.e. it carries no grade/average value on
+    // its own). Typical case: a long module name that wrapped inside the
+    // PDF column now comes back as a separate row containing only the
+    // second line of the name (e.g. "mauritanien" after "Système financier").
+    // [EDIT 1] Roman numeral detector — matches I / II / III / IV / V / VI etc.
+    // Used by mergeDetailsContinuations to keep module section numbers on the same
+    // line as their module name (e.g. "Enseignement de la spécialité    III").
+    const _ROMAN_RE = /^(I{1,3}|IV|V?I{0,3}|IX|X{1,3}L?|XC?)$/i;
+    function _isRomanNumeral(s) { return _ROMAN_RE.test(String(s || '').trim()); }
+
+    function mergeDetailsContinuations(rows) {
+        if (!rows || rows.length < 2) return rows;
+        const result = [];
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            const cells = (row.cells || []).slice().sort((a, b) => (a.x || 0) - (b.x || 0));
+            // Only attempt merge when the candidate row has 1–2 cells and
+            // there is already a preceding row in the result set.
+            if (cells.length <= 2 && result.length > 0) {
+                const prev = result[result.length - 1];
+                const prevCells = (prev.cells || []).slice().sort((a, b) => (a.x || 0) - (b.x || 0));
+                const isNumber = (s) => /^\d+([.,]\d+)?$/.test(String(s || '').trim());
+                const allNonNumeric = cells.every(c => !isNumber(c.s));
+                if (allNonNumeric) {
+                    const prevAllNonNumeric = prevCells.every(c => !isNumber(c.s));
+
+                    // [EDIT 1] Case A+: lone Roman numeral row (I / II / III / IV …).
+                    // Merge it unconditionally into the previous row regardless of how
+                    // many cells that row has — this is always a module section number
+                    // that belongs on the same line as the module name.
+                    const isSingleRoman = cells.length === 1 && _isRomanNumeral(cells[0].s);
+
+                    // Case A (original): previous row is all-text with ≤ 2 cells —
+                    // merge unconditionally (handles other short text continuations).
+                    const prevIsTextOnly = prevAllNonNumeric && prevCells.length <= 2;
+
+                    // Case B: previous row is a data row (code + name + grade) and
+                    // the continuation x matches the name column — merge by proximity.
+                    const xMatch = cells.every(candCell => {
+                        const candX = candCell.x || 0;
+                        return prevCells.some(pc => Math.abs((pc.x || 0) - candX) < 80);
+                    });
+
+                    if (isSingleRoman || prevIsTextOnly || (prevCells.length > cells.length && xMatch)) {
+                        // Append each continuation cell's text to the closest cell
+                        // in the previous row.
+                        cells.forEach(candCell => {
+                            const candX = candCell.x || 0;
+                            let closest = prevCells[0];
+                            let closestDist = Math.abs((closest.x || 0) - candX);
+                            for (const pc of prevCells) {
+                                const d = Math.abs((pc.x || 0) - candX);
+                                if (d < closestDist) { closestDist = d; closest = pc; }
+                            }
+                            closest.s = (closest.s || '') + ' ' + (candCell.s || '');
+                        });
+                        continue; // row absorbed — do not push it
+                    }
+                }
+            }
+            result.push({ y: row.y, cells: cells.map(c => ({ x: c.x, s: c.s })) });
+        }
+        return result;
+    }
+
+    function renderDetailsAsHtml(container, details, studentId) {
+        details = removeOtherStudentsFromDetails(details, studentId);
+        // Merge continuation rows so long module names appear on a single line.
+        const mergedRows = mergeDetailsContinuations(details.rows);
+        const SCALE = 0.92;
+        const W = (details.w || 1200) * SCALE;
+        const H = (details.h || 1600) * SCALE;
+        let html = '';
+        const lineColor = '#94a3b8';
+        // Per-row layout: for each row, build cell boxes whose right edge
+        // touches the next cell's left edge → gives a perfectly aligned
+        // grid for THAT row, regardless of how other rows are split.
+        const ys = mergedRows.map(r => r.y || 0).sort((a, b) => a - b);
+        mergedRows.forEach((row) => {
+            const y = (row.y || 0) * SCALE;
+            // row height = distance to next row (or default)
+            const idx = ys.indexOf(row.y || 0);
+            const nextY = idx >= 0 && idx < ys.length - 1 ? ys[idx + 1] : (row.y || 0) + 18;
+            const rowH = (nextY - (row.y || 0)) * SCALE;
+            const cells = (row.cells || []).slice().sort((a, b) => (a.x || 0) - (b.x || 0));
+
+            // [EDIT 1] — Module header rendering: if a row has ≥2 cells and ALL
+            // cells are non-numeric text (including a Roman numeral), render it as
+            // a flex row with space-between so the module name and its section number
+            // (I / II / III / IV) always appear on the SAME line, never on a new line.
+            // This works on Android, iPhone, Desktop, and in PDF rendering.
+            const _isNum = (s) => /^\d+([.,]\d+)?$/.test(String(s || '').trim());
+            const _allText = cells.every(c => !_isNum(c.s));
+            const _hasRoman = cells.some(c => _isRomanNumeral(c.s));
+            if (_allText && cells.length >= 2 && _hasRoman) {
+                const cellsHtml = cells.map(c => {
+                    const safe = String(c.s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    return `<span style="white-space:nowrap;font-family:'Cairo',Arial,sans-serif;font-size:12px;color:#0f172a;line-height:1.2;">${safe}</span>`;
+                }).join('');
+                html += `<div style="position:absolute;left:0;top:${y.toFixed(1)}px;width:${W.toFixed(1)}px;height:${rowH.toFixed(1)}px;display:flex;justify-content:space-between;align-items:center;border:1px solid ${lineColor};box-sizing:border-box;padding:1px 6px;">${cellsHtml}</div>`;
             } else {
-                container.style.display = 'block';
-                btnElement.innerText = "👁️ إخفاء كشف النقاط التفصيلي";
+                // Default: render each cell as an absolutely-positioned box
+                for (let i = 0; i < cells.length; i++) {
+                    const c = cells[i];
+                    const x = (c.x || 0) * SCALE;
+                    const nextX = i < cells.length - 1 ? (cells[i + 1].x || 0) * SCALE : W;
+                    const cellW = Math.max(8, nextX - x);
+                    const safe = String(c.s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    html += `<div style="position:absolute;left:${x.toFixed(1)}px;top:${y.toFixed(1)}px;width:${cellW.toFixed(1)}px;height:${rowH.toFixed(1)}px;border:1px solid ${lineColor};box-sizing:border-box;padding:1px 3px;font-family:'Cairo',Arial,sans-serif;font-size:12px;color:#0f172a;line-height:1.2;white-space:nowrap;overflow:visible;">${safe}</div>`;
+                }
+            }
+        }); // end mergedRows.forEach
+        container.innerHTML = `<div style="position:relative;width:${W.toFixed(0)}px;height:${(H + 30).toFixed(0)}px;max-width:100%;margin:0 auto;background:#fff;border-radius:12px;padding:8px;box-shadow:0 10px 28px rgba(0,0,0,0.12);overflow:auto;overflow-y:auto;direction:ltr;text-align:left;-webkit-overflow-scrolling:touch;">${html}</div>`;
+    }
+
+    // Cluster cell x-positions into real columns and compute row/column
+    // edge lines that match a true table grid (mirrors the look of the
+    // original PDF transcript).
+    function computeDetailsGrid(details) {
+        const W = details.w || 1200;
+        const rows = details.rows || [];
+        // ----- Column clustering -----
+        const xs = [];
+        rows.forEach(r => (r.cells || []).forEach(c => xs.push(c.x || 0)));
+        xs.sort((a, b) => a - b);
+        const TOL = Math.max(18, W * 0.015); // group x's within this tolerance
+        const clusters = [];
+        xs.forEach(x => {
+            const last = clusters[clusters.length - 1];
+            if (last && x - last.max <= TOL) { last.values.push(x); last.max = x; }
+            else { clusters.push({ values: [x], max: x }); }
+        });
+        const colStarts = clusters.map(c => Math.min(...c.values));
+        // Column EDGES are placed BETWEEN adjacent column starts (midpoints),
+        // never on top of a cell's text. The leftmost edge sits a little
+        // to the left of the first column, the rightmost edge a little
+        // to the right of the last column.
+        const colEdges = [];
+        if (colStarts.length) {
+            const firstGap = colStarts.length > 1 ? (colStarts[1] - colStarts[0]) : 60;
+            colEdges.push(Math.max(0, colStarts[0] - Math.min(20, firstGap * 0.4)));
+            for (let i = 0; i < colStarts.length - 1; i++) {
+                colEdges.push((colStarts[i] + colStarts[i + 1]) / 2);
+            }
+            const lastGap = colStarts.length > 1
+                ? (colStarts[colStarts.length - 1] - colStarts[colStarts.length - 2])
+                : 80;
+            colEdges.push(Math.min(W, colStarts[colStarts.length - 1] + lastGap));
+        }
+        // ----- Row edges = midpoints between consecutive row Ys -----
+        const ys = rows.map(r => r.y || 0).sort((a, b) => a - b);
+        const rowEdges = [];
+        if (ys.length) {
+            const firstGap = ys.length > 1 ? (ys[1] - ys[0]) : 18;
+            rowEdges.push(Math.max(0, ys[0] - firstGap * 0.4));
+            for (let i = 0; i < ys.length - 1; i++) {
+                rowEdges.push((ys[i] + ys[i + 1]) / 2);
+            }
+            const lastGap = ys.length > 1 ? (ys[ys.length - 1] - ys[ys.length - 2]) : 18;
+            rowEdges.push(ys[ys.length - 1] + lastGap * 1.2);
+        }
+        return { colEdges, rowEdges };
+    }
+
+    // Render the structured `details` data onto an offscreen canvas so we
+    // can embed it into a downloadable PDF (used when the on-screen view
+    // was rendered as HTML, not a canvas).
+    function renderDetailsToCanvas(details, studentId) {
+        details = removeOtherStudentsFromDetails(details, studentId);
+        const c = document.createElement('canvas');
+        c.width  = Math.max(800, details.w || 1200);
+        c.height = Math.max(600, details.h || 1600);
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, c.width, c.height);
+        // ----- Per-row cell boxes for the downloadable PDF -----
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 1;
+        const W = c.width;
+        const ys = (details.rows || []).map(r => r.y || 0).sort((a, b) => a - b);
+        (details.rows || []).forEach((row) => {
+            const y = row.y || 0;
+            const idx = ys.indexOf(y);
+            const nextY = idx >= 0 && idx < ys.length - 1 ? ys[idx + 1] : y + 24;
+            const rowH = nextY - y;
+            const cells = (row.cells || []).slice().sort((a, b) => (a.x || 0) - (b.x || 0));
+            for (let i = 0; i < cells.length; i++) {
+                const cell = cells[i];
+                const x = cell.x || 0;
+                const nextX = i < cells.length - 1 ? (cells[i + 1].x || 0) : W;
+                ctx.strokeRect(x + 0.5, y + 0.5, Math.max(8, nextX - x), rowH);
+            }
+        });
+        ctx.fillStyle = '#0f172a';
+        ctx.textBaseline = 'top';
+        ctx.font = '20px Arial, sans-serif';
+        (details.rows || []).forEach(row => {
+            (row.cells || []).forEach(cell => {
+                ctx.fillText(String(cell.s || ''), cell.x || 0, row.y || 0);
+            });
+        });
+        return c;
+    }
+
+    async function imgUrlToCanvas(url) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = () => {
+                const c = document.createElement('canvas');
+                c.width  = img.naturalWidth  || img.width;
+                c.height = img.naturalHeight || img.height;
+                c.getContext('2d').drawImage(img, 0, 0);
+                resolve(c);
+            };
+            img.onerror = reject;
+            img.src = url;
+        });
+    }
+
+    async function downloadDetailsAsPdf(canvas, studentId) {
+        const { PDFDocument } = PDFLib;
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+        const b64     = dataUrl.split(',')[1];
+        const bin     = atob(b64);
+        const bytes   = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+
+        const pdfDoc = await PDFDocument.create();
+        const jpg    = await pdfDoc.embedJpg(bytes);
+        const PAGE_W = 595.28, PAGE_H = 841.89, MARGIN = 20;
+        const page   = pdfDoc.addPage([PAGE_W, PAGE_H]);
+        const ratio  = canvas.height / canvas.width;
+        let w = PAGE_W - 2 * MARGIN;
+        let h = w * ratio;
+        if (h > PAGE_H - 2 * MARGIN) { h = PAGE_H - 2 * MARGIN; w = h / ratio; }
+        page.drawImage(jpg, { x: (PAGE_W - w) / 2, y: PAGE_H - MARGIN - h, width: w, height: h });
+
+        const pdfBytes = await pdfDoc.save();
+        const blob     = new Blob([pdfBytes], { type: 'application/pdf' });
+        const url      = URL.createObjectURL(blob);
+        const a        = document.createElement('a');
+        a.href = url; a.download = `كشف_النقاط_${studentId}.pdf`;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+    }
+
+    function appendDownloadPdfButton(container, getCanvas, studentId) {
+        // Avoid duplicating the button on re-renders.
+        if (container.querySelector('.download-details-pdf-btn')) return;
+        const wrap = document.createElement('div');
+        wrap.style.cssText = 'text-align:center;margin-top:14px;';
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'download-details-pdf-btn';
+        btn.textContent = '⬇️ تنزيل كشف النقاط كملف PDF';
+        btn.style.cssText = 'background:linear-gradient(135deg,#2563eb,#1e40af);color:#fff;border:none;padding:10px 20px;border-radius:10px;font-weight:bold;cursor:pointer;font-family:Cairo,Arial,sans-serif;font-size:14px;box-shadow:0 6px 16px rgba(37,99,235,0.35);';
+        btn.onclick = async () => {
+            const orig = btn.textContent;
+            btn.disabled = true; btn.textContent = '⏳ جاري إنشاء الملف...';
+            try {
+                const canvas = await getCanvas();
+                await downloadDetailsAsPdf(canvas, studentId);
+            } catch (e) {
+                console.error(e); alert('تعذر إنشاء ملف PDF.');
+            }
+            btn.disabled = false; btn.textContent = orig;
+        };
+        wrap.appendChild(btn);
+        container.appendChild(wrap);
+    }
+
+    async function renderDetailsInContainer(studentId, pdfUrl, btnElement, container, pageIndex, thumbUrl) {
+        // ── Instant path: structured text extracted at upload time ─────────
+        const cardId = container.id.replace(/^details-container-/, '');
+        const detailsData = window.__detailsDataMap && window.__detailsDataMap[cardId];
+        if (detailsData && detailsData.rows && detailsData.rows.length) {
+            renderDetailsAsHtml(container, detailsData, studentId);
+            appendDownloadPdfButton(container, () => renderDetailsToCanvas(detailsData, studentId), studentId);
+            container.dataset.rendered = '1';
+            container.style.display    = 'block';
+            if (btnElement) {
+                btnElement.disabled  = false;
+                btnElement.innerText = '👁️ إخفاء كشف النقاط التفصيلي';
             }
             return;
         }
 
-        btnElement.disabled = true;
-        btnElement.innerText = "⏳ جاري استخراج التفاصيل لعرضها...";
+        // ── Fast path: pre-rendered JPEG image ──────────────────────────────
+        if (thumbUrl) {
+            container.innerHTML = `<img src="${thumbUrl}"
+                style="width:100%;border-radius:12px;box-shadow:0 10px 28px rgba(0,0,0,0.12);display:block;"
+                loading="eager" />`;
+            appendDownloadPdfButton(container, () => imgUrlToCanvas(thumbUrl), studentId);
+            container.dataset.rendered = '1';
+            container.style.display    = 'block';
+            if (btnElement) {
+                btnElement.disabled  = false;
+                btnElement.innerText = '👁️ إخفاء كشف النقاط التفصيلي';
+            }
+            return;
+        }
 
+        // ── Slow paths: fetch & render PDF ──────────────────────────────────
+        if (btnElement) { btnElement.disabled = true; btnElement.innerText = '⏳ جاري تحميل الكشف...'; }
         try {
-            const existingPdfBytes = await fetch(pdfUrl).then(res => res.arrayBuffer());
-            const pdfDocjs = await pdfjsLib.getDocument({ data: existingPdfBytes }).promise;
+            const isNewFormat = Number.isInteger(pageIndex) && pageIndex >= 0;
+            let pdfDocjs;
 
-            // Branch 1: NEW uploads — PDF is already organized one student per page,
-            // and we know the exact page index. Render that single page directly.
-            if (Number.isInteger(pageIndex) && pageIndex >= 0 && pageIndex < pdfDocjs.numPages) {
-                const page = await pdfDocjs.getPage(pageIndex + 1);
+            if (pdfDocCache[pdfUrl]) {
+                pdfDocjs = pdfDocCache[pdfUrl];
+            } else if (isNewFormat) {
+                pdfDocjs = await pdfjsLib.getDocument({
+                    url:              pdfUrl,
+                    rangeChunkSize:   65536,
+                    disableAutoFetch: true,
+                    disableStream:    false
+                }).promise;
+                pdfDocCache[pdfUrl] = pdfDocjs;
+            } else {
+                const bytes = await fetch(pdfUrl).then(res => res.arrayBuffer());
+                pdfDocjs = await pdfjsLib.getDocument({ data: new Uint8Array(bytes) }).promise;
+                pdfDocCache[pdfUrl] = pdfDocjs;
+            }
+
+            let renderedCanvas = null;
+            if (isNewFormat && pageIndex < pdfDocjs.numPages) {
+                if (btnElement) btnElement.innerText = '⏳ جاري عرض الكشف...';
+                const page     = await pdfDocjs.getPage(pageIndex + 1);
                 const viewport = page.getViewport({ scale: 2.0 });
-                const canvas = document.createElement('canvas');
-                canvas.width  = viewport.width;
-                canvas.height = viewport.height;
+                const canvas   = document.createElement('canvas');
+                canvas.width   = viewport.width;
+                canvas.height  = viewport.height;
                 await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
                 container.innerHTML = '';
                 container.appendChild(canvas);
+                renderedCanvas = canvas;
             } else {
-                // Branch 2: LEGACY uploads — original raw minutes PDF.
-                // Use the precise splitter algorithm to slice out this single
-                // student (handles multi-page students, header trimming, etc.).
                 await renderStudentSliceLegacy(pdfDocjs, studentId, container);
+                renderedCanvas = container.querySelector('canvas');
             }
 
-            container.style.display = 'block';
-            btnElement.innerText = "👁️ إخفاء كشف النقاط التفصيلي";
+            if (renderedCanvas) {
+                appendDownloadPdfButton(container, () => renderedCanvas, studentId);
+            }
+
+            container.dataset.rendered = '1';
+            container.style.display   = 'block';
+            if (btnElement) btnElement.innerText = '👁️ إخفاء كشف النقاط التفصيلي';
         } catch (error) {
             console.error(error);
-            alert("حدث خطأ في عرض التفاصيل.");
-            btnElement.innerText = "👁️ عرض كشف النقاط التفصيلي";
+            alert('حدث خطأ في عرض التفاصيل.');
+            if (btnElement) btnElement.innerText = '👁️ عرض كشف النقاط التفصيلي';
         } finally {
-            btnElement.disabled = false;
+            if (btnElement) btnElement.disabled = false;
         }
+    }
+
+    // ---------------------------------------------------------------
+    // Called by the "تحقق وعرض الكشف" button inside the NNI form.
+    // ---------------------------------------------------------------
+    async function verifyNniAndShow(studentId, pdfUrl, cardId, pageIndex, storedNni) {
+        const container  = document.getElementById(`details-container-${cardId}`);
+        const nniField   = document.getElementById(`nni-field-${cardId}`);
+        const nniErrMsg  = document.getElementById(`nni-err-${cardId}`);
+        const submitBtn  = document.getElementById(`nni-btn-${cardId}`);
+        const detailsBtn = document.querySelector(`#${cardId} .view-details-btn`);
+        // thumbUrl stored in container dataset by viewPreciseDetails
+        const thumbUrl   = container.dataset.thumbUrl || '';
+
+        const entered = (nniField ? nniField.value : '').trim().replace(/\s+/g, '');
+        const stored  = storedNni.trim().replace(/\s+/g, '');
+
+        if (entered !== stored) {
+            if (nniErrMsg)  { nniErrMsg.style.display = 'block'; }
+            if (nniField)   {
+                nniField.classList.remove('nni-input-error');
+                void nniField.offsetWidth; // reflow to restart animation
+                nniField.classList.add('nni-input-error');
+                nniField.focus();
+            }
+            return;
+        }
+
+        // Correct NNI — clear form then render (fast image path or PDF fallback)
+        if (submitBtn) { submitBtn.disabled = true; submitBtn.innerText = '⏳ جاري عرض الكشف...'; }
+        delete container.dataset.nniPending;
+        container.innerHTML = '';
+        await renderDetailsInContainer(studentId, pdfUrl, detailsBtn, container, pageIndex, thumbUrl);
+    }
+
+    // ---------------------------------------------------------------
+    // Main entry point — button onclick handler.
+    // For annual results with NNI: shows verification form first.
+    // For all other cases: renders PDF directly.
+    // ---------------------------------------------------------------
+    async function viewPreciseDetails(studentId, pdfUrl, btnElement, cardId, pageIndex) {
+        const container  = document.getElementById(`details-container-${cardId}`);
+        const isAnnual   = btnElement.dataset.annual === '1';
+        const storedNni  = (btnElement.dataset.nni   || '').trim();
+        const thumbUrl   = (btnElement.dataset.thumb  || '').trim();
+
+        // Toggle if already rendered — instant show/hide
+        if (container.dataset.rendered === '1') {
+            if (container.style.display === 'block') {
+                container.style.display = 'none';
+                btnElement.innerText = '👁️ عرض كشف النقاط التفصيلي';
+            } else {
+                container.style.display = 'block';
+                btnElement.innerText = '👁️ إخفاء كشف النقاط التفصيلي';
+            }
+            return;
+        }
+
+        // If the NNI form is already showing, just refocus the input
+        if (container.dataset.nniPending === '1') {
+            container.style.display = 'block';
+            const nniField = document.getElementById(`nni-field-${cardId}`);
+            if (nniField) nniField.focus();
+            return;
+        }
+
+        // Annual result WITH a stored NNI → show verification form first
+        if (isAnnual && storedNni) {
+            container.dataset.nniPending = '1';
+            container.dataset.thumbUrl   = thumbUrl;  // passed to verifyNniAndShow via dataset
+            container.innerHTML = `
+                <div class="nni-verify-box">
+                    <div class="nni-verify-icon">🪪</div>
+                    <p class="nni-verify-title">تحقق من الهوية / Vérification d'identité</p>
+                    <p class="nni-verify-sub">أدخل رقمك الوطني (NNI) للوصول إلى كشف النقاط التفصيلي<br><span style="font-size:0.82rem;opacity:0.8;">Entrez votre NNI pour accéder au relevé de notes détaillé</span></p>
+                    <input class="nni-input" id="nni-field-${cardId}" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="15" placeholder="NNI" autocomplete="off" />
+                    <p class="nni-error-msg" id="nni-err-${cardId}">❌ الرقم الوطني غير صحيح — NNI incorrect</p>
+                    <button class="nni-submit-btn" id="nni-btn-${cardId}" onclick="verifyNniAndShow('${studentId}', '${pdfUrl}', '${cardId}', ${Number.isInteger(pageIndex) ? pageIndex : 'null'}, '${storedNni}')">✅ تحقق وعرض الكشف</button>
+                </div>`;
+            container.style.display = 'block';
+            const nniField = document.getElementById(`nni-field-${cardId}`);
+            if (nniField) {
+                nniField.focus();
+                nniField.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') document.getElementById(`nni-btn-${cardId}`).click();
+                });
+            }
+            return;
+        }
+
+        // Semester result or annual without NNI → render directly
+        await renderDetailsInContainer(studentId, pdfUrl, btnElement, container, pageIndex, thumbUrl);
     }
 </script>
 
