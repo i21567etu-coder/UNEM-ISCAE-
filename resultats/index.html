@@ -2770,19 +2770,68 @@
 </script>
 
 <script>
-    window.addEventListener('load', async () => {
-        if (localStorage.getItem('unem_direct_visit_results')) return;
-        try {
-            const STATS_URL = 'https://rcdaxtretxskeyghxugm.supabase.co';
-            const STATS_KEY = 'sb_publishable_OupfdnKe5eQmqULV46O0wQ_xUglAncv'; 
-            const statsClient = supabase.createClient(STATS_URL, STATS_KEY);
-            
-            await statsClient.from('analytics').insert([
-                { action_type: 'دخول قسم', action_detail: 'النتائج' }
-            ]);
-            localStorage.setItem('unem_direct_visit_results', 'true');
-        } catch (e) {}
-    });
- </script>
+    // ============================================================
+    //  STATISTICS — Supabase ثانية مخصصة للإحصائيات فقط
+    //  لا تمس قاعدة البيانات الأساسية (_supabase) إطلاقاً
+    // ============================================================
+    (function () {
+        const STATS_SUPABASE_URL = 'https://cbaswqaufawdsvadizyi.supabase.co';
+        const STATS_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNiYXN3cWF1ZmF3ZHN2YWRpenlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzODUxNCwiZXhwIjoyMDkzNDE0NTE0fQ.tv-u05JTkUFFkdYgR4gUyRb0TZKtDEwEwRQLRQSljHU';
+
+        // عميل Supabase منفصل خاص بالإحصائيات فقط
+        const statsSupabase = supabase.createClient(STATS_SUPABASE_URL, STATS_SUPABASE_KEY);
+
+        // منع تكرار العد لنفس المستخدم في نفس الجلسة
+        const SESSION_KEY  = 'unem_stats_session_recorded';
+        const VISITOR_KEY  = 'unem_stats_visitor_id';
+
+        function getOrCreateVisitorId() {
+            let vid = localStorage.getItem(VISITOR_KEY);
+            if (!vid) {
+                vid = 'v_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem(VISITOR_KEY, vid);
+            }
+            return vid;
+        }
+
+        async function recordVisit() {
+            // لا تعد نفس الجلسة مرتين
+            if (sessionStorage.getItem(SESSION_KEY)) return;
+
+            try {
+                const visitorId = getOrCreateVisitorId();
+                const page      = window.location.pathname || '/results';
+                const referrer  = document.referrer || 'direct';
+                const ua        = navigator.userAgent || '';
+                const isMobile  = /Mobi|Android|iPhone|iPad/i.test(ua);
+
+                await statsSupabase.from('analytics').insert([{
+                    action_type   : 'page_view',
+                    action_detail : 'النتائج',
+                    visitor_id    : visitorId,
+                    page          : page,
+                    referrer      : referrer.substring(0, 200),
+                    device_type   : isMobile ? 'mobile' : 'desktop',
+                    recorded_at   : new Date().toISOString()
+                }]);
+
+                // سجّل الزيارة في sessionStorage لمنع التكرار في نفس الجلسة
+                sessionStorage.setItem(SESSION_KEY, '1');
+            } catch (e) {
+                // صامت — لا يؤثر على أداء الموقع الأساسي
+            }
+        }
+
+        // نفّذ بعد تحميل الصفحة كاملاً حتى لا يبطئ العرض
+        if (document.readyState === 'complete') {
+            recordVisit();
+        } else {
+            window.addEventListener('load', recordVisit);
+        }
+    })();
+    // ============================================================
+    //  END STATISTICS
+    // ============================================================
+</script>
 </body>
 </html>
