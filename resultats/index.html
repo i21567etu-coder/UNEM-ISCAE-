@@ -3245,13 +3245,22 @@
 
         // Pull distinct values from the table itself so the filter stays
         // accurate even if new years/majors are added later.
-        const { data, error } = await _supabase
-            .from('student_results')
-            .select('year, major, level, semester')
-            .limit(5000);
-        if (error) { console.warn(error); return; }
+        // Supabase caps each request at 1000 rows by default, so we paginate
+        // to make sure ALL majors/years/levels appear in the filters.
+        const all = [];
+        const PAGE = 1000;
+        for (let from = 0; ; from += PAGE) {
+            const { data, error } = await _supabase
+                .from('student_results')
+                .select('year, major, level, semester')
+                .range(from, from + PAGE - 1);
+            if (error) { console.warn(error); break; }
+            if (!data || data.length === 0) break;
+            all.push(...data);
+            if (data.length < PAGE) break;
+        }
 
-        const uniq = (k) => Array.from(new Set((data || []).map(r => r[k]).filter(Boolean))).sort();
+        const uniq = (k) => Array.from(new Set(all.map(r => r[k]).filter(Boolean))).sort();
         const fill = (sel, values) => {
             const current = sel.value;
             sel.innerHTML = '<option value="">— الكل —</option>' +
@@ -3277,17 +3286,23 @@
             semester: document.getElementById('stats-semester').value,
         };
 
-        let query = _supabase.from('student_results').select('matricule, decision, level');
-        for (const [k, v] of Object.entries(filters)) if (v) query = query.eq(k, v);
-
-        const { data, error } = await query.limit(50000);
-        if (error) {
-            status.style.color = '#dc2626';
-            status.innerHTML = '❌ خطأ في القراءة: ' + (error.message || error);
-            return;
+        // Paginate to bypass the 1000-row default cap.
+        const PAGE = 1000;
+        const rows = [];
+        for (let from = 0; ; from += PAGE) {
+            let query = _supabase.from('student_results').select('matricule, decision, level');
+            for (const [k, v] of Object.entries(filters)) if (v) query = query.eq(k, v);
+            const { data, error } = await query.range(from, from + PAGE - 1);
+            if (error) {
+                status.style.color = '#dc2626';
+                status.innerHTML = '❌ خطأ في القراءة: ' + (error.message || error);
+                return;
+            }
+            if (!data || data.length === 0) break;
+            rows.push(...data);
+            if (data.length < PAGE) break;
         }
 
-        const rows = data || [];
         const total = rows.length;
         let success = 0;
         const byLevel = {}; // { L1: { total, success } ... }
