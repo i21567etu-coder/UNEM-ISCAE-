@@ -24,6 +24,9 @@
     <!-- مكتبة Supabase -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 
+    <!-- Chart.js for stats dashboard -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
     <!-- خطوط احترافية للعربية والفرنسية -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1083,7 +1086,39 @@
             <div id="upload-annual-status" style="margin-top:15px; font-weight:bold; font-size:0.9rem; text-align:center;"></div>
 
             <hr style="border: 1px solid #eee; margin: 20px 0;">
+            <button class="admin-btn" style="background:var(--secondary); color:white; margin-bottom:10px;" onclick="openStatsModal()">📊 عرض إحصائيات النجاح</button>
             <button class="admin-btn" style="background:#dc2626; color:white;" onclick="adminLogout()">تسجيل الخروج 🚪</button>
+        </div>
+    </div>
+</div>
+
+<!-- ============ STATS MODAL ============ -->
+<div id="stats-modal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 1100px;">
+        <span class="close-modal" onclick="closeStatsModal()">✖</span>
+        <h2>📊 إحصائيات النجاح</h2>
+
+        <div class="form-group" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap:10px;">
+            <div><label>السنة الجامعية:</label><select id="stats-year"><option value="">— الكل —</option></select></div>
+            <div><label>التخصص:</label><select id="stats-major"><option value="">— الكل —</option></select></div>
+            <div><label>المستوى:</label><select id="stats-level"><option value="">— الكل —</option></select></div>
+            <div><label>السداسي:</label><select id="stats-semester"><option value="">— الكل —</option></select></div>
+        </div>
+        <button class="admin-btn" style="background:var(--primary); color:#fff; margin-top:12px;" onclick="loadStats()">🔄 تحديث</button>
+
+        <div id="stats-status" style="margin-top:12px; text-align:center; font-weight:bold;"></div>
+
+        <div id="stats-cards" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap:14px; margin-top:18px;"></div>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px,1fr)); gap:18px; margin-top:22px;">
+            <div style="background:#fff; border:1px solid var(--border-light); border-radius:var(--radius); padding:14px; box-shadow:var(--shadow-sm);">
+                <h3 style="margin:0 0 10px; text-align:center; color:var(--text);">النجاح مقابل الرسوب</h3>
+                <canvas id="stats-pie" height="220"></canvas>
+            </div>
+            <div style="background:#fff; border:1px solid var(--border-light); border-radius:var(--radius); padding:14px; box-shadow:var(--shadow-sm);">
+                <h3 style="margin:0 0 10px; text-align:center; color:var(--text);">نسبة النجاح حسب المستوى</h3>
+                <canvas id="stats-bar" height="220"></canvas>
+            </div>
         </div>
     </div>
 </div>
@@ -1862,7 +1897,11 @@
             }]);
             
             if (dbError) throw dbError;
-            
+
+            // Persist structured per-student rows for the analytics dashboard.
+            try { await saveStudentResults(studentsArray, { academicYear, major, level, semester }); }
+            catch (e) { console.warn('saveStudentResults failed:', e); }
+
             globalFilesCache = null;
             currentDisplayMode = 'semester';
             applyDisplayMode();
@@ -2359,6 +2398,10 @@
                 details_url: detailsUrl, ranking_url: rankingUrl
             }]);
             if (dbError) throw dbError;
+
+            // Persist structured per-student rows for the analytics dashboard.
+            try { await saveStudentResults(studentsArray, { academicYear, major, level, semester: 'ANNUEL' }); }
+            catch (e) { console.warn('saveStudentResults failed:', e); }
 
             globalFilesCache = null;
             currentDisplayMode = 'annual';
@@ -3130,6 +3173,194 @@
 
         // Semester result or annual without NNI → render directly
         await renderDetailsInContainer(studentId, pdfUrl, btnElement, container, pageIndex, thumbUrl);
+    }
+
+    // ============================================================
+    //                  SUCCESS STATISTICS DASHBOARD
+    // ============================================================
+    // Decision values are normalized: "Admis" / "Validé" → success,
+    // "Rattrapage" / "Ajourné" → fail. Anything else is counted as fail
+    // by default. Data lives in the `student_results` table (see SQL in
+    // the project notes). All reads use the existing _supabase client.
+
+    function classifyDecision(decision) {
+        if (!decision) return 'fail';
+        const d = String(decision).toLowerCase();
+        if (d.includes('admis') || d.includes('validé') || d.includes('valide')) return 'success';
+        return 'fail';
+    }
+
+    /**
+     * Bulk-insert per-student rows after a successful upload.
+     * Safe to call repeatedly: previous rows for the same
+     * (year/major/level/semester) tuple are wiped first so re-uploads
+     * (e.g. after appeals) keep the table clean.
+     */
+    async function saveStudentResults(studentsArray, ctx) {
+        if (!Array.isArray(studentsArray) || studentsArray.length === 0) return;
+        const { academicYear, major, level, semester } = ctx;
+
+        await _supabase.from('student_results')
+            .delete()
+            .match({ year: academicYear, major, level, semester });
+
+        const rows = studentsArray.map(s => ({
+            matricule: s.id,
+            name: s.name,
+            moyenne: typeof s.avgNum === 'number' ? s.avgNum : parseFloat(String(s.avg).replace(',', '.')),
+            decision: s.decision || null,
+            year: academicYear,
+            major,
+            level,
+            semester,
+        }));
+
+        // Insert in chunks to stay well under PostgREST limits.
+        const CHUNK = 500;
+        for (let i = 0; i < rows.length; i += CHUNK) {
+            const slice = rows.slice(i, i + CHUNK);
+            const { error } = await _supabase.from('student_results').insert(slice);
+            if (error) throw error;
+        }
+    }
+
+    let _statsPieChart = null;
+    let _statsBarChart = null;
+
+    function openStatsModal() {
+        document.getElementById('stats-modal').style.display = 'flex';
+        populateStatsFilters();
+        loadStats();
+    }
+    function closeStatsModal() {
+        document.getElementById('stats-modal').style.display = 'none';
+    }
+
+    async function populateStatsFilters() {
+        // Mirror existing year/major/level/semester options, but with an "all" choice.
+        const yearSel = document.getElementById('stats-year');
+        const majorSel = document.getElementById('stats-major');
+        const levelSel = document.getElementById('stats-level');
+        const semSel  = document.getElementById('stats-semester');
+
+        // Pull distinct values from the table itself so the filter stays
+        // accurate even if new years/majors are added later.
+        const { data, error } = await _supabase
+            .from('student_results')
+            .select('year, major, level, semester')
+            .limit(5000);
+        if (error) { console.warn(error); return; }
+
+        const uniq = (k) => Array.from(new Set((data || []).map(r => r[k]).filter(Boolean))).sort();
+        const fill = (sel, values) => {
+            const current = sel.value;
+            sel.innerHTML = '<option value="">— الكل —</option>' +
+                values.map(v => `<option value="${v}">${v}</option>`).join('');
+            if (current) sel.value = current;
+        };
+        fill(yearSel,  uniq('year'));
+        fill(majorSel, uniq('major'));
+        fill(levelSel, uniq('level'));
+        fill(semSel,   uniq('semester'));
+    }
+
+    async function loadStats() {
+        const status = document.getElementById('stats-status');
+        const cards  = document.getElementById('stats-cards');
+        status.style.color = ''; status.innerHTML = '⏳ جاري تحميل الإحصائيات...';
+        cards.innerHTML = '';
+
+        const filters = {
+            year:     document.getElementById('stats-year').value,
+            major:    document.getElementById('stats-major').value,
+            level:    document.getElementById('stats-level').value,
+            semester: document.getElementById('stats-semester').value,
+        };
+
+        let query = _supabase.from('student_results').select('matricule, decision, level');
+        for (const [k, v] of Object.entries(filters)) if (v) query = query.eq(k, v);
+
+        const { data, error } = await query.limit(50000);
+        if (error) {
+            status.style.color = '#dc2626';
+            status.innerHTML = '❌ خطأ في القراءة: ' + (error.message || error);
+            return;
+        }
+
+        const rows = data || [];
+        const total = rows.length;
+        let success = 0;
+        const byLevel = {}; // { L1: { total, success } ... }
+        for (const r of rows) {
+            const isOk = classifyDecision(r.decision) === 'success';
+            if (isOk) success++;
+            const lvl = r.level || '—';
+            if (!byLevel[lvl]) byLevel[lvl] = { total: 0, success: 0 };
+            byLevel[lvl].total++;
+            if (isOk) byLevel[lvl].success++;
+        }
+        const failCount = total - success;
+        const rate = total ? (success / total) * 100 : 0;
+
+        status.innerHTML = total ? '' : '⚠️ لا توجد بيانات تطابق هذه الفلاتر.';
+
+        const card = (label, value, color) => `
+            <div class="result-card" style="background:#fff; border:1px solid var(--border-light); border-radius:var(--radius); padding:16px; box-shadow:var(--shadow-sm); text-align:center;">
+                <div style="color:var(--text-muted); font-size:0.9rem; margin-bottom:6px;">${label}</div>
+                <div data-counter="${value}" style="font-size:1.9rem; font-weight:800; color:${color};">0</div>
+            </div>`;
+        cards.innerHTML =
+            card('إجمالي الطلاب', total, 'var(--text)') +
+            card('الناجحون', success, 'var(--primary)') +
+            card('الراسبون', failCount, '#dc2626') +
+            card('نسبة النجاح', rate.toFixed(2) + '%', 'var(--secondary)');
+
+        // Animated counters
+        cards.querySelectorAll('[data-counter]').forEach(el => {
+            const target = el.getAttribute('data-counter');
+            const isPct = String(target).endsWith('%');
+            const num = parseFloat(target);
+            if (isNaN(num)) { el.textContent = target; return; }
+            const duration = 700; const start = performance.now();
+            const step = (now) => {
+                const p = Math.min(1, (now - start) / duration);
+                const v = num * (0.5 - Math.cos(Math.PI * p) / 2);
+                el.textContent = isPct ? v.toFixed(2) + '%' : Math.round(v).toLocaleString();
+                if (p < 1) requestAnimationFrame(step);
+            };
+            requestAnimationFrame(step);
+        });
+
+        // Charts
+        const pieCtx = document.getElementById('stats-pie');
+        const barCtx = document.getElementById('stats-bar');
+        if (_statsPieChart) _statsPieChart.destroy();
+        if (_statsBarChart) _statsBarChart.destroy();
+
+        if (total > 0 && window.Chart) {
+            _statsPieChart = new Chart(pieCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['ناجح', 'راسب'],
+                    datasets: [{ data: [success, failCount], backgroundColor: ['#005C29', '#dc2626'], borderWidth: 0 }]
+                },
+                options: { plugins: { legend: { position: 'bottom' } }, cutout: '60%' }
+            });
+
+            const levels = Object.keys(byLevel).sort();
+            const rates  = levels.map(l => byLevel[l].total ? (byLevel[l].success / byLevel[l].total) * 100 : 0);
+            _statsBarChart = new Chart(barCtx, {
+                type: 'bar',
+                data: {
+                    labels: levels,
+                    datasets: [{ label: 'نسبة النجاح %', data: rates, backgroundColor: '#2563eb', borderRadius: 6 }]
+                },
+                options: {
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } } }
+                }
+            });
+        }
     }
 </script>
 
