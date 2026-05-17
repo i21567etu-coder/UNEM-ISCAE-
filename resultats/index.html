@@ -1092,32 +1092,123 @@
     </div>
 </div>
 
-<!-- ============ STATS MODAL ============ -->
+<!-- ============ STATS MODAL (Professional Redesign) ============ -->
+<style>
+    #stats-modal .stats-pro-box{
+        max-width:1200px; width:96%; max-height:94vh; padding:0; overflow:hidden;
+        border-radius:20px; background:#f8fafc; display:flex; flex-direction:column;
+        box-shadow:0 30px 80px rgba(0,0,0,0.35);
+    }
+    #stats-modal .stats-pro-header{
+        background:linear-gradient(135deg,#005C29 0%,#10b981 60%,#2563eb 100%);
+        color:#fff; padding:22px 28px; position:relative;
+        box-shadow:0 6px 20px rgba(0,92,41,0.25);
+    }
+    #stats-modal .stats-pro-header h2{
+        margin:0; font-size:1.6rem; font-weight:800; display:flex; align-items:center; gap:10px;
+    }
+    #stats-modal .stats-pro-header p{ margin:6px 0 0; opacity:.92; font-size:.95rem; }
+    #stats-modal .stats-pro-close{
+        position:absolute; top:14px; left:14px; width:36px; height:36px; border-radius:50%;
+        background:rgba(255,255,255,0.2); color:#fff; display:flex; align-items:center;
+        justify-content:center; cursor:pointer; font-size:1.1rem; border:none; transition:all .2s;
+    }
+    #stats-modal .stats-pro-close:hover{ background:rgba(255,255,255,0.35); transform:rotate(90deg); }
+    #stats-modal .stats-pro-body{ padding:22px 26px; overflow-y:auto; flex:1; }
+    #stats-modal .stats-filter-card{
+        background:#fff; border-radius:16px; padding:18px 20px;
+        box-shadow:0 4px 18px rgba(15,23,42,0.06); border:1px solid #e2e8f0;
+    }
+    #stats-modal .stats-filter-grid{
+        display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px;
+    }
+    #stats-modal .stats-filter-grid label{
+        display:block; font-size:.82rem; color:#64748b; margin-bottom:6px; font-weight:600;
+    }
+    #stats-modal .stats-filter-grid select{
+        width:100%; padding:10px 12px; border-radius:10px; border:1.5px solid #e2e8f0;
+        background:#f8fafc; font-family:'Cairo',sans-serif; font-size:.92rem; transition:all .2s;
+    }
+    #stats-modal .stats-filter-grid select:focus{ outline:none; border-color:#005C29; background:#fff; }
+    #stats-modal .stats-refresh-btn{
+        margin-top:14px; width:100%; padding:12px; border:none; border-radius:12px;
+        background:linear-gradient(135deg,#005C29,#10b981); color:#fff; font-weight:700;
+        font-family:'Cairo',sans-serif; font-size:1rem; cursor:pointer; transition:all .2s;
+        box-shadow:0 6px 16px rgba(0,92,41,0.3);
+    }
+    #stats-modal .stats-refresh-btn:hover{ transform:translateY(-2px); box-shadow:0 10px 24px rgba(0,92,41,0.4); }
+    #stats-modal .stats-kpi-grid{
+        display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+        gap:14px; margin-top:18px;
+    }
+    #stats-modal .stats-kpi-card{
+        background:#fff; border-radius:16px; padding:18px 16px; position:relative; overflow:hidden;
+        box-shadow:0 4px 18px rgba(15,23,42,0.06); border:1px solid #e2e8f0; transition:all .25s;
+    }
+    #stats-modal .stats-kpi-card:hover{ transform:translateY(-3px); box-shadow:0 12px 28px rgba(15,23,42,0.12); }
+    #stats-modal .stats-kpi-card::before{
+        content:''; position:absolute; top:0; right:0; width:6px; height:100%; background:var(--accent,#005C29);
+    }
+    #stats-modal .stats-kpi-icon{
+        width:42px; height:42px; border-radius:12px; display:flex; align-items:center;
+        justify-content:center; font-size:1.3rem; margin-bottom:10px;
+    }
+    #stats-modal .stats-kpi-label{ color:#64748b; font-size:.85rem; font-weight:600; margin-bottom:6px; }
+    #stats-modal .stats-kpi-value{ font-size:2rem; font-weight:800; line-height:1; }
+    #stats-modal .stats-charts-grid{
+        display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+        gap:16px; margin-top:18px;
+    }
+    #stats-modal .stats-chart-card{
+        background:#fff; border-radius:16px; padding:18px;
+        box-shadow:0 4px 18px rgba(15,23,42,0.06); border:1px solid #e2e8f0;
+    }
+    #stats-modal .stats-chart-card h3{
+        margin:0 0 14px; font-size:1.05rem; color:#0f172a; font-weight:700;
+        padding-bottom:10px; border-bottom:2px solid #f1f5f9;
+    }
+    #stats-modal .stats-chart-card canvas{ max-height:280px; }
+    #stats-modal .stats-status-msg{
+        margin-top:14px; padding:12px; border-radius:10px; text-align:center; font-weight:600;
+    }
+    @media(max-width:640px){
+        #stats-modal .stats-pro-header{ padding:18px 20px; }
+        #stats-modal .stats-pro-header h2{ font-size:1.25rem; }
+        #stats-modal .stats-pro-body{ padding:16px; }
+        #stats-modal .stats-kpi-value{ font-size:1.6rem; }
+    }
+</style>
 <div id="stats-modal" class="modal-overlay">
-    <div class="modal-box" style="max-width: 1100px;">
-        <span class="close-modal" onclick="closeStatsModal()">✖</span>
-        <h2>📊 إحصائيات النجاح</h2>
-
-        <div class="form-group" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap:10px;">
-            <div><label>السنة الجامعية:</label><select id="stats-year"><option value="">— الكل —</option></select></div>
-            <div><label>التخصص:</label><select id="stats-major"><option value="">— الكل —</option></select></div>
-            <div><label>المستوى:</label><select id="stats-level"><option value="">— الكل —</option></select></div>
-            <div><label>السداسي:</label><select id="stats-semester"><option value="">— الكل —</option></select></div>
+    <div class="modal-box stats-pro-box">
+        <div class="stats-pro-header">
+            <button class="stats-pro-close" onclick="closeStatsModal()" aria-label="إغلاق">✖</button>
+            <h2>📊 لوحة إحصائيات النجاح</h2>
+            <p>عرض شامل ومفصّل لنسب النجاح حسب التخصص والمستوى والسداسي</p>
         </div>
-        <button class="admin-btn" style="background:var(--primary); color:#fff; margin-top:12px;" onclick="loadStats()">🔄 تحديث</button>
-
-        <div id="stats-status" style="margin-top:12px; text-align:center; font-weight:bold;"></div>
-
-        <div id="stats-cards" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap:14px; margin-top:18px;"></div>
-
-        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px,1fr)); gap:18px; margin-top:22px;">
-            <div style="background:#fff; border:1px solid var(--border-light); border-radius:var(--radius); padding:14px; box-shadow:var(--shadow-sm);">
-                <h3 style="margin:0 0 10px; text-align:center; color:var(--text);">النجاح مقابل الرسوب</h3>
-                <canvas id="stats-pie" height="220"></canvas>
+        <div class="stats-pro-body">
+            <div class="stats-filter-card">
+                <div class="stats-filter-grid">
+                    <div><label>📅 السنة الجامعية</label><select id="stats-year"><option value="">— الكل —</option></select></div>
+                    <div><label>🎓 التخصص</label><select id="stats-major"><option value="">— الكل —</option></select></div>
+                    <div><label>📚 المستوى</label><select id="stats-level"><option value="">— الكل —</option></select></div>
+                    <div><label>🗓️ السداسي</label><select id="stats-semester"><option value="">— الكل —</option></select></div>
+                </div>
+                <button class="stats-refresh-btn" onclick="loadStats()">🔄 تحديث الإحصائيات</button>
             </div>
-            <div style="background:#fff; border:1px solid var(--border-light); border-radius:var(--radius); padding:14px; box-shadow:var(--shadow-sm);">
-                <h3 style="margin:0 0 10px; text-align:center; color:var(--text);">نسبة النجاح حسب المستوى</h3>
-                <canvas id="stats-bar" height="220"></canvas>
+
+            <div id="stats-status" class="stats-status-msg" style="display:none;"></div>
+
+            <div id="stats-cards" class="stats-kpi-grid"></div>
+
+            <div class="stats-charts-grid">
+                <div class="stats-chart-card">
+                    <h3>🥧 النجاح مقابل الرسوب</h3>
+                    <canvas id="stats-pie"></canvas>
+                </div>
+                <div class="stats-chart-card">
+                    <h3>📊 نسبة النجاح حسب المستوى</h3>
+                    <canvas id="stats-bar"></canvas>
+                </div>
             </div>
         </div>
     </div>
@@ -2737,8 +2828,8 @@
     }
 
     async function downloadDetailsAsPdf(canvas, studentId) {
-        const { PDFDocument } = PDFLib;
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+        const { PDFDocument, StandardFonts, rgb } = PDFLib;
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
         const b64     = dataUrl.split(',')[1];
         const bin     = atob(b64);
         const bytes   = new Uint8Array(bin.length);
@@ -2746,19 +2837,59 @@
 
         const pdfDoc = await PDFDocument.create();
         const jpg    = await pdfDoc.embedJpg(bytes);
-        const PAGE_W = 595.28, PAGE_H = 841.89, MARGIN = 20;
-        const page   = pdfDoc.addPage([PAGE_W, PAGE_H]);
+        const font     = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+        const fontLite = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
+        // Choose orientation based on canvas aspect for clearest result.
+        const landscape = canvas.width > canvas.height * 1.15;
+        const PAGE_W = landscape ? 841.89 : 595.28;
+        const PAGE_H = landscape ? 595.28 : 841.89;
+        const MARGIN_X = 24, MARGIN_TOP = 70, MARGIN_BOTTOM = 32;
+
+        const page = pdfDoc.addPage([PAGE_W, PAGE_H]);
+
+        // ── Header band ───────────────────────────────────────────────
+        page.drawRectangle({ x: 0, y: PAGE_H - 48, width: PAGE_W, height: 48, color: rgb(0, 0.36, 0.16) });
+        page.drawText('Releve de Notes - Transcript', {
+            x: MARGIN_X, y: PAGE_H - 30, size: 16, font, color: rgb(1, 1, 1),
+        });
+        page.drawText(`Matricule: ${studentId}`, {
+            x: MARGIN_X, y: PAGE_H - 46, size: 10, font: fontLite, color: rgb(0.92, 0.98, 0.94),
+        });
+        const dateStr = new Date().toLocaleDateString('fr-FR');
+        const dateW = fontLite.widthOfTextAtSize(dateStr, 10);
+        page.drawText(dateStr, {
+            x: PAGE_W - MARGIN_X - dateW, y: PAGE_H - 30, size: 10, font: fontLite, color: rgb(1, 1, 1),
+        });
+
+        // ── Transcript image, scaled to fit available area ────────────
+        const availW = PAGE_W - 2 * MARGIN_X;
+        const availH = PAGE_H - MARGIN_TOP - MARGIN_BOTTOM;
         const ratio  = canvas.height / canvas.width;
-        let w = PAGE_W - 2 * MARGIN;
-        let h = w * ratio;
-        if (h > PAGE_H - 2 * MARGIN) { h = PAGE_H - 2 * MARGIN; w = h / ratio; }
-        page.drawImage(jpg, { x: (PAGE_W - w) / 2, y: PAGE_H - MARGIN - h, width: w, height: h });
+        let w = availW, h = availW * ratio;
+        if (h > availH) { h = availH; w = h / ratio; }
+        const x = (PAGE_W - w) / 2;
+        const y = MARGIN_BOTTOM + (availH - h) / 2;
+
+        // Subtle frame around image
+        page.drawRectangle({
+            x: x - 2, y: y - 2, width: w + 4, height: h + 4,
+            borderColor: rgb(0.85, 0.88, 0.92), borderWidth: 1, color: rgb(1, 1, 1),
+        });
+        page.drawImage(jpg, { x, y, width: w, height: h });
+
+        // ── Footer ────────────────────────────────────────────────────
+        const footer = 'UNEM ISCAE - Document officiel genere automatiquement  |  Developpe par MDA';
+        const fw = fontLite.widthOfTextAtSize(footer, 8);
+        page.drawText(footer, {
+            x: (PAGE_W - fw) / 2, y: 14, size: 8, font: fontLite, color: rgb(0.45, 0.5, 0.55),
+        });
 
         const pdfBytes = await pdfDoc.save();
         const blob     = new Blob([pdfBytes], { type: 'application/pdf' });
         const url      = URL.createObjectURL(blob);
         const a        = document.createElement('a');
-        a.href = url; a.download = `كشف_النقاط_${studentId}.pdf`;
+        a.href = url; a.download = `Releve_${studentId}.pdf`;
         document.body.appendChild(a); a.click(); a.remove();
         setTimeout(() => URL.revokeObjectURL(url), 5000);
     }
@@ -3000,7 +3131,20 @@
         const detailsData = window.__detailsDataMap && window.__detailsDataMap[cardId];
         if (detailsData && detailsData.rows && detailsData.rows.length) {
             renderDetailsAsHtml(container, detailsData, studentId);
-            appendDownloadPdfButton(container, () => renderDetailsToCanvas(detailsData, studentId), studentId);
+            // Snapshot the rendered HTML grid via html2canvas for a clean, organized PDF
+            // that mirrors exactly what the user sees on screen.
+            appendDownloadPdfButton(container, async () => {
+                const target = container.firstElementChild || container;
+                try {
+                    return await html2canvas(target, {
+                        scale: 2.5, backgroundColor: '#ffffff', useCORS: true, logging: false,
+                        windowWidth: target.scrollWidth, windowHeight: target.scrollHeight,
+                    });
+                } catch (e) {
+                    console.warn('html2canvas failed, falling back to manual canvas', e);
+                    return renderDetailsToCanvas(detailsData, studentId);
+                }
+            }, studentId);
             container.dataset.rendered = '1';
             container.style.display    = 'block';
             if (btnElement) {
@@ -3318,17 +3462,20 @@
         const rate = total ? (success / total) * 100 : 0;
 
         status.innerHTML = total ? '' : '⚠️ لا توجد بيانات تطابق هذه الفلاتر.';
+        status.style.display = total ? 'none' : 'block';
+        if (!total) { status.style.background = '#fef3c7'; status.style.color = '#92400e'; }
 
-        const card = (label, value, color) => `
-            <div class="result-card" style="background:#fff; border:1px solid var(--border-light); border-radius:var(--radius); padding:16px; box-shadow:var(--shadow-sm); text-align:center;">
-                <div style="color:var(--text-muted); font-size:0.9rem; margin-bottom:6px;">${label}</div>
-                <div data-counter="${value}" style="font-size:1.9rem; font-weight:800; color:${color};">0</div>
+        const kpi = (label, value, color, icon, bg) => `
+            <div class="stats-kpi-card" style="--accent:${color}">
+                <div class="stats-kpi-icon" style="background:${bg}; color:${color};">${icon}</div>
+                <div class="stats-kpi-label">${label}</div>
+                <div data-counter="${value}" class="stats-kpi-value" style="color:${color};">0</div>
             </div>`;
         cards.innerHTML =
-            card('إجمالي الطلاب', total, 'var(--text)') +
-            card('الناجحون', success, 'var(--primary)') +
-            card('الراسبون', failCount, '#dc2626') +
-            card('نسبة النجاح', rate.toFixed(2) + '%', 'var(--secondary)');
+            kpi('إجمالي الطلاب', total, '#0f172a', '👥', '#f1f5f9') +
+            kpi('الناجحون',     success,   '#005C29', '✅', '#dcfce7') +
+            kpi('الراسبون',     failCount, '#dc2626', '❌', '#fee2e2') +
+            kpi('نسبة النجاح',  rate.toFixed(2) + '%', '#2563eb', '📈', '#dbeafe');
 
         // Animated counters
         cards.querySelectorAll('[data-counter]').forEach(el => {
