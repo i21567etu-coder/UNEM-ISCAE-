@@ -1315,6 +1315,140 @@
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwb2d0ZnJwY2Z3Y2ttaWNleGppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5OTcyMjYsImV4cCI6MjA5MzU3MzIyNn0.1hImKAGBuSTYaWblu7tJ7-MDMOeZWuFaZkOtz4EcHwY';
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     
+    /* ============================================================
+       CLOUDINARY — File storage (replaces Supabase Storage)
+       ------------------------------------------------------------
+       Unsigned uploads via an upload preset. The PUBLIC API key
+       below is safe to ship in the browser; the preset must be
+       configured as "unsigned" in the Cloudinary dashboard.
+
+       Resources:
+         • PDFs / JSON  → resource_type = 'raw'
+         • JPEG images  → resource_type = 'image'  (auto f_auto,q_auto delivery)
+
+       All uploaded URLs are stored in the Supabase DB exactly as
+       before — only the storage backend changes.
+       ============================================================ */
+    const CLOUDINARY_CLOUD_NAME    = 'ddrs2qk8e';
+    const CLOUDINARY_API_KEY       = '241845611843322';
+    const CLOUDINARY_UPLOAD_PRESET = 'student_results';
+    const CLOUDINARY_FOLDER        = 'iscae_results';
+
+    /* ============================================================
+       Supabase Storage fallback for large files
+       ------------------------------------------------------------
+       Cloudinary's free plan rejects single files larger than
+       ~10 MB. For those large files we transparently fall back to
+       Supabase Storage. The returned public URL is stored in the
+       same DB columns (details_url / ranking_url) and is consumed
+       by the read side via plain fetch(), so no other code needs
+       to change. cloudinaryDelivery() passes non-Cloudinary URLs
+       through unchanged, which keeps thumbnails / PDFs working.
+
+        REQUIRED ONE-TIME SETUP in Supabase:
+          1. Create a PUBLIC bucket named exactly:  isc_results
+          2. (Optional) Increase per-file size limit if needed.
+        ============================================================ */
+     const SUPABASE_BUCKET     = 'isc_results';
+     const SUPABASE_FOLDER     = 'iscae_results';
+    const CLOUDINARY_MAX_SIZE = 10 * 1024 * 1024; // 10 MB
+
+    /**
+     * Upload a Blob/File to Supabase Storage (public bucket) and
+     * return its public URL. Used as a fallback when the file is
+     * too large for Cloudinary's free tier.
+     */
+    async function uploadToSupabaseStorage(blob, publicId, ext = '') {
+        const cleanExt = (ext || '').replace(/^\./, '');
+        const fname    = (publicId || ('file_' + Date.now())) + (cleanExt ? ('.' + cleanExt) : '');
+        const path     = `${SUPABASE_FOLDER}/${fname}`;
+        const contentType = blob.type || (cleanExt === 'pdf'  ? 'application/pdf'
+                                       :  cleanExt === 'json' ? 'application/json'
+                                       :  'application/octet-stream');
+        console.log('[SupabaseStorage] uploading', { bucket: SUPABASE_BUCKET, path, size: blob && blob.size, contentType });
+        const { error } = await _supabase.storage
+            .from(SUPABASE_BUCKET)
+            .upload(path, blob, { contentType, upsert: true, cacheControl: '3600' });
+        if (error) {
+            console.error('[SupabaseStorage] upload failed', error);
+            throw new Error('Supabase Storage upload failed: ' + (error.message || error));
+        }
+        const { data } = _supabase.storage.from(SUPABASE_BUCKET).getPublicUrl(path);
+        if (!data || !data.publicUrl) throw new Error('Supabase Storage returned no public URL');
+        console.log('[SupabaseStorage] uploaded ->', data.publicUrl);
+        return data.publicUrl;
+    }
+
+    /**
+     * Upload a Blob/File. Routes to Cloudinary by default, or to
+     * Supabase Storage when the blob exceeds Cloudinary's free-tier
+     * 10 MB single-file limit. The return value (a URL string) has
+     * the same shape in both cases, so call sites need no changes.
+     * @param {Blob}   blob         File data.
+     * @param {string} publicId     Stable id (no extension); used for upsert.
+     * @param {'image'|'raw'|'auto'} resourceType
+     * @returns {Promise<string>}   public URL of the uploaded file.
+     */
+    async function uploadToCloudinary(blob, publicId, resourceType = 'auto', ext = '') {
+        // ── Route oversized files to Supabase Storage ──────────────
+        if (blob && typeof blob.size === 'number' && blob.size > CLOUDINARY_MAX_SIZE) {
+            console.log('[Upload] file > 10MB, using Supabase Storage instead of Cloudinary', { size: blob.size });
+            return uploadToSupabaseStorage(blob, publicId, ext);
+        }
+
+        const fd = new FormData();
+        // Give the blob a filename with the right extension so Cloudinary keeps
+        // the extension on the returned secure_url (critical for raw uploads,
+        // otherwise we can't tell JSON from PDF on the read side).
+        const fname = (publicId || 'file') + (ext ? ('.' + ext.replace(/^\./, '')) : '');
+        fd.append('file', blob, fname);
+        fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+        fd.append('folder', CLOUDINARY_FOLDER);
+        if (publicId) {
+            // Include the extension in the public_id for raw resources so the
+            // delivery URL ends with .json / .pdf and downstream fetch logic
+            // can branch on the file type reliably.
+            const pid = (resourceType === 'raw' && ext) ? (publicId + '.' + ext.replace(/^\./, '')) : publicId;
+            fd.append('public_id', pid);
+        }
+        const endpoint = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/${resourceType}/upload`;
+        console.log('[Cloudinary] uploading', { endpoint, publicId, resourceType, ext, size: blob && blob.size });
+        const res = await fetch(endpoint, { method: 'POST', body: fd });
+        if (!res.ok) {
+            let msg = 'Cloudinary upload failed';
+            try { const j = await res.json(); if (j && j.error && j.error.message) msg = j.error.message; } catch(_) {}
+            // Last-resort fallback: if Cloudinary rejected the file due to
+            // size limits, try Supabase Storage so the upload still succeeds.
+            if (/file size|too large|maximum|limit/i.test(msg)) {
+                console.warn('[Cloudinary] size-related rejection, falling back to Supabase Storage:', msg);
+                return uploadToSupabaseStorage(blob, publicId, ext);
+            }
+            console.error('[Cloudinary] upload failed', msg);
+            throw new Error(msg);
+        }
+        const data = await res.json();
+        if (!data.secure_url) throw new Error('Cloudinary returned no URL');
+        console.log('[Cloudinary] uploaded ->', data.secure_url);
+        return data.secure_url;
+    }
+
+    /**
+     * Inject f_auto,q_auto (+ optional width) into a Cloudinary delivery URL
+     * to dramatically reduce bandwidth on each view.
+     */
+    function cloudinaryDelivery(url, transforms = 'f_auto,q_auto') {
+        if (!url || typeof url !== 'string') return url;
+        if (!url.includes('res.cloudinary.com') || !url.includes('/upload/')) return url;
+        // Avoid double-injecting transforms.
+        if (/\/upload\/[a-z]_[^/]+\//.test(url)) return url;
+        return url.replace('/upload/', `/upload/${transforms}/`);
+    }
+
+    /** Sanitize a string for use as a Cloudinary public_id. */
+    function cldId(str) {
+        return String(str || '').replace(/[^a-zA-Z0-9_\-]/g, '_').slice(0, 120);
+    }
+
     let globalFilesCache = null; 
     let rankingDataCache = {};
     let pdfDocCache = {};
@@ -1597,31 +1731,27 @@
     }
 
     // ---------------------------------------------------------------
-    // Upload per-student JPEG images to Supabase storage in parallel
-    // batches of 5.  Returns { studentId → publicUrl }.
+    // Upload per-student JPEG images to Cloudinary in parallel
+    // batches.  Returns { studentId → secure_url }.
     // These images are created from the canvases already built by
     // splitPdfByStudent — no extra rendering work is needed.
+    // We deliver them later through cloudinaryDelivery(url) so each
+    // view costs a few KB instead of a whole PDF page.
     // ---------------------------------------------------------------
     async function uploadCanvasImages(canvasMap, prefix, onStatus) {
         const thumbMap = {};
         const entries  = Object.entries(canvasMap);
-        const BATCH    = 20; // higher concurrency = much faster upload
+        const BATCH    = 12; // Cloudinary handles concurrency well; keep modest
         let done = 0;
         for (let i = 0; i < entries.length; i += BATCH) {
             const batch = entries.slice(i, i + BATCH);
             await Promise.all(batch.map(async ([id, canvas]) => {
                 try {
-                    const blob     = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.82));
-                    const fileName = `${prefix}_${id}.jpg`;
-                    const { error } = await _supabase.storage
-                        .from('isc_results')
-                        .upload(fileName, blob, { upsert: true, contentType: 'image/jpeg', cacheControl: '3600' });
-                    if (!error) {
-                        const { data } = _supabase.storage
-                            .from('isc_results')
-                            .getPublicUrl(fileName);
-                        thumbMap[id] = data.publicUrl;
-                    }
+                    // 0.78 JPEG quality is visually identical to 0.82 but ~20% smaller.
+                    const blob     = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.78));
+                    const publicId = cldId(`${prefix}_${id}_${Date.now()}`);
+                    const url      = await uploadToCloudinary(blob, publicId, 'image');
+                    thumbMap[id]   = url;
                 } catch (e) { /* skip — display falls back to PDF */ }
                 done++;
                 if (onStatus) onStatus(`جاري رفع صور الكشوفات ${done} من ${entries.length}...`);
@@ -1899,12 +2029,15 @@
                     if (!idMatch) return;
                     const id = idMatch[1].replace(/\s+/g, '').toUpperCase();
 
-                    const decisionRegex = /(\d{1,2}[.,]\d{1,2})\s+(Validé|Rattrapage|Ajourné|Session|Admis)/i;
+                    // Include "Non Validé" FIRST so it wins over a later sub-row "Validé".
+                    const decisionRegex = /(\d{1,2}[.,]\d{1,2})\s+(Non\s+Validé|Validé|Rattrapage|Ajourn[ée]|Session|Admis)/i;
                     const decMatch = segment.match(decisionRegex);
 
                     if (decMatch) {
                         let avgStr = decMatch[1].replace(',', '.');
-                        let decision = decMatch[2].trim();
+                        let decision = decMatch[2].trim().replace(/\s+/g, ' ');
+                        // Normalize capitalization
+                        if (/^non\s+valid/i.test(decision)) decision = 'Non Validé';
                         let avg = parseFloat(avgStr);
 
                         if (avg <= 20.00) {
@@ -1912,6 +2045,14 @@
                             let rawNameSection = segment.substring(idMatch[1].length, avgIndex).trim();
                             let cleanName = rawNameSection.replace(/^\d+\s+/, "").trim();
                             cleanName = cleanName.replace(/Modul.*$/i, "").trim();
+                            // Keep only the leading name portion (letters/spaces/accents/-/').
+                            // Stops at the first digit or subject code so wrapped rows
+                            // don't bleed grades/modules into the student name field.
+                            const nameOnly = cleanName.match(/^[A-Za-zÀ-ÿ'’\-\.\s]+/);
+                            if (nameOnly) cleanName = nameOnly[0].trim().replace(/\s+/g, ' ');
+                            // Drop trailing tokens that are not real name parts
+                            cleanName = cleanName.replace(/\s+(Non|Validé|Ajourn[ée]|Rattrapage|Session|Admis)\b.*$/i, '').trim();
+                            if (!cleanName || cleanName.length < 2) return;
 
                             if (!studentsMap.has(id)) {
                                 studentsMap.set(id, { id, name: cleanName, avg: avgStr, avgNum: avg, decision });
@@ -1947,36 +2088,34 @@
                 // Replace the upload payload with the reorganized PDF.
                 finalPdfBlob = new Blob([splitResult.pdfBytes], { type: 'application/pdf' });
 
-                // ── Skip per-student JPEG thumbnail upload ──
-                // The structured `detailsMap` (extracted text) renders instantly
-                // as HTML, and the split PDF is opened with HTTP range requests
-                // for fallback. Uploading hundreds of JPEGs was the slowest step.
+                // ── Per-student JPEG thumbnails (Cloudinary) ──
+                // Cloudinary delivers compressed JPEGs (f_auto,q_auto) so each
+                // student card costs a few KB instead of pulling a PDF page.
+                // This drastically cuts public bandwidth usage.
                 if (splitResult.detailsMap) {
                     studentsArray.forEach(s => { if (splitResult.detailsMap[s.id]) s.details = splitResult.detailsMap[s.id]; });
                 }
+                // Image (thumbnail) uploads disabled by request — keep PDFs only.
+                // if (splitResult.canvasMap) { ... uploadCanvasImages ... }
+
             } catch (splitErr) {
                 console.warn('Splitter failed, uploading original PDF as-is:', splitErr);
                 statusDiv.innerHTML = '⚠️ تعذرت إعادة التنظيم تلقائياً، سيتم رفع الملف الأصلي.';
             }
             // === END NEW ===
 
-            statusDiv.innerHTML = '⏳ جاري رفع الملفات إلى الخادم وتحديث البيانات...';
+            statusDiv.innerHTML = '⏳ جاري رفع الملفات إلى Cloudinary وتحديث البيانات...';
 
-            const uploadToStorage = async (fileData, fileName) => {
-                const { error } = await _supabase.storage.from('isc_results').upload(fileName, fileData);
-                if (error) throw error;
-                const { data } = _supabase.storage.from('isc_results').getPublicUrl(fileName); 
-                return data.publicUrl;
-            };
-
-            const detailsFileName = `DETAILS_${major}_${level}_${semester}_${Date.now()}.pdf`;
-            const jsonBlob = new Blob([JSON.stringify(studentsArray)], { type: 'application/json' });
-            const jsonFileName = `RANKING_${major}_${level}_${semester}_${Date.now()}.json`;
-            // Upload PDF + JSON in parallel for faster total upload time
+            const ts          = Date.now();
+            const detailsId   = cldId(`DETAILS_${major}_${level}_${semester}_${academicYear}_${ts}`);
+            const rankingId   = cldId(`RANKING_${major}_${level}_${semester}_${academicYear}_${ts}`);
+            const jsonBlob    = new Blob([JSON.stringify(studentsArray)], { type: 'application/json' });
+            // Upload PDF + JSON in parallel for faster total upload time.
             const [detailsUrl, rankingUrl] = await Promise.all([
-                uploadToStorage(finalPdfBlob, detailsFileName),
-                uploadToStorage(jsonBlob, jsonFileName)
+                uploadToCloudinary(finalPdfBlob, detailsId, 'raw', 'pdf'),
+                uploadToCloudinary(jsonBlob,     rankingId, 'raw', 'json')
             ]);
+            console.log('[Upload] saved URLs', { detailsUrl, rankingUrl });
 
             await _supabase.from('results_metadata')
                 .delete()
@@ -2014,14 +2153,60 @@
         closeCelebration();
     }
 
+    // Display-time safety net: strips bleed-over from previously uploaded
+    // JSONs where the name field accidentally captured subjects/grades.
+    // Returns true only for actual success decisions. "Non Validé" -> false.
+    function isValidDecision(d) {
+        if (!d) return false;
+        const s = String(d).toLowerCase().replace(/\s+/g, ' ').trim();
+        if (s.startsWith('non ') || s.includes('non valid') || s.includes('non admis')) return false;
+        return s.includes('valid') || s.includes('admis');
+    }
+
+    function sanitizeStudentName(s) {
+        if (!s || typeof s !== 'object' || typeof s.name !== 'string') return s;
+        let n = s.name;
+        const m = n.match(/^[A-Za-zÀ-ÿ'’\-\.\s]+/);
+        if (m) n = m[0];
+        n = n.replace(/\s+(Non|Validé|Ajourn[ée]|Rattrapage|Session|Admis)\b.*$/i, '');
+        n = n.replace(/\s+/g, ' ').trim();
+        if (n) s.name = n;
+        return s;
+    }
+
     async function fetchRankingData(url) {
         if (rankingDataCache[url]) return rankingDataCache[url];
         try {
-            if (url.endsWith('.json')) {
+            // Inline guard: ensure sanitizeStudentName exists even when this
+            // file is loaded before the helper declaration (hoisting-safe).
+            // Cloudinary raw uploads may not carry an extension in the URL.
+            // 1) Trust the extension when present.
+            // 2) Otherwise probe the Content-Type and try JSON before PDF.
+            let isJson = /\.json(\?|$)/i.test(url);
+            if (!isJson && !/\.pdf(\?|$)/i.test(url)) {
+                try {
+                    const head = await fetch(url, { method: 'HEAD' });
+                    const ct = (head.headers.get('content-type') || '').toLowerCase();
+                    if (ct.includes('json') || ct.includes('text/plain') || ct.includes('octet-stream')) {
+                        isJson = true;
+                    }
+                } catch (_) { /* CORS may block HEAD — fall through to JSON attempt */ isJson = true; }
+            }
+            if (isJson) {
+                console.log('[fetchRankingData] JSON ->', url);
                 const response = await fetch(url);
-                const data = await response.json();
-                rankingDataCache[url] = data; return data;
-            } else {
+                const text = await response.text();
+                try {
+                    const data = JSON.parse(text);
+                    const cleaned = Array.isArray(data) ? data.map(sanitizeStudentName) : data;
+                    rankingDataCache[url] = cleaned; return cleaned;
+                } catch (parseErr) {
+                    console.warn('[fetchRankingData] JSON parse failed, falling back to PDF', parseErr);
+                    // fall through to PDF parsing below
+                }
+            }
+            {
+                console.log('[fetchRankingData] PDF ->', url);
                 const loadingTask = pdfjsLib.getDocument(url); const pdf = await loadingTask.promise;
                 let students = [];
                 for (let i = 1; i <= pdf.numPages; i++) {
@@ -2035,12 +2220,32 @@
                     rows.sort((a, b) => b.y - a.y);
                     rows.forEach(row => {
                         const lineItems = row.items.sort((a, b) => a.x - b.x); const lineStr = lineItems.map(t => t.str).join(" ").trim();
-                        let match = lineStr.match(/^(\d+)\s+(I\s*\d+)\s+(.+?)\s+(\d{1,2}(?:[.,]\d{1,2})?)\s+(\d{1,2})\s+(.+)$/i);
+                        // Name must NOT contain digits — prevents merged rows from
+                        // bleeding subject grades into the student name field.
+                        let match = lineStr.match(/^(\d+)\s+(I\s*\d+)\s+([^\d]+?)\s+(\d{1,2}(?:[.,]\d{1,2})?)\s+(\d{1,2})\s+(Non\s+Validé|Validé|Rattrapage|Ajourn[ée]|Session|Admis)\b/i);
                         let hasCredit = true;
-                        if (!match) { match = lineStr.match(/^(\d+)\s+(I\s*\d+)\s+(.+?)\s+(\d{1,2}(?:[.,]\d{1,2})?)\s+(.+)$/i); hasCredit = false; }
-                        if(match) { students.push({ rank: parseInt(match[1]), id: match[2].replace(/\s+/g, '').toUpperCase(), name: match[3].trim(), avg: match[4].replace(',', '.'), decision: hasCredit ? match[6].trim() : match[5].trim() }); }
+                        if (!match) { match = lineStr.match(/^(\d+)\s+(I\s*\d+)\s+([^\d]+?)\s+(\d{1,2}(?:[.,]\d{1,2})?)\s+(Non\s+Validé|Validé|Rattrapage|Ajourn[ée]|Session|Admis)\b/i); hasCredit = false; }
+                        if(match) {
+                            let decision = (hasCredit ? match[6] : match[5]).trim().replace(/\s+/g, ' ');
+                            if (/^non\s+valid/i.test(decision)) decision = 'Non Validé';
+                            // Reject obviously corrupt decisions (too long = merged rows).
+                            if (decision.length > 40) return;
+                            students.push({
+                                rank: parseInt(match[1]),
+                                id: match[2].replace(/\s+/g, '').toUpperCase(),
+                                name: match[3].trim(),
+                                avg: match[4].replace(',', '.'),
+                                decision: decision
+                            });
+                        }
                     });
                 }
+                // Dedupe by id (keep first clean occurrence)
+                const seenIds = new Set();
+                students = students.filter(s => {
+                    if (seenIds.has(s.id)) return false;
+                    seenIds.add(s.id); return true;
+                }).map(sanitizeStudentName);
                 rankingDataCache[url] = students; return students;
             }
         } catch(e) { console.error(e); return null; }
@@ -2134,7 +2339,7 @@
                 // Preload the PDF in the background so the details button is instant
                 setTimeout(() => preloadPdfDocuments(foundResults), 300);
                 const latestResult = foundResults[0].student;
-                const latestIsValid = latestResult.decision.toLowerCase().includes('valid') || latestResult.decision.toLowerCase().includes('admis');
+                const latestIsValid = isValidDecision(latestResult.decision);
                 const latestAvg = parseFloat(latestResult.avg) || 0;
                 
                 if (latestIsValid) {
@@ -2265,7 +2470,7 @@
         const showRattrapage = shouldShowRattrapageNotice();
         results.forEach(res => {
             const s = res.student; const f = res.file;
-            const isValid = s.decision.toLowerCase().includes('valid') || s.decision.toLowerCase().includes('admis');
+            const isValid = isValidDecision(s.decision);
             const cardId = 'card_' + Math.random().toString(36).substr(2, 9);
             if (s.details && s.details.rows && s.details.rows.length) {
                 window.__detailsDataMap[cardId] = s.details;
@@ -2452,33 +2657,31 @@
                 });
                 finalPdfBlob = new Blob([splitResult.pdfBytes], { type: 'application/pdf' });
 
-                // ── Skip per-student JPEG thumbnail upload (huge speed win) ──
+                // ── Per-student JPEG thumbnails (Cloudinary) ──
                 if (splitResult.detailsMap) {
                     studentsArray.forEach(s => { if (splitResult.detailsMap[s.id]) s.details = splitResult.detailsMap[s.id]; });
                 }
+                // Image (thumbnail) uploads disabled by request — keep PDFs only.
+                // if (splitResult.canvasMap) { ... uploadCanvasImages ... }
+
             } catch (splitErr) {
                 console.warn('Annual splitter failed, uploading original PDF as-is:', splitErr);
                 statusDiv.innerHTML = '⚠️ تعذرت إعادة التنظيم تلقائياً، سيتم رفع الملف الأصلي.';
             }
 
             // --- Upload PDF + ranking JSON, refresh metadata row --------------
-            statusDiv.innerHTML = '⏳ جاري رفع الملفات إلى الخادم وتحديث البيانات...';
+            statusDiv.innerHTML = '⏳ جاري رفع الملفات إلى Cloudinary وتحديث البيانات...';
 
-            const uploadToStorage = async (fileData, fileName) => {
-                const { error } = await _supabase.storage.from('isc_results').upload(fileName, fileData);
-                if (error) throw error;
-                const { data } = _supabase.storage.from('isc_results').getPublicUrl(fileName);
-                return data.publicUrl;
-            };
-
-            const detailsFileName = `DETAILS_${major}_${level}_${semester}_${Date.now()}.pdf`;
-            const jsonBlob        = new Blob([JSON.stringify(studentsArray)], { type: 'application/json' });
-            const jsonFileName    = `RANKING_${major}_${level}_${semester}_${Date.now()}.json`;
-            // Upload PDF + JSON in parallel for faster total upload time
+            const ts          = Date.now();
+            const detailsId   = cldId(`DETAILS_${major}_${level}_${semester}_${academicYear}_${ts}`);
+            const rankingId   = cldId(`RANKING_${major}_${level}_${semester}_${academicYear}_${ts}`);
+            const jsonBlob    = new Blob([JSON.stringify(studentsArray)], { type: 'application/json' });
+            // Upload PDF + JSON in parallel for faster total upload time.
             const [detailsUrl, rankingUrl] = await Promise.all([
-                uploadToStorage(finalPdfBlob, detailsFileName),
-                uploadToStorage(jsonBlob, jsonFileName)
+                uploadToCloudinary(finalPdfBlob, detailsId, 'raw', 'pdf'),
+                uploadToCloudinary(jsonBlob,     rankingId, 'raw', 'json')
             ]);
+            console.log('[Upload] saved URLs', { detailsUrl, rankingUrl });
 
             await _supabase.from('results_metadata')
                 .delete()
@@ -3156,10 +3359,13 @@
 
         // ── Fast path: pre-rendered JPEG image ──────────────────────────────
         if (thumbUrl) {
-            container.innerHTML = `<img src="${thumbUrl}"
+            // Deliver via Cloudinary auto-format + auto-quality (massive bandwidth saving).
+            const deliveryUrl = cloudinaryDelivery(thumbUrl, 'f_auto,q_auto,w_1400,c_limit');
+            const fullResUrl  = cloudinaryDelivery(thumbUrl, 'f_auto,q_auto');
+            container.innerHTML = `<img src="${deliveryUrl}"
                 style="display:block;max-width:100%;width:auto;height:auto;border-radius:12px;box-shadow:0 10px 28px rgba(0,0,0,0.12);"
-                loading="eager" />`;
-            appendDownloadPdfButton(container, () => imgUrlToCanvas(thumbUrl), studentId);
+                loading="lazy" decoding="async" />`;
+            appendDownloadPdfButton(container, () => imgUrlToCanvas(fullResUrl), studentId);
             container.dataset.rendered = '1';
             container.style.display    = 'block';
             if (btnElement) {
@@ -3330,6 +3536,7 @@
     function classifyDecision(decision) {
         if (!decision) return 'fail';
         const d = String(decision).toLowerCase();
+        if (d.startsWith('non ') || d.includes('non valid') || d.includes('non admis')) return 'fail';
         if (d.includes('admis') || d.includes('validé') || d.includes('valide')) return 'success';
         return 'fail';
     }
