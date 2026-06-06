@@ -24,8 +24,6 @@
     <!-- مكتبة Supabase -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 
-    <!-- Chart.js for stats dashboard -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
     <!-- خطوط احترافية للعربية والفرنسية -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1086,133 +1084,11 @@
             <div id="upload-annual-status" style="margin-top:15px; font-weight:bold; font-size:0.9rem; text-align:center;"></div>
 
             <hr style="border: 1px solid #eee; margin: 20px 0;">
-            <button class="admin-btn" style="background:var(--secondary); color:white; margin-bottom:10px;" onclick="openStatsModal()">📊 عرض إحصائيات النجاح</button>
             <button class="admin-btn" style="background:#dc2626; color:white;" onclick="adminLogout()">تسجيل الخروج 🚪</button>
         </div>
     </div>
 </div>
 
-<!-- ============ STATS MODAL (Professional Redesign) ============ -->
-<style>
-    #stats-modal .stats-pro-box{
-        max-width:1200px; width:96%; max-height:94vh; padding:0; overflow:hidden;
-        border-radius:20px; background:#f8fafc; display:flex; flex-direction:column;
-        box-shadow:0 30px 80px rgba(0,0,0,0.35);
-    }
-    #stats-modal .stats-pro-header{
-        background:linear-gradient(135deg,#005C29 0%,#10b981 60%,#2563eb 100%);
-        color:#fff; padding:22px 28px; position:relative;
-        box-shadow:0 6px 20px rgba(0,92,41,0.25);
-    }
-    #stats-modal .stats-pro-header h2{
-        margin:0; font-size:1.6rem; font-weight:800; display:flex; align-items:center; gap:10px;
-    }
-    #stats-modal .stats-pro-header p{ margin:6px 0 0; opacity:.92; font-size:.95rem; }
-    #stats-modal .stats-pro-close{
-        position:absolute; top:14px; left:14px; width:36px; height:36px; border-radius:50%;
-        background:rgba(255,255,255,0.2); color:#fff; display:flex; align-items:center;
-        justify-content:center; cursor:pointer; font-size:1.1rem; border:none; transition:all .2s;
-    }
-    #stats-modal .stats-pro-close:hover{ background:rgba(255,255,255,0.35); transform:rotate(90deg); }
-    #stats-modal .stats-pro-body{ padding:22px 26px; overflow-y:auto; flex:1; }
-    #stats-modal .stats-filter-card{
-        background:#fff; border-radius:16px; padding:18px 20px;
-        box-shadow:0 4px 18px rgba(15,23,42,0.06); border:1px solid #e2e8f0;
-    }
-    #stats-modal .stats-filter-grid{
-        display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px;
-    }
-    #stats-modal .stats-filter-grid label{
-        display:block; font-size:.82rem; color:#64748b; margin-bottom:6px; font-weight:600;
-    }
-    #stats-modal .stats-filter-grid select{
-        width:100%; padding:10px 12px; border-radius:10px; border:1.5px solid #e2e8f0;
-        background:#f8fafc; font-family:'Cairo',sans-serif; font-size:.92rem; transition:all .2s;
-    }
-    #stats-modal .stats-filter-grid select:focus{ outline:none; border-color:#005C29; background:#fff; }
-    #stats-modal .stats-refresh-btn{
-        margin-top:14px; width:100%; padding:12px; border:none; border-radius:12px;
-        background:linear-gradient(135deg,#005C29,#10b981); color:#fff; font-weight:700;
-        font-family:'Cairo',sans-serif; font-size:1rem; cursor:pointer; transition:all .2s;
-        box-shadow:0 6px 16px rgba(0,92,41,0.3);
-    }
-    #stats-modal .stats-refresh-btn:hover{ transform:translateY(-2px); box-shadow:0 10px 24px rgba(0,92,41,0.4); }
-    #stats-modal .stats-kpi-grid{
-        display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-        gap:14px; margin-top:18px;
-    }
-    #stats-modal .stats-kpi-card{
-        background:#fff; border-radius:16px; padding:18px 16px; position:relative; overflow:hidden;
-        box-shadow:0 4px 18px rgba(15,23,42,0.06); border:1px solid #e2e8f0; transition:all .25s;
-    }
-    #stats-modal .stats-kpi-card:hover{ transform:translateY(-3px); box-shadow:0 12px 28px rgba(15,23,42,0.12); }
-    #stats-modal .stats-kpi-card::before{
-        content:''; position:absolute; top:0; right:0; width:6px; height:100%; background:var(--accent,#005C29);
-    }
-    #stats-modal .stats-kpi-icon{
-        width:42px; height:42px; border-radius:12px; display:flex; align-items:center;
-        justify-content:center; font-size:1.3rem; margin-bottom:10px;
-    }
-    #stats-modal .stats-kpi-label{ color:#64748b; font-size:.85rem; font-weight:600; margin-bottom:6px; }
-    #stats-modal .stats-kpi-value{ font-size:2rem; font-weight:800; line-height:1; }
-    #stats-modal .stats-charts-grid{
-        display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
-        gap:16px; margin-top:18px;
-    }
-    #stats-modal .stats-chart-card{
-        background:#fff; border-radius:16px; padding:18px;
-        box-shadow:0 4px 18px rgba(15,23,42,0.06); border:1px solid #e2e8f0;
-    }
-    #stats-modal .stats-chart-card h3{
-        margin:0 0 14px; font-size:1.05rem; color:#0f172a; font-weight:700;
-        padding-bottom:10px; border-bottom:2px solid #f1f5f9;
-    }
-    #stats-modal .stats-chart-card canvas{ max-height:280px; }
-    #stats-modal .stats-status-msg{
-        margin-top:14px; padding:12px; border-radius:10px; text-align:center; font-weight:600;
-    }
-    @media(max-width:640px){
-        #stats-modal .stats-pro-header{ padding:18px 20px; }
-        #stats-modal .stats-pro-header h2{ font-size:1.25rem; }
-        #stats-modal .stats-pro-body{ padding:16px; }
-        #stats-modal .stats-kpi-value{ font-size:1.6rem; }
-    }
-</style>
-<div id="stats-modal" class="modal-overlay">
-    <div class="modal-box stats-pro-box">
-        <div class="stats-pro-header">
-            <button class="stats-pro-close" onclick="closeStatsModal()" aria-label="إغلاق">✖</button>
-            <h2>📊 لوحة إحصائيات النجاح</h2>
-            <p>عرض شامل ومفصّل لنسب النجاح حسب التخصص والمستوى والسداسي</p>
-        </div>
-        <div class="stats-pro-body">
-            <div class="stats-filter-card">
-                <div class="stats-filter-grid">
-                    <div><label>📅 السنة الجامعية</label><select id="stats-year"><option value="">— الكل —</option></select></div>
-                    <div><label>🎓 التخصص</label><select id="stats-major"><option value="">— الكل —</option></select></div>
-                    <div><label>📚 المستوى</label><select id="stats-level"><option value="">— الكل —</option></select></div>
-                    <div><label>🗓️ السداسي</label><select id="stats-semester"><option value="">— الكل —</option></select></div>
-                </div>
-                <button class="stats-refresh-btn" onclick="loadStats()">🔄 تحديث الإحصائيات</button>
-            </div>
-
-            <div id="stats-status" class="stats-status-msg" style="display:none;"></div>
-
-            <div id="stats-cards" class="stats-kpi-grid"></div>
-
-            <div class="stats-charts-grid">
-                <div class="stats-chart-card">
-                    <h3>🥧 النجاح مقابل الرسوب</h3>
-                    <canvas id="stats-pie"></canvas>
-                </div>
-                <div class="stats-chart-card">
-                    <h3>📊 نسبة النجاح حسب المستوى</h3>
-                    <canvas id="stats-bar"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
 <div id="top20-modal" class="modal-overlay">
     <div class="modal-box">
@@ -1311,8 +1187,8 @@
 </div>
 
 <script>
-    const SUPABASE_URL = 'https://epogtfrpcfwckmicexji.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwb2d0ZnJwY2Z3Y2ttaWNleGppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5OTcyMjYsImV4cCI6MjA5MzU3MzIyNn0.1hImKAGBuSTYaWblu7tJ7-MDMOeZWuFaZkOtz4EcHwY';
+    const SUPABASE_URL = 'https://gocplsdcrprqudunuqkv.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdvY3Bsc2RjcnBycXVkdW51cWt2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3MjUwNDEsImV4cCI6MjA5NjMwMTA0MX0.YxgyHYRO-bZZc3t643CUkcUvYFbUYn2KsfVY-K0EzPg';
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     
     /* ============================================================
@@ -1478,6 +1354,30 @@
         return rowItems.length ? Math.min(...rowItems.map(it => it.yTop)) : match.yTop;
     }
 
+    // In annual relevés, the next student's name/header can sit ABOVE their
+    // matricule row.  Use those header labels as the real start boundary so
+    // the previous student's details never include the following student's name.
+    function getStudentRecordStartTop(items, match, headerBottomValue) {
+        const idRowTop = getVisualRowTop(items, match);
+        const minY = Math.max(headerBottomValue || 0, idRowTop - 210);
+        const band = items.filter(it => it.yBottom <= match.yBottom + 8 && it.yTop >= minY);
+        const rows = [];
+        band.forEach(it => {
+            let row = rows.find(r => Math.abs(r.y - it.yTop) < 7);
+            if (!row) { row = { y: it.yTop, cells: [] }; rows.push(row); }
+            row.cells.push(it);
+        });
+        rows.sort((a, b) => a.y - b.y);
+        let best = idRowTop;
+        rows.forEach(row => {
+            const text = row.cells.slice().sort((a, b) => a.x - b.x).map(c => c.str).join(' ');
+            if (/RELEV[EÉée]\s*\.?\s*DE\s+NOTES|Nom\s+et\s+pr[ée]nom|Num[ée]ro\s+d['′'`’\u2019\u02B9\s]*inscription/i.test(text)) {
+                best = Math.min(best, row.y);
+            }
+        });
+        return best;
+    }
+
     // Reliably find where the page header ends, using the header text fingerprint.
     // The page header always contains "Page X / Y" and a date like "dd/mm/yyyy".
     // We use them as anchors and include any items that share their visual line.
@@ -1560,16 +1460,14 @@
             const cur  = studentMatches[i];
             const next = studentMatches[i + 1];
             const startPage = cur.pageIdx;
-            const curRowTop = getVisualRowTop(pages[startPage].items, cur);
+            const curRowTop = getStudentRecordStartTop(pages[startPage].items, cur, headerBottom[startPage]);
             const startY    = Math.max(headerBottom[startPage], curRowTop - 4);
             let endPage, endY;
             if (next) {
                 endPage = next.pageIdx;
-                // [EDIT 3] Stop above the visual top of the NEXT STUDENT'S ENTIRE ROW.
-                // Safety margin increased to -6px to prevent any pixel leakage from
-                // the next student's row (names/averages can sit slightly above the ID).
-                // This fixes the "Résultat Annulé" data-leak bug.
-                const nextRowTop = getVisualRowTop(pages[endPage].items, next);
+                // Stop above the NEXT STUDENT'S REAL RECORD START, not only the ID row.
+                // In annual PDFs the next name/header can appear before the matricule.
+                const nextRowTop = getStudentRecordStartTop(pages[endPage].items, next, headerBottom[endPage]);
                 endY    = Math.max(0, nextRowTop - 6);
             } else {
                 endPage = pages.length - 1;
@@ -2472,15 +2370,27 @@
             const s = res.student; const f = res.file;
             const isValid = isValidDecision(s.decision);
             const cardId = 'card_' + Math.random().toString(36).substr(2, 9);
-            if (s.details && s.details.rows && s.details.rows.length) {
-                window.__detailsDataMap[cardId] = s.details;
-            }
             const card = document.createElement('div'); card.id = cardId; card.className = 'result-card'; card.style.display = 'block';
             let shareBtnHtml = ''; if (isValid) shareBtnHtml = `<button class="share-btn" onclick="shareResultCard('${cardId}', '${f.semester}', this)"><i class="fas fa-share-alt"></i> مشاركة النتيجة</button>`;
 
             const isAnnual = (f.semester === 'ANNUEL');
             const semesterLabel = isAnnual ? `${f.level} - Annuel` : f.semester;
             const rattrapageHtml = (!isAnnual && showRattrapage) ? buildRattrapageNoticeHtml() : '';
+
+            if (s.details && s.details.rows && s.details.rows.length) {
+                window.__detailsDataMap[cardId] = {
+                    ...s.details,
+                    _summary: {
+                        name: s.name,
+                        avg: s.avg,
+                        decision: s.decision,
+                        isAnnual: isAnnual,
+                        level: f.level,
+                        academicYear: f.academic_year,
+                        major: f.major
+                    }
+                };
+            }
 
             card.innerHTML = `
                 ${rattrapageHtml}
@@ -2539,18 +2449,21 @@
     function parseAnnualPdfText(fullText) {
         // Split the full extracted text on the "RELEVE DE NOTES" boundary —
         // each annual student page starts with that title.
-        const segments = fullText.split(/RELEVE\s+DE\s+NOTES/i);
+        // Accept both "RELEVE" and "RELEVÉ" (with accent), and also tolerate
+        // line-broken variants where PDF.js inserts extra whitespace.
+        const segments = fullText.split(/RELEV[EÉée]\s*\.?\s*DE\s+NOTES/i);
         const studentsMap = new Map();
 
         for (const segment of segments) {
             // --- Matricule (Numéro d'inscription) -----------------------------
-            const idMatch = segment.match(/Num[ée]ro\s+d['′'`’ ]*\s*inscription\s*:?\s*(I\s*\d{4,7})/i);
+            const idMatch = segment.match(/Num[ée]ro\s+d['′'`’\u2019\u02B9\s]*inscription\s*:?\s*(I\s*\d{4,7})/i)
+                         || segment.match(/\b(I\s*\d{4,7})\b/i);
             if (!idMatch) continue;
             const id = idMatch[1].replace(/\s+/g, '').toUpperCase();
 
             // --- Annual average -----------------------------------------------
             // Accept "Moyenne annuelle L1/L2/L3 : 11.03" (or comma decimal).
-            const avgMatch = segment.match(/Moyenne\s+annuelle\s+L\d?\s*:?\s*(\d{1,2}[.,]\d{1,2})/i);
+            const avgMatch = segment.match(/Moyenne\s+annuelle(?:\s+L\s*\d)?\s*:?\s*(\d{1,2}[.,]\d{1,2})/i);
             if (!avgMatch) continue;
             const avgStr = avgMatch[1].replace(',', '.');
             const avg    = parseFloat(avgStr);
@@ -2561,7 +2474,7 @@
             // (Date and place of birth, Numéro d'inscription, Filière, NNI)
             // or a long whitespace gap, whichever comes first.
             let name = '';
-            const nameMatch = segment.match(/Nom\s+et\s+pr[ée]nom\s*:?\s*([^]+?)(?=\s+Date\s+et|\s+Num[ée]ro|\s+Fili[èe]re|\s+NNI|\s{6,})/i);
+            const nameMatch = segment.match(/Nom\s+et\s+pr[ée]nom\s*:?\s*([^]+?)(?=\s+Date\s+(?:et|de)|\s+Num[ée]ro|\s+Fili[èe]re|\s+NNI|\s{6,})/i);
             if (nameMatch) {
                 name = nameMatch[1].trim().replace(/\s+/g, ' ');
             }
@@ -2580,6 +2493,7 @@
             }
         }
 
+        console.log('[parseAnnualPdfText] segments:', segments.length, 'students extracted:', studentsMap.size);
         return Array.from(studentsMap.values());
     }
 
@@ -2795,14 +2709,82 @@
     function removeOtherStudentsFromDetails(details, studentId) {
         const targetId = normalizeStudentId(studentId);
         if (!details || !Array.isArray(details.rows)) return details;
-        const rows = [];
-        for (const row of details.rows) {
-            const idsInRow = (row.cells || [])
+        const srcRows = details.rows;
+        const isNum = (v) => /^\d+([.,]\d+)?$/.test(String(v || '').trim());
+        // Keywords that mark the CURRENT student's footer block — we must keep them.
+        const FOOTER_RE = /(cr[ée]dit|directeur|moyenne|total|admis|ajourn|session|ann[ée]e|semestre)/i;
+        // Keywords that mark a NEW student's header block (Nom/Prenom/Matricule/etc.).
+        const HEADER_RE = /(matricule|n\s*°|nom\s*[:\-]|pr[ée]nom|date\s+de\s+naissance|lieu\s+de\s+naissance|fili[èe]re|sp[ée]cialit[ée]|niveau|cycle|promotion|etablissement|fiche|relev[ée])/i;
+        // 1) Locate rows that explicitly contain a FOREIGN student ID.
+        const foreignIdRows = new Set();
+        const rowHasTarget = new Array(srcRows.length).fill(false);
+        srcRows.forEach((row, i) => {
+            const ids = (row.cells || [])
                 .map(c => normalizeStudentId(c.s))
                 .filter(s => STUDENT_ID_RE.test(s));
-            if (idsInRow.some(id => id !== targetId)) break;
-            rows.push(row);
+            if (ids.length) {
+                if (ids.some(id => id === targetId)) rowHasTarget[i] = true;
+                if (ids.some(id => id !== targetId)) foreignIdRows.add(i);
+            }
+        });
+        const targetIndex = rowHasTarget.findIndex(Boolean);
+        // Old saved details may already include the next student's NAME/header but
+        // not their ID.  Cut at the first repeated annual-record header after the
+        // current student's matricule; this preserves the current header above it.
+        let hardCut = srcRows.length;
+        if (targetIndex >= 0) {
+            for (let i = targetIndex + 4; i < srcRows.length; i++) {
+                const text = (srcRows[i].cells || []).map(c => String(c.s || '')).join(' ');
+                if (/RELEV[EÉée]\s*\.?\s*DE\s+NOTES|Nom\s+et\s+pr[ée]nom|Num[ée]ro\s+d['′'`’\u2019\u02B9\s]*inscription/i.test(text)) {
+                    hardCut = i;
+                    break;
+                }
+            }
         }
+        // 2) Build set of rows to drop. For every foreign-id row, also drop
+        //    nearby header-ish rows above AND below it that clearly do not
+        //    belong to the current student (no target id, no numeric grade,
+        //    not a recognised footer keyword of the current student).
+        const drop = new Set(foreignIdRows);
+        const isHeaderish = (row) => {
+            const cells = row.cells || [];
+            if (!cells.length) return true;
+            const text = cells.map(c => String(c.s || '')).join(' ');
+            if (FOOTER_RE.test(text)) return false; // belongs to current student
+            if (cells.some(c => isNum(c.s))) return false; // looks like a grade line
+            return true;
+        };
+        for (const i of foreignIdRows) {
+            // Walk upwards while rows look like headers of the foreign student.
+            for (let j = i - 1; j >= 0 && i - j <= 12; j--) {
+                if (drop.has(j)) continue;
+                if (rowHasTarget[j]) break;
+                if (!isHeaderish(srcRows[j])) break;
+                drop.add(j);
+            }
+            // Walk downwards while rows look like a foreign student's block
+            // (header lines OR grade lines that follow a foreign id without
+            // any current-student marker in between).
+            for (let j = i + 1; j < srcRows.length && j - i <= 60; j++) {
+                if (drop.has(j)) continue;
+                if (rowHasTarget[j]) break;
+                const row = srcRows[j];
+                const cells = row.cells || [];
+                const text = cells.map(c => String(c.s || '')).join(' ');
+                if (FOOTER_RE.test(text)) break; // stop: current student's footer
+                drop.add(j);
+            }
+        }
+        // 3) Strip rows that are clearly admin signature blocks (Directeur,
+        //    Directeur des études, signature, cachet) — they add no value
+        //    for the student and clutter the bottom of the detail view.
+        const NOISE_RE = /(le\s+directeur|directeur\s+des?\s+[ée]tudes?|^\s*directeur\s*$|signature|cachet|^\s*visa\s*$)/i;
+        const rows = srcRows.filter((_, i) => {
+            if (i >= hardCut || drop.has(i)) return false;
+            const text = (srcRows[i].cells || []).map(c => String(c.s || '')).join(' ').trim();
+            if (NOISE_RE.test(text)) return false;
+            return true;
+        });
         return { ...details, rows };
     }
 
@@ -2874,13 +2856,78 @@
         return result;
     }
 
-    function renderDetailsAsHtml(container, details, studentId) {
-        details = removeOtherStudentsFromDetails(details, studentId);
-        // Merge continuation rows so long module names appear on a single line.
-        const mergedRows = mergeDetailsContinuations(details.rows);
+     // [FIX ANNUEL] Cluster rows whose Y values are within Y_TOL pixels into
+     // a single logical row. The annual transcript renders two semesters
+     // side-by-side; their rows often have slightly different Y (off by
+     // 2–6 px) which previously caused each semester's row to render as
+     // its own ultra-thin line with cells only on one side. Merging them
+     // restores a proper grid where S1 and S2 columns line up on the same row.
+     function clusterRowsByY(rows, tol) {
+         if (!rows || rows.length === 0) return rows;
+         const sorted = rows.slice().sort((a, b) => (a.y || 0) - (b.y || 0));
+         const clusters = [];
+         sorted.forEach(r => {
+             const last = clusters[clusters.length - 1];
+             if (last && Math.abs((r.y || 0) - last.refY) <= tol) {
+                 last.rows.push(r);
+                 // keep refY as the min Y of the cluster (top edge)
+             } else {
+                 clusters.push({ refY: r.y || 0, rows: [r] });
+             }
+         });
+         return clusters.map(cl => {
+             const allCells = [];
+             cl.rows.forEach(r => (r.cells || []).forEach(c => allCells.push({ x: c.x, s: c.s })));
+             // De-duplicate cells that have the same x AND identical text (can
+             // happen when the same row was extracted twice from overlapping
+             // PDF text fragments).
+             const seen = new Set();
+             const dedup = [];
+             allCells.sort((a, b) => (a.x || 0) - (b.x || 0));
+             for (const c of allCells) {
+                 const key = `${Math.round((c.x || 0) / 4)}|${String(c.s || '').trim()}`;
+                 if (seen.has(key)) continue;
+                 seen.add(key);
+                 dedup.push(c);
+             }
+             return { y: cl.refY, cells: dedup };
+         });
+     }
+
+     function renderDetailsAsHtml(container, details, studentId) {
+         details = removeOtherStudentsFromDetails(details, studentId);
+         // [FIX ANNUEL] Cluster near-equal Y's first so two-semester rows
+         // (S1 + S2) collapse into one row with all their cells aligned.
+         const isAnnualDetails = !!(details && details._summary && details._summary.isAnnual);
+         const Y_TOL = isAnnualDetails ? 8 : 3;
+         let preClustered = clusterRowsByY(details.rows || [], Y_TOL);
+         // Merge continuation rows so long module names appear on a single line.
+         let mergedRows = mergeDetailsContinuations(preClustered);
+        // ── Vertical compression: collapse any empty gap > MAX_GAP to MAX_GAP.
+        //    Fixes the messy bottom area where the original PDF leaves a huge
+        //    blank band between the credits row and the footer (Date de
+        //    naissance / Directeur), making them feel disconnected.
+        const MAX_GAP = 26;
+        const sortedYs = mergedRows
+            .map(r => r.y || 0)
+            .filter((v, i, a) => a.indexOf(v) === i)
+            .sort((a, b) => a - b);
+        const yMap = new Map();
+        let cursor = sortedYs.length ? sortedYs[0] : 0;
+        sortedYs.forEach((y, i) => {
+            if (i === 0) { yMap.set(y, y); return; }
+            const prev = sortedYs[i - 1];
+            const gap = Math.min(y - prev, MAX_GAP);
+            cursor = (yMap.get(prev) || prev) + gap;
+            yMap.set(y, cursor);
+        });
+        mergedRows = mergedRows.map(r => ({ ...r, y: yMap.get(r.y || 0) ?? (r.y || 0) }));
         const SCALE = 1.05;  /* slightly > 1 keeps text crisp and cells non-overlapping */
         const W = (details.w || 1200) * SCALE;
-        const H = (details.h || 1600) * SCALE;
+        // Trim total height to the actual content extent (plus small padding),
+        // instead of the PDF page height which is often mostly empty.
+        const maxY = mergedRows.reduce((m, r) => Math.max(m, r.y || 0), 0);
+        const H = (maxY + 40) * SCALE;
         let html = '';
         const lineColor = '#94a3b8';
         const FONT_SIZE = '13px';  /* up from 12px for mobile readability */
@@ -2922,7 +2969,40 @@
                 }
             }
         }); // end mergedRows.forEach
-        container.innerHTML = `<div style="position:relative;width:${W.toFixed(0)}px;height:${(H + 30).toFixed(0)}px;margin:0 auto;background:#fff;border-radius:12px;padding:8px;box-shadow:0 10px 28px rgba(0,0,0,0.12);direction:ltr;text-align:left;">${html}</div>`;
+        const gridHtml = `<div style="position:relative;width:${W.toFixed(0)}px;height:${(H + 30).toFixed(0)}px;margin:0 auto;background:#fff;border-radius:12px;padding:8px;box-shadow:0 10px 28px rgba(0,0,0,0.12);direction:ltr;text-align:left;">${html}</div>`;
+        // ── Annual banner: clearly show full student name, annual average, and decision
+        //    at the top of the detailed transcript (Résultat Annuel only).
+        let bannerHtml = '';
+        if (details && details._summary && details._summary.isAnnual) {
+            const sum = details._summary;
+            const okDecision = /(admis|valid)/i.test(String(sum.decision || ''));
+            const decisionColor = okDecision ? '#047857' : '#b91c1c';
+            const decisionBg = okDecision ? '#d1fae5' : '#fee2e2';
+            const safeName = String(sum.name || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            const safeAvg = String(sum.avg || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            const safeDec = String(sum.decision || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            const ctx = [sum.academicYear, sum.major, sum.level ? `${sum.level} - Annuel` : 'Annuel']
+                .filter(Boolean).join(' | ');
+            const safeCtx = String(ctx).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            bannerHtml = `
+                <div style="width:${W.toFixed(0)}px;max-width:100%;margin:0 auto 10px auto;background:linear-gradient(135deg,#003d1a 0%,#005C29 50%,#047a36 100%);color:#fff;border-radius:12px;padding:14px 16px;box-sizing:border-box;box-shadow:0 10px 28px rgba(0,92,41,0.18);direction:ltr;text-align:left;font-family:'Cairo','Inter',Arial,sans-serif;">
+                    <div style="font-size:12px;opacity:0.85;letter-spacing:0.4px;margin-bottom:6px;">${safeCtx}</div>
+                    <div style="font-size:20px;font-weight:800;line-height:1.3;word-wrap:break-word;overflow-wrap:break-word;margin-bottom:10px;">${safeName}</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
+                        <div style="background:rgba(255,255,255,0.15);padding:8px 14px;border-radius:10px;font-size:15px;font-weight:700;">
+                            Moyenne annuelle :
+                            <span style="font-size:18px;font-weight:900;margin-left:6px;">${safeAvg}</span>
+                        </div>
+                        <div style="background:${decisionBg};color:${decisionColor};padding:8px 14px;border-radius:10px;font-size:15px;font-weight:800;">
+                            Décision : ${safeDec}
+                        </div>
+                    </div>
+                </div>`;
+        }
+        // Wrap banner + grid as a SINGLE root child so html2canvas
+        // (which snapshots container.firstElementChild) downloads the
+        // FULL transcript, not just the banner.
+        container.innerHTML = `<div data-details-root style="display:inline-block;background:#fff;border-radius:12px;">${bannerHtml}${gridHtml}</div>`;
     }
 
     // Cluster cell x-positions into real columns and compute row/column
@@ -3575,227 +3655,7 @@
         }
     }
 
-    let _statsPieChart = null;
-    let _statsBarChart = null;
-
-    function openStatsModal() {
-        document.getElementById('stats-modal').style.display = 'flex';
-        populateStatsFilters();
-        loadStats();
-    }
-    function closeStatsModal() {
-        document.getElementById('stats-modal').style.display = 'none';
-    }
-
-    async function populateStatsFilters() {
-        // Mirror existing year/major/level/semester options, but with an "all" choice.
-        const yearSel = document.getElementById('stats-year');
-        const majorSel = document.getElementById('stats-major');
-        const levelSel = document.getElementById('stats-level');
-        const semSel  = document.getElementById('stats-semester');
-
-        // Pull distinct values from the table itself so the filter stays
-        // accurate even if new years/majors are added later.
-        // Supabase caps each request at 1000 rows by default, so we paginate
-        // to make sure ALL majors/years/levels appear in the filters.
-        const all = [];
-        const PAGE = 1000;
-        for (let from = 0; ; from += PAGE) {
-            const { data, error } = await _supabase
-                .from('student_results')
-                .select('year, major, level, semester')
-                .range(from, from + PAGE - 1);
-            if (error) { console.warn(error); break; }
-            if (!data || data.length === 0) break;
-            all.push(...data);
-            if (data.length < PAGE) break;
-        }
-
-        const uniq = (k) => Array.from(new Set(all.map(r => r[k]).filter(Boolean))).sort();
-        const fill = (sel, values) => {
-            const current = sel.value;
-            sel.innerHTML = '<option value="">— الكل —</option>' +
-                values.map(v => `<option value="${v}">${v}</option>`).join('');
-            if (current) sel.value = current;
-        };
-        fill(yearSel,  uniq('year'));
-        fill(majorSel, uniq('major'));
-        fill(levelSel, uniq('level'));
-        fill(semSel,   uniq('semester'));
-    }
-
-    async function loadStats() {
-        const status = document.getElementById('stats-status');
-        const cards  = document.getElementById('stats-cards');
-        status.style.color = ''; status.innerHTML = '⏳ جاري تحميل الإحصائيات...';
-        cards.innerHTML = '';
-
-        const filters = {
-            year:     document.getElementById('stats-year').value,
-            major:    document.getElementById('stats-major').value,
-            level:    document.getElementById('stats-level').value,
-            semester: document.getElementById('stats-semester').value,
-        };
-
-        // Paginate to bypass the 1000-row default cap.
-        const PAGE = 1000;
-        const rows = [];
-        for (let from = 0; ; from += PAGE) {
-            let query = _supabase.from('student_results').select('matricule, decision, level');
-            for (const [k, v] of Object.entries(filters)) if (v) query = query.eq(k, v);
-            const { data, error } = await query.range(from, from + PAGE - 1);
-            if (error) {
-                status.style.color = '#dc2626';
-                status.innerHTML = '❌ خطأ في القراءة: ' + (error.message || error);
-                return;
-            }
-            if (!data || data.length === 0) break;
-            rows.push(...data);
-            if (data.length < PAGE) break;
-        }
-
-        const total = rows.length;
-        let success = 0;
-        const byLevel = {}; // { L1: { total, success } ... }
-        for (const r of rows) {
-            const isOk = classifyDecision(r.decision) === 'success';
-            if (isOk) success++;
-            const lvl = r.level || '—';
-            if (!byLevel[lvl]) byLevel[lvl] = { total: 0, success: 0 };
-            byLevel[lvl].total++;
-            if (isOk) byLevel[lvl].success++;
-        }
-        const failCount = total - success;
-        const rate = total ? (success / total) * 100 : 0;
-
-        status.innerHTML = total ? '' : '⚠️ لا توجد بيانات تطابق هذه الفلاتر.';
-        status.style.display = total ? 'none' : 'block';
-        if (!total) { status.style.background = '#fef3c7'; status.style.color = '#92400e'; }
-
-        const kpi = (label, value, color, icon, bg) => `
-            <div class="stats-kpi-card" style="--accent:${color}">
-                <div class="stats-kpi-icon" style="background:${bg}; color:${color};">${icon}</div>
-                <div class="stats-kpi-label">${label}</div>
-                <div data-counter="${value}" class="stats-kpi-value" style="color:${color};">0</div>
-            </div>`;
-        cards.innerHTML =
-            kpi('إجمالي الطلاب', total, '#0f172a', '👥', '#f1f5f9') +
-            kpi('الناجحون',     success,   '#005C29', '✅', '#dcfce7') +
-            kpi('الراسبون',     failCount, '#dc2626', '❌', '#fee2e2') +
-            kpi('نسبة النجاح',  rate.toFixed(2) + '%', '#2563eb', '📈', '#dbeafe');
-
-        // Animated counters
-        cards.querySelectorAll('[data-counter]').forEach(el => {
-            const target = el.getAttribute('data-counter');
-            const isPct = String(target).endsWith('%');
-            const num = parseFloat(target);
-            if (isNaN(num)) { el.textContent = target; return; }
-            const duration = 700; const start = performance.now();
-            const step = (now) => {
-                const p = Math.min(1, (now - start) / duration);
-                const v = num * (0.5 - Math.cos(Math.PI * p) / 2);
-                el.textContent = isPct ? v.toFixed(2) + '%' : Math.round(v).toLocaleString();
-                if (p < 1) requestAnimationFrame(step);
-            };
-            requestAnimationFrame(step);
-        });
-
-        // Charts
-        const pieCtx = document.getElementById('stats-pie');
-        const barCtx = document.getElementById('stats-bar');
-        if (_statsPieChart) _statsPieChart.destroy();
-        if (_statsBarChart) _statsBarChart.destroy();
-
-        if (total > 0 && window.Chart) {
-            _statsPieChart = new Chart(pieCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['ناجح', 'راسب'],
-                    datasets: [{ data: [success, failCount], backgroundColor: ['#005C29', '#dc2626'], borderWidth: 0 }]
-                },
-                options: { plugins: { legend: { position: 'bottom' } }, cutout: '60%' }
-            });
-
-            const levels = Object.keys(byLevel).sort();
-            const rates  = levels.map(l => byLevel[l].total ? (byLevel[l].success / byLevel[l].total) * 100 : 0);
-            _statsBarChart = new Chart(barCtx, {
-                type: 'bar',
-                data: {
-                    labels: levels,
-                    datasets: [{ label: 'نسبة النجاح %', data: rates, backgroundColor: '#2563eb', borderRadius: 6 }]
-                },
-                options: {
-                    plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } } }
-                }
-            });
-        }
-    }
 </script>
 
-<script>
-    // ============================================================
-    //  STATISTICS — Supabase ثانية مخصصة للإحصائيات فقط
-    //  لا تمس قاعدة البيانات الأساسية (_supabase) إطلاقاً
-    // ============================================================
-    (function () {
-        const STATS_SUPABASE_URL = 'https://cbaswqaufawdsvadizyi.supabase.co';
-        const STATS_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNiYXN3cWF1ZmF3ZHN2YWRpenlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzODUxNCwiZXhwIjoyMDkzNDE0NTE0fQ.tv-u05JTkUFFkdYgR4gUyRb0TZKtDEwEwRQLRQSljHU';
-
-        // عميل Supabase منفصل خاص بالإحصائيات فقط
-        const statsSupabase = supabase.createClient(STATS_SUPABASE_URL, STATS_SUPABASE_KEY);
-
-        // منع تكرار العد لنفس المستخدم في نفس الجلسة
-        const SESSION_KEY  = 'unem_stats_session_recorded';
-        const VISITOR_KEY  = 'unem_stats_visitor_id';
-
-        function getOrCreateVisitorId() {
-            let vid = localStorage.getItem(VISITOR_KEY);
-            if (!vid) {
-                vid = 'v_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 9);
-                localStorage.setItem(VISITOR_KEY, vid);
-            }
-            return vid;
-        }
-
-        async function recordVisit() {
-            // لا تعد نفس الجلسة مرتين
-            if (sessionStorage.getItem(SESSION_KEY)) return;
-
-            try {
-                const visitorId = getOrCreateVisitorId();
-                const page      = window.location.pathname || '/results';
-                const referrer  = document.referrer || 'direct';
-                const ua        = navigator.userAgent || '';
-                const isMobile  = /Mobi|Android|iPhone|iPad/i.test(ua);
-
-                await statsSupabase.from('analytics').insert([{
-                    action_type   : 'page_view',
-                    action_detail : 'النتائج',
-                    visitor_id    : visitorId,
-                    page          : page,
-                    referrer      : referrer.substring(0, 200),
-                    device_type   : isMobile ? 'mobile' : 'desktop',
-                    recorded_at   : new Date().toISOString()
-                }]);
-
-                // سجّل الزيارة في sessionStorage لمنع التكرار في نفس الجلسة
-                sessionStorage.setItem(SESSION_KEY, '1');
-            } catch (e) {
-                // صامت — لا يؤثر على أداء الموقع الأساسي
-            }
-        }
-
-        // نفّذ بعد تحميل الصفحة كاملاً حتى لا يبطئ العرض
-        if (document.readyState === 'complete') {
-            recordVisit();
-        } else {
-            window.addEventListener('load', recordVisit);
-        }
-    })();
-    // ============================================================
-    //  END STATISTICS
-    // ============================================================
-</script>
 </body>
 </html>
