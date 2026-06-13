@@ -1,12 +1,22 @@
 // قم بتغيير هذا الرقم في كل مرة تقوم بتحديث الموقع ليظهر الإشعار للمستخدمين
 const CACHE_NAME = 'unem-iscae-V42';
 
-const urlsToCache =[
+const urlsToCache = [
   './',
   './index.html',
   './manifest.json',
   './logo.png',
-  './icon-192.png'
+  './icon-192.png',
+  './moyenne/',
+  './moyenne/index.html'
+];
+
+// الصفحات التي تستخدم استراتيجية Network-First (دائماً من الشبكة أولاً)
+// هذا يضمن أن المستخدمين المثبِّتين يرون التحديثات فوراً مثل باقي المستخدمين
+const NETWORK_FIRST_URLS = [
+  '/moyenne',
+  '/moyenne/',
+  '/moyenne/index.html'
 ];
 
 // حدث التثبيت: نقوم بتخزين الملفات، لكن *لا نجبر* المتصفح على التحديث فوراً
@@ -36,17 +46,44 @@ self.addEventListener('activate', event => {
   );
 });
 
-// جلب الملفات: الاستراتيجية تعتمد على جلب الملف من الكاش أولاً إن وجد
+// جلب الملفات:
+// - صفحة /moyenne: Network-First (دائماً من الشبكة أولاً لضمان أحدث نسخة)
+// - باقي الصفحات: Cache-First (من الكاش للسرعة)
 self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        if (response) {
-          return response;
-        }
-        return fetch(event.request);
-      })
+  const url = new URL(event.request.url);
+  const isNetworkFirst = NETWORK_FIRST_URLS.some(
+    path => url.pathname === path || url.pathname.startsWith(path)
   );
+
+  if (isNetworkFirst) {
+    // Network-First: اجلب من الشبكة أولاً، وإذا فشل استخدم الكاش كاحتياطي
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          // إذا نجح الطلب، احفظ النسخة الجديدة في الكاش وأرجعها
+          if (response && response.status === 200) {
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseClone));
+          }
+          return response;
+        })
+        .catch(() => {
+          // إذا فشلت الشبكة (مثلاً بدون إنترنت)، ارجع للكاش
+          return caches.match(event.request);
+        })
+    );
+  } else {
+    // Cache-First: من الكاش للسرعة، ومن الشبكة إذا لم يوجد
+    event.respondWith(
+      caches.match(event.request)
+        .then(response => {
+          if (response) {
+            return response;
+          }
+          return fetch(event.request);
+        })
+    );
+  }
 });
 
 // الاستماع لرسالة زر "تحديث الآن" من واجهة الموقع
