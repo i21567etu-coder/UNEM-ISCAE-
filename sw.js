@@ -1,5 +1,5 @@
 // قم بتغيير هذا الرقم في كل مرة تقوم بتحديث الموقع ليظهر الإشعار للمستخدمين
-const CACHE_NAME = 'unem-iscae-V43';
+const CACHE_NAME = 'unem-iscae-V42';
 
 const urlsToCache = [
   './',
@@ -8,7 +8,9 @@ const urlsToCache = [
   './logo.png',
   './icon-192.png',
   './moyenne/',
-  './moyenne/index.html'
+  './moyenne/index.html',
+  './resultats/',
+  './resultats/index.html'
 ];
 
 // الصفحات التي تستخدم استراتيجية Network-First (دائماً من الشبكة أولاً)
@@ -16,7 +18,10 @@ const urlsToCache = [
 const NETWORK_FIRST_URLS = [
   '/moyenne',
   '/moyenne/',
-  '/moyenne/index.html'
+  '/moyenne/index.html',
+  '/resultats',
+  '/resultats/',
+  '/resultats/index.html'
 ];
 
 // حدث التثبيت: نقوم بتخزين الملفات، لكن *لا نجبر* المتصفح على التحديث فوراً

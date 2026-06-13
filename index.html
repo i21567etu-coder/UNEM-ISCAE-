@@ -87,6 +87,10 @@
         }
         .theme-btn { inset-inline-start: 15px; } .lang-btn { inset-inline-end: 15px; font-size: 0.95rem; }
         .theme-btn:hover, .lang-btn:hover { background: rgba(255,255,255,0.3); transform: scale(1.1); }
+        .refresh-btn { inset-inline-start: 62px; }
+        .refresh-btn:hover { background: rgba(255,255,255,0.3); transform: scale(1.1); }
+        .refresh-btn.spinning i { animation: spin 0.8s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
         .main-header { background: linear-gradient(135deg, #0f5132 0%, #198754 100%); color: white; padding: 15px 10px 15px; border-radius: 0 0 25px 25px; text-align: center; box-shadow: 0 10px 30px rgba(25, 135, 84, 0.3); margin-bottom: -15px; position: relative; overflow: hidden; flex-shrink: 0; }
         body.dark-mode .main-header { background: linear-gradient(135deg, #064e3b 0%, #047857 100%); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
@@ -365,6 +369,7 @@
 
     <header class="main-header">
         <button id="theme-toggle" class="theme-btn" onclick="toggleTheme()"><i id="theme-icon" class="fas fa-moon"></i></button>
+        <button id="refresh-btn" class="theme-btn refresh-btn" onclick="hardRefresh()" title="تحديث"><i class="fas fa-sync-alt"></i></button>
         <button id="lang-toggle" class="lang-btn">FR</button>
 
         <div class="logo-container">
@@ -934,6 +939,22 @@
                 langToggle.addEventListener('click', () => setLanguage(currentLang === 'ar' ? 'fr' : 'ar'));
             }
         });
+
+        async function hardRefresh() {
+            const btn = document.getElementById('refresh-btn');
+            if (btn) btn.classList.add('spinning');
+            try {
+                if ('caches' in window) {
+                    const keys = await caches.keys();
+                    await Promise.all(keys.map(key => caches.delete(key)));
+                }
+                if ('serviceWorker' in navigator) {
+                    const regs = await navigator.serviceWorker.getRegistrations();
+                    await Promise.all(regs.map(reg => reg.unregister()));
+                }
+            } catch(e) {}
+            window.location.reload(true);
+        }
 
         function toggleTheme() {
             document.body.classList.toggle('dark-mode');

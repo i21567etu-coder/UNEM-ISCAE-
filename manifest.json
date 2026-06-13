@@ -6,7 +6,9 @@
   "display": "standalone",
   "background_color": "#0f5132",
   "theme_color": "#0f5132",
-  "icons":[
+  "scope": "/",
+  "handle_links": "preferred",
+  "icons": [
     {
       "src": "icon-192.png",
       "sizes": "192x192",
@@ -18,6 +20,20 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "حساب المعدل",
+      "url": "/moyenne",
+      "description": "احسب معدلك الفصلي"
+    },
+    {
+      "name": "النتائج",
+      "url": "/resultats",
+      "description": "اطلع على نتائجك"
     }
   ]
 }
