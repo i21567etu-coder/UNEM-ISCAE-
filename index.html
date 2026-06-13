@@ -142,7 +142,7 @@
             flex: 1; 
             display: grid !important; 
             grid-template-columns: repeat(2, 1fr) !important; 
-            grid-template-rows: repeat(3, 1fr); 
+            grid-template-rows: repeat(4, 1fr); 
             gap: 8px; 
             height: 100%;
         }
@@ -398,6 +398,12 @@
                     <p data-i18n="card_results_desc">الاستعلام عن النتائج</p>
                 </div>
 
+                <!-- زر توقع المعدل — يوجه لـ /moyenne -->
+                <div class="semester-card wide-card" onclick="logSupabaseAnalytics('دخول قسم', 'توقع المعدل'); window.location.href='/moyenne'" style="--theme-color:#7c3aed; --theme-light:rgba(124,58,237,0.2); background-color:rgba(124,58,237,0.04);">
+                    <div class="icon-box"><i class="fas fa-calculator"></i></div>
+                    <h3 data-i18n="card_gpa">توقع المعدل</h3>
+                    <p data-i18n="card_gpa_desc">احسب معدلك الفصلي مسبقاً</p>
+                </div>
 
                 <div class="semester-card wide-card" onclick="openUnionModal()" style="--theme-color:#16a34a; --theme-light:rgba(22,163,74,0.2); background-color:rgba(22,163,74,0.04);">
                     <div class="icon-box"><i class="fas fa-info-circle"></i></div>
@@ -748,6 +754,8 @@
                 card_summaries_desc: "جميع التخصصات (L1, L2, L3)",
                 card_results: "نتائج المعهد",
                 card_results_desc: "الاستعلام عن النتائج",
+                card_gpa: "توقع المعدل",
+                card_gpa_desc: "احسب معدلك الفصلي مسبقاً",
                 card_about: "عن الاتحاد",
                 card_about_desc: "نبذة تعريفية وتاريخية",
                 btn_home: "الرئيسية",
@@ -825,6 +833,8 @@
                 card_summaries_desc: "Toutes les filières (L1, L2, L3)",
                 card_results: "Résultats de l'Institut",
                 card_results_desc: "Consulter les résultats",
+                card_gpa: "Simuler sa Moyenne",
+                card_gpa_desc: "Calculez votre moyenne semestrielle",
                 card_about: "À propos de l'Union",
                 card_about_desc: "Aperçu historique et présentation",
                 btn_home: "Accueil",
