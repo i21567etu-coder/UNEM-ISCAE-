@@ -1,5 +1,5 @@
 // قم بتغيير هذا الرقم في كل مرة تقوم بتحديث الموقع ليظهر الإشعار للمستخدمين
-const CACHE_NAME = 'unem-iscae-V45';
+const CACHE_NAME = 'unem-iscae-V46';
 
 const urlsToCache = [
   './',
@@ -16,13 +16,15 @@ const urlsToCache = [
 // الصفحات التي تستخدم استراتيجية Network-First (دائماً من الشبكة أولاً)
 // هذا يضمن أن المستخدمين المثبِّتين يرون التحديثات فوراً مثل باقي المستخدمين
 const NETWORK_FIRST_URLS = [
+  '/',
+  '/index.html',
   '/moyenne',
   '/moyenne/',
   '/moyenne/index.html',
   '/resultats',
   '/resultats/',
   '/resultats/index.html'
-  /index.html',];
+];
 
 // حدث التثبيت: نقوم بتخزين الملفات، لكن *لا نجبر* المتصفح على التحديث فوراً
 // حتى يتسنى للمستخدم رؤية إشعار "يتوفر تحديث جديد" والضغط عليه.
