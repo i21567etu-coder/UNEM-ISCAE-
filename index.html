@@ -9,6 +9,9 @@
     <meta name="theme-color" content="#0f5132" id="theme-color-meta">
     <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
     <link rel="apple-touch-icon" href="icon-192.png">
+    <!-- iOS PWA: ضرورية لتفعيل وضع التطبيق الكامل على iPhone/iPad -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="UNEM ISCAE">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
@@ -1033,12 +1036,21 @@
             if (!supabaseClient) return;
             
             try {
-                let isFirstTime = false;
+                let isFirstEver = false;   // أول مرة في التاريخ (بين جميع الأجهزة)
+                let isFirstToday = false;  // أول مرة اليوم لهذا المستخدم (لقياس الزيارات اليومية الفريدة)
+                const today = new Date().toISOString().split('T')[0]; // مثال: "2026-06-14"
 
                 if (actionType === 'زيارة الموقع') {
+                    // فحص أول زيارة أبدية
                     if (!localStorage.getItem('unem_has_visited')) {
                         localStorage.setItem('unem_has_visited', 'true');
-                        isFirstTime = true;
+                        isFirstEver = true;
+                    }
+                    // فحص أول زيارة اليوم (لإحصاء الزيارات اليومية الفريدة)
+                    const lastVisitDate = localStorage.getItem('unem_last_visit_date');
+                    if (lastVisitDate !== today) {
+                        localStorage.setItem('unem_last_visit_date', today);
+                        isFirstToday = true;
                     }
                 } 
                 else if (actionType === 'دخول تخصص') {
@@ -1046,27 +1058,44 @@
                     if (!loggedSpecs.includes(actionDetail)) {
                         loggedSpecs.push(actionDetail);
                         localStorage.setItem('unem_logged_specs', JSON.stringify(loggedSpecs));
-                        isFirstTime = true;
+                        isFirstEver = true;
                     }
+                    isFirstToday = true; // كل دخول تخصص يُحسب
                 }
                 else if (actionType === 'دخول مستوى') {
                     let loggedLevels = JSON.parse(localStorage.getItem('unem_logged_levels') || '[]');
                     if (!loggedLevels.includes(actionDetail)) {
                         loggedLevels.push(actionDetail);
                         localStorage.setItem('unem_logged_levels', JSON.stringify(loggedLevels));
-                        isFirstTime = true;
+                        isFirstEver = true;
                     }
+                    isFirstToday = true;
                 }
                 else if (actionType === 'دخول قسم') {
                     let loggedSections = JSON.parse(localStorage.getItem('unem_logged_sections') || '[]');
                     if (!loggedSections.includes(actionDetail)) {
                         loggedSections.push(actionDetail);
                         localStorage.setItem('unem_logged_sections', JSON.stringify(loggedSections));
-                        isFirstTime = true;
+                        isFirstEver = true;
                     }
+                    isFirstToday = true;
+                }
+                else {
+                    isFirstToday = true; // بقية الأحداث (تحميل، بحث، إلخ) تُحسب دائماً
                 }
 
-                let finalActionType = isFirstTime ? actionType : actionType + ' (متكرر)';
+                // نسجل الحدث دائماً، ونُضيف تصنيف لتسهيل الإحصاء:
+                // - بدون لاحقة: أول زيارة أبدية
+                // - (جديد اليوم): زيارة يومية فريدة (يوم جديد لنفس المستخدم)
+                // - (متكرر): نفس اليوم
+                let finalActionType;
+                if (isFirstEver) {
+                    finalActionType = actionType; // زيارة جديدة كلياً
+                } else if (isFirstToday) {
+                    finalActionType = actionType + ' (جديد اليوم)'; // عاد اليوم
+                } else {
+                    finalActionType = actionType + ' (متكرر)'; // نفس الجلسة
+                }
 
                 await supabaseClient.from('analytics').insert([
                     { action_type: finalActionType, action_detail: actionDetail }
@@ -1134,8 +1163,10 @@
                     }
                 }
 
-                let uniqueVisits = 0;
-                let uniqueResults = 0;
+                // إجمالي الزيارات (جميع الأنواع: أولى + جديد اليوم، بدون المتكررة في نفس اليوم)
+                let totalVisits = 0;
+                // إجمالي دخول النتائج (أولى + جديد اليوم)
+                let totalResults = 0;
 
                 let dailyVisitsTotal = {};
                 let dailyResultsTotal = {}; 
@@ -1144,19 +1175,20 @@
 
                 allData.forEach(row => {
                     const dateStr = row.created_at.split('T')[0];
-                    const isUnique = !row.action_type.includes('(متكرر)');
+                    // نحسب الزيارات الفريدة: أولى أبدية + جديد اليوم (ليس المتكرر في نفس اليوم)
+                    const isCountable = !row.action_type.includes('(متكرر)');
 
                     if (row.action_type.startsWith('زيارة الموقع')) {
-                        if (isUnique) uniqueVisits++; 
+                        if (isCountable) totalVisits++;
+                        // الرسم البياني يُظهر كل الزيارات اليومية
                         dailyVisitsTotal[dateStr] = (dailyVisitsTotal[dateStr] || 0) + 1; 
                     }
 
                     if (row.action_type.startsWith('دخول قسم') && row.action_detail === 'النتائج') {
-                        if (isUnique) uniqueResults++;
+                        if (isCountable) totalResults++;
                         dailyResultsTotal[dateStr] = (dailyResultsTotal[dateStr] || 0) + 1;
                     }
 
-                    
                     if (row.action_type.startsWith('دخول تخصص')) {
                         specCountsTotal[row.action_detail] = (specCountsTotal[row.action_detail] || 0) + 1;
                     }
@@ -1166,8 +1198,8 @@
                     }
                 });
 
-                document.getElementById('stat-visits').textContent = uniqueVisits;
-                document.getElementById('stat-results').textContent = uniqueResults;
+                document.getElementById('stat-visits').textContent = totalVisits;
+                document.getElementById('stat-results').textContent = totalResults;
 
                 const sortedDatesVisits = Object.keys(dailyVisitsTotal).sort();
                 const sortedDailyVisits = {};
@@ -1833,6 +1865,12 @@ function closeAnalyticsDashboard() {
             reg.addEventListener('updatefound', () => {
               newWorker = reg.installing;
               newWorker.addEventListener('statechange', () => {
+                // iOS Safari: إذا لم يكن هناك controller (أول تثبيت أو بعد مسح الكاش)
+                // نُجبر SW الجديد على التفعيل فوراً بدون انتظار المستخدم
+                if (newWorker.state === 'installed' && !navigator.serviceWorker.controller) {
+                  newWorker.postMessage({ action: 'skipWaiting' });
+                }
+
                 if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                   
                   // --- نظام الفحص الذكي للإصدارات، النتائج، والتظلمات (بالأرقام الصحيحة) ---

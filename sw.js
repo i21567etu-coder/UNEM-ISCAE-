@@ -1,5 +1,5 @@
 // قم بتغيير هذا الرقم في كل مرة تقوم بتحديث الموقع ليظهر الإشعار للمستخدمين
-const CACHE_NAME = 'unem-iscae-V43';
+const CACHE_NAME = 'unem-iscae-V44';
 
 const urlsToCache = [
   './',
@@ -22,7 +22,7 @@ const NETWORK_FIRST_URLS = [
   '/resultats',
   '/resultats/',
   '/resultats/index.html'
-];
+  /index.html',];
 
 // حدث التثبيت: نقوم بتخزين الملفات، لكن *لا نجبر* المتصفح على التحديث فوراً
 // حتى يتسنى للمستخدم رؤية إشعار "يتوفر تحديث جديد" والضغط عليه.
@@ -36,6 +36,7 @@ self.addEventListener('install', event => {
 });
 
 // حدث التفعيل: مسح أي نسخ قديمة من الكاش من هواتف المستخدمين
+// + self.clients.claim() ضروري لـ iOS ليأخذ Service Worker الجديد السيطرة فوراً
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
@@ -47,6 +48,10 @@ self.addEventListener('activate', event => {
           }
         })
       );
+    }).then(() => {
+      // يُجبر المتصفح (خصوصاً iOS Safari) على استخدام SW الجديد فوراً
+      // بدون هذا السطر، يظل iOS يستخدم SW القديم حتى إغلاق جميع تبويبات الموقع
+      return self.clients.claim();
     })
   );
 });
