@@ -1190,6 +1190,51 @@
     const SUPABASE_URL = 'https://gocplsdcrprqudunuqkv.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdvY3Bsc2RjcnBycXVkdW51cWt2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3MjUwNDEsImV4cCI6MjA5NjMwMTA0MX0.YxgyHYRO-bZZc3t643CUkcUvYFbUYn2KsfVY-K0EzPg';
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    /* ============================================================
+       نظام إحصائيات موحّد مع الصفحة الرئيسية
+       يضمن تسجيل "زيارة الموقع" لأي زائر يصل مباشرة إلى /resultats
+       حتى لا يتجاوز عدد فتحات النتائج عدد الزيارات الكلية.
+       ============================================================ */
+    async function logSupabaseAnalytics(actionType, actionDetail) {
+        if (!_supabase) return;
+        try {
+            // ضمان تسجيل زيارة الموقع أولاً إذا لم تُسجَّل بعد
+            if (actionType !== 'زيارة الموقع' && !localStorage.getItem('unem_has_visited')) {
+                localStorage.setItem('unem_has_visited', 'true');
+                try {
+                    await _supabase.from('analytics').insert([
+                        { action_type: 'زيارة الموقع', action_detail: 'تلقائي - صفحة النتائج' }
+                    ]);
+                } catch (e) {}
+            }
+
+            let isFirstTime = false;
+            if (actionType === 'زيارة الموقع') {
+                if (!localStorage.getItem('unem_has_visited')) {
+                    localStorage.setItem('unem_has_visited', 'true');
+                    isFirstTime = true;
+                }
+            } else if (actionType === 'دخول قسم') {
+                let logged = JSON.parse(localStorage.getItem('unem_logged_sections') || '[]');
+                if (!logged.includes(actionDetail)) {
+                    logged.push(actionDetail);
+                    localStorage.setItem('unem_logged_sections', JSON.stringify(logged));
+                    isFirstTime = true;
+                }
+            }
+            const finalActionType = isFirstTime ? actionType : actionType + ' (متكرر)';
+            await _supabase.from('analytics').insert([
+                { action_type: finalActionType, action_detail: actionDetail }
+            ]);
+        } catch (e) {}
+    }
+
+    window.addEventListener('load', () => {
+        logSupabaseAnalytics('زيارة الموقع', 'صفحة النتائج');
+        logSupabaseAnalytics('دخول قسم', 'النتائج');
+    });
+
     
     /* ============================================================
        CLOUDINARY — File storage (replaces Supabase Storage)
