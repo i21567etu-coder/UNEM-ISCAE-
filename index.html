@@ -9,9 +9,6 @@
     <meta name="theme-color" content="#0f5132" id="theme-color-meta">
     <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
     <link rel="apple-touch-icon" href="icon-192.png">
-    <!-- iOS PWA: ضرورية لتفعيل وضع التطبيق الكامل على iPhone/iPad -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="UNEM ISCAE">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
@@ -433,7 +430,7 @@
                 </div>
 
                 <!-- تم التعديل هنا ليوجه لـ /resultats مباشرة -->
-                <div class="semester-card wide-card" onclick="logSupabaseAnalytics('دخول قسم', 'النتائج'); window.location.href='/resultats'">
+                <div class="semester-card wide-card" onclick="(async()=>{ try{ await logSupabaseAnalytics('دخول قسم', 'النتائج'); }catch(e){} window.location.href='/resultats'; })()">
                     <div class="icon-box"><i class="fas fa-graduation-cap"></i></div>
                     <h3 data-i18n="card_results">نتائج المعهد</h3>
                     <p data-i18n="card_results_desc">الاستعلام عن النتائج</p>
@@ -673,7 +670,9 @@
             <div class="header-with-back" style="margin-bottom: 20px;">
                 <button class="back-btn" onclick="closeAnalyticsDashboard()" style="padding: 10px 20px; font-size: 1rem;">رجوع للإدارة</button>
                 <h2 style="color: var(--primary-color); margin: 0; font-weight: 800; font-size: 1.5rem;">📊 الإحصائيات المباشرة</h2>
-                <div style="width:80px"></div>
+                <button onclick="downloadStatsImage()" class="btn-submit" style="padding: 10px 18px; font-size: 0.95rem; margin: 0; width: auto; background: var(--primary-color); color: #fff;">
+                    <i class="fas fa-download"></i> تحميل صورة
+                </button>
             </div>
 
             <!-- فلتر التاريخ -->
@@ -704,14 +703,14 @@
             <!-- شبكة الرسوم البيانية الخطية للكمبيوتر -->
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; margin-bottom: 20px;">
                 <div style="background: var(--card-bg); padding: 20px; border-radius: 15px; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);">
-                    <h4 style="margin-top: 0; text-align: center; color: var(--text-primary); font-size: 1.2rem; font-weight: 800; margin-bottom: 20px;">إجمالي الزيارات (شامل المتكرر)</h4>
+                    <h4 style="margin-top: 0; text-align: center; color: var(--text-primary); font-size: 1.2rem; font-weight: 800; margin-bottom: 20px;">إجمالي الزيارات</h4>
                     <div style="position: relative; width: 100%; height: 320px;">
                         <canvas id="dailyVisitsChart"></canvas>
                     </div>
                 </div>
                 
                 <div style="background: var(--card-bg); padding: 20px; border-radius: 15px; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);">
-                    <h4 style="margin-top: 0; text-align: center; color: var(--text-primary); font-size: 1.2rem; font-weight: 800; margin-bottom: 20px;">دخول قسم النتائج (شامل المتكرر)</h4>
+                    <h4 style="margin-top: 0; text-align: center; color: var(--text-primary); font-size: 1.2rem; font-weight: 800; margin-bottom: 20px;">دخول قسم النتائج</h4>
                     <div style="position: relative; width: 100%; height: 320px;">
                         <canvas id="dailyResultsChart"></canvas>
                     </div>
@@ -988,8 +987,17 @@
                     const regs = await navigator.serviceWorker.getRegistrations();
                     await Promise.all(regs.map(reg => reg.unregister()));
                 }
+                try { sessionStorage.clear(); } catch(e) {}
             } catch(e) {}
-            window.location.reload(true);
+            // iOS Safari يتجاهل reload(true) ويعرض النسخة المخزنة.
+            // الحل: التنقل إلى رابط جديد بمعامل زمني لكسر الكاش، مع استبدال السجل.
+            try {
+                const url = new URL(window.location.href);
+                url.searchParams.set('_r', Date.now().toString());
+                window.location.replace(url.toString());
+            } catch(e) {
+                window.location.reload();
+            }
         }
 
         function toggleTheme() {
@@ -1036,21 +1044,24 @@
             if (!supabaseClient) return;
             
             try {
-                let isFirstEver = false;   // أول مرة في التاريخ (بين جميع الأجهزة)
-                let isFirstToday = false;  // أول مرة اليوم لهذا المستخدم (لقياس الزيارات اليومية الفريدة)
-                const today = new Date().toISOString().split('T')[0]; // مثال: "2026-06-14"
+                // ===== ضمان تسجيل "زيارة الموقع" قبل أي حدث آخر =====
+                // إذا كان الحدث ليس زيارة موقع، ولم يُسجَّل للمستخدم زيارة بعد،
+                // نسجّل زيارة فريدة أولاً حتى لا يتجاوز عدد النتائج عدد الزيارات.
+                if (actionType !== 'زيارة الموقع' && !localStorage.getItem('unem_has_visited')) {
+                    localStorage.setItem('unem_has_visited', 'true');
+                    try {
+                        await supabaseClient.from('analytics').insert([
+                            { action_type: 'زيارة الموقع', action_detail: 'تلقائي - ' + (actionDetail || actionType) }
+                        ]);
+                    } catch (e) {}
+                }
+
+                let isFirstTime = false;
 
                 if (actionType === 'زيارة الموقع') {
-                    // فحص أول زيارة أبدية
                     if (!localStorage.getItem('unem_has_visited')) {
                         localStorage.setItem('unem_has_visited', 'true');
-                        isFirstEver = true;
-                    }
-                    // فحص أول زيارة اليوم (لإحصاء الزيارات اليومية الفريدة)
-                    const lastVisitDate = localStorage.getItem('unem_last_visit_date');
-                    if (lastVisitDate !== today) {
-                        localStorage.setItem('unem_last_visit_date', today);
-                        isFirstToday = true;
+                        isFirstTime = true;
                     }
                 } 
                 else if (actionType === 'دخول تخصص') {
@@ -1058,44 +1069,27 @@
                     if (!loggedSpecs.includes(actionDetail)) {
                         loggedSpecs.push(actionDetail);
                         localStorage.setItem('unem_logged_specs', JSON.stringify(loggedSpecs));
-                        isFirstEver = true;
+                        isFirstTime = true;
                     }
-                    isFirstToday = true; // كل دخول تخصص يُحسب
                 }
                 else if (actionType === 'دخول مستوى') {
                     let loggedLevels = JSON.parse(localStorage.getItem('unem_logged_levels') || '[]');
                     if (!loggedLevels.includes(actionDetail)) {
                         loggedLevels.push(actionDetail);
                         localStorage.setItem('unem_logged_levels', JSON.stringify(loggedLevels));
-                        isFirstEver = true;
+                        isFirstTime = true;
                     }
-                    isFirstToday = true;
                 }
                 else if (actionType === 'دخول قسم') {
                     let loggedSections = JSON.parse(localStorage.getItem('unem_logged_sections') || '[]');
                     if (!loggedSections.includes(actionDetail)) {
                         loggedSections.push(actionDetail);
                         localStorage.setItem('unem_logged_sections', JSON.stringify(loggedSections));
-                        isFirstEver = true;
+                        isFirstTime = true;
                     }
-                    isFirstToday = true;
-                }
-                else {
-                    isFirstToday = true; // بقية الأحداث (تحميل، بحث، إلخ) تُحسب دائماً
                 }
 
-                // نسجل الحدث دائماً، ونُضيف تصنيف لتسهيل الإحصاء:
-                // - بدون لاحقة: أول زيارة أبدية
-                // - (جديد اليوم): زيارة يومية فريدة (يوم جديد لنفس المستخدم)
-                // - (متكرر): نفس اليوم
-                let finalActionType;
-                if (isFirstEver) {
-                    finalActionType = actionType; // زيارة جديدة كلياً
-                } else if (isFirstToday) {
-                    finalActionType = actionType + ' (جديد اليوم)'; // عاد اليوم
-                } else {
-                    finalActionType = actionType + ' (متكرر)'; // نفس الجلسة
-                }
+                let finalActionType = isFirstTime ? actionType : actionType + ' (متكرر)';
 
                 await supabaseClient.from('analytics').insert([
                     { action_type: finalActionType, action_detail: actionDetail }
@@ -1163,10 +1157,11 @@
                     }
                 }
 
-                // إجمالي الزيارات (جميع الأنواع: أولى + جديد اليوم، بدون المتكررة في نفس اليوم)
-                let totalVisits = 0;
-                // إجمالي دخول النتائج (أولى + جديد اليوم)
-                let totalResults = 0;
+                let uniqueVisits = 0;
+                let uniqueResults = 0;
+                let uniqueOtherSections = 0;
+                let uniqueSpecsTotal = 0;
+                let uniqueLevelsTotal = 0;
 
                 let dailyVisitsTotal = {};
                 let dailyResultsTotal = {}; 
@@ -1175,31 +1170,39 @@
 
                 allData.forEach(row => {
                     const dateStr = row.created_at.split('T')[0];
-                    // نحسب الزيارات الفريدة: أولى أبدية + جديد اليوم (ليس المتكرر في نفس اليوم)
-                    const isCountable = !row.action_type.includes('(متكرر)');
+                    const isUnique = !row.action_type.includes('(متكرر)');
 
                     if (row.action_type.startsWith('زيارة الموقع')) {
-                        if (isCountable) totalVisits++;
-                        // الرسم البياني يُظهر كل الزيارات اليومية
+                        if (isUnique) uniqueVisits++; 
                         dailyVisitsTotal[dateStr] = (dailyVisitsTotal[dateStr] || 0) + 1; 
                     }
 
-                    if (row.action_type.startsWith('دخول قسم') && row.action_detail === 'النتائج') {
-                        if (isCountable) totalResults++;
-                        dailyResultsTotal[dateStr] = (dailyResultsTotal[dateStr] || 0) + 1;
+                    if (row.action_type.startsWith('دخول قسم')) {
+                        if (row.action_detail === 'النتائج') {
+                            if (isUnique) uniqueResults++;
+                            dailyResultsTotal[dateStr] = (dailyResultsTotal[dateStr] || 0) + 1;
+                        } else if (isUnique) {
+                            uniqueOtherSections++;
+                        }
                     }
 
+                    
                     if (row.action_type.startsWith('دخول تخصص')) {
+                        if (isUnique) uniqueSpecsTotal++;
                         specCountsTotal[row.action_detail] = (specCountsTotal[row.action_detail] || 0) + 1;
                     }
 
                     if (row.action_type.startsWith('دخول مستوى')) {
+                        if (isUnique) uniqueLevelsTotal++;
                         levelCountsTotal[row.action_detail] = (levelCountsTotal[row.action_detail] || 0) + 1;
                     }
                 });
 
-                document.getElementById('stat-visits').textContent = totalVisits;
-                document.getElementById('stat-results').textContent = totalResults;
+                // زوار الموقع = زوار النتائج + زوار باقي الأقسام + زوار التخصصات + زوار المستويات (بدون المتكرر).
+                const displayedVisits = uniqueResults + uniqueOtherSections + uniqueSpecsTotal + uniqueLevelsTotal;
+
+                document.getElementById('stat-visits').textContent = displayedVisits;
+                document.getElementById('stat-results').textContent = uniqueResults;
 
                 const sortedDatesVisits = Object.keys(dailyVisitsTotal).sort();
                 const sortedDailyVisits = {};
@@ -1209,10 +1212,19 @@
                 const sortedDailyResults = {};
                 sortedDatesResults.forEach(d => sortedDailyResults[d] = dailyResultsTotal[d]);
 
-                renderAnalyticsChart('dailyVisitsChart', 'line', 'إجمالي الزيارات (شامل المتكرر)', sortedDailyVisits);
-                renderAnalyticsChart('dailyResultsChart', 'line', 'دخول قسم النتائج (شامل المتكرر)', sortedDailyResults);
+                renderAnalyticsChart('dailyVisitsChart', 'line', 'إجمالي الزيارات', sortedDailyVisits);
+                renderAnalyticsChart('dailyResultsChart', 'line', 'دخول قسم النتائج', sortedDailyResults);
                 renderAnalyticsChart('specChart', 'pie', 'التخصصات (إجمالي الدخول)', specCountsTotal);
                 renderAnalyticsChart('levelChart', 'doughnut', 'المستويات (إجمالي الدخول)', levelCountsTotal);
+
+                // حفظ البيانات لاستخدامها عند تصدير الصورة
+                window.__lastStatsData = {
+                    startDate, endDate,
+                    displayedVisits, uniqueResults,
+                    specCountsTotal, levelCountsTotal,
+                    dailyVisitsTotal: sortedDailyVisits,
+                    dailyResultsTotal: sortedDailyResults
+                };
 
             } catch(e) {
                 console.error(e);
@@ -1236,12 +1248,14 @@
             };
 
             if (type === 'line') {
-                dataset.borderColor = '#198754'; 
-                dataset.backgroundColor = 'rgba(25, 135, 84, 0.1)';
+                dataset.borderColor = '#15803d'; 
+                dataset.backgroundColor = 'rgba(21,128,61,0.22)';
                 dataset.fill = true;
-                dataset.tension = 0.4;
-                dataset.borderWidth = 3;
-                dataset.pointBackgroundColor = '#0f5132';
+                dataset.tension = 0.35;
+                dataset.borderWidth = 4;
+                dataset.pointBackgroundColor = '#15803d';
+                dataset.pointBorderColor = '#052e16';
+                dataset.pointBorderWidth = 1.5;
                 dataset.pointRadius = 4;
                 dataset.pointHoverRadius = 6;
             } else {
@@ -1278,8 +1292,8 @@
                         }
                     },
                     scales: type === 'line' ? {
-                        y: { beginAtZero: true, ticks: { font: { family: 'Tajawal', weight: 'bold' } } },
-                        x: { ticks: { font: { family: 'Tajawal', weight: 'bold' } } }
+                        y: { beginAtZero: true, ticks: { color: '#0f172a', font: { family: 'Tajawal', weight: 'bold', size: 13 } }, grid: { color: 'rgba(15,23,42,0.12)' } },
+                        x: { ticks: { color: '#0f172a', font: { family: 'Tajawal', weight: 'bold', size: 12 } }, grid: { color: 'rgba(15,23,42,0.08)' } }
                     } : {} 
                 }
             });
@@ -1293,6 +1307,282 @@ function closeAnalyticsDashboard() {
     document.getElementById('analytics-overlay').classList.add('hidden');
     document.getElementById('upload-modal-overlay').classList.remove('hidden');
 }
+
+        // ================== تصدير صورة احترافية للإحصائيات ==================
+        async function downloadStatsImage() {
+            const d = window.__lastStatsData;
+            if (!d) { alert('لا توجد بيانات للتصدير، الرجاء الانتظار حتى تحميل الإحصائيات.'); return; }
+
+            const btn = event && event.currentTarget;
+            const oldHtml = btn ? btn.innerHTML : '';
+            if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحضير...'; }
+
+            // اختيار المشرف: هل يضيف تذييلاً باسمه؟
+            const adminName = 'Mohamed Dah Agove (MDA)';
+            const includeAdminFooter = confirm(`هل تريد إضافة تذييل باسم المشرف؟\n\n${adminName}\n\nاضغط "موافق" للإضافة أو "إلغاء" لتنزيل الصورة بدون تذييل.`);
+
+            try {
+                // ====== أبعاد منطقية + تكبير ×2 للجودة العالية ======
+                const SCALE = 2;
+                const W = 1600, H = 2100;
+                const extraFooter = includeAdminFooter ? 70 : 0;
+                const totalH = H + extraFooter;
+                const canvas = document.createElement('canvas');
+                canvas.width = W * SCALE; canvas.height = totalH * SCALE;
+                const ctx = canvas.getContext('2d');
+                ctx.scale(SCALE, SCALE);
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+
+                // خلفية متدرجة
+                const bgGrad = ctx.createLinearGradient(0, 0, 0, totalH);
+                bgGrad.addColorStop(0, '#f0fdf4');
+                bgGrad.addColorStop(1, '#dcfce7');
+                ctx.fillStyle = bgGrad; ctx.fillRect(0, 0, W, totalH);
+
+                // شريط علوي (أصفر)
+                const headGrad = ctx.createLinearGradient(0, 0, W, 0);
+                headGrad.addColorStop(0, '#0f5132');
+                headGrad.addColorStop(1, '#157347');
+                ctx.fillStyle = headGrad; ctx.fillRect(0, 0, W, 200);
+
+                // عنوان UNEM ISCAE
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 70px "Segoe UI", Tahoma, Arial, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('UNEM ISCAE', W/2, 90);
+
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 38px "Segoe UI", Tahoma, Arial, sans-serif';
+                ctx.fillText('تقرير إحصائيات الموقع', W/2, 145);
+
+                ctx.font = '26px "Segoe UI", Tahoma, Arial, sans-serif';
+                ctx.fillStyle = '#e6f4ea';
+                ctx.fillText('https://unem-iscae.vercel.app/', W/2, 185);
+
+                // معلومات الفترة وتاريخ التوليد
+                ctx.textAlign = 'right';
+                ctx.fillStyle = '#334155';
+                ctx.font = 'bold 28px "Segoe UI", Tahoma, Arial, sans-serif';
+                const period = (d.startDate || d.endDate)
+                    ? `الفترة: من ${d.startDate || '—'} إلى ${d.endDate || '—'}`
+                    : 'الإحصائيات العامة (كل الفترات)';
+                ctx.fillText(period, W - 60, 260);
+
+                ctx.textAlign = 'left';
+                ctx.font = '24px "Segoe UI", Tahoma, Arial, sans-serif';
+                ctx.fillStyle = '#64748b';
+                const now = new Date();
+                const genDate = now.toLocaleString('ar-EG', { dateStyle: 'medium', timeStyle: 'short' });
+                ctx.fillText('تاريخ التوليد: ' + genDate, 60, 260);
+
+                // دالة رسم بطاقة
+                function drawCard(x, y, w, h, title, value, color) {
+                    ctx.fillStyle = '#ffffff';
+                    ctx.strokeStyle = '#bbf7d0';
+                    ctx.lineWidth = 2;
+                    roundRect(ctx, x, y, w, h, 20, true, true);
+                    ctx.fillStyle = color;
+                    roundRect(ctx, x, y, 12, h, 6, true, false);
+                    ctx.textAlign = 'center';
+                    ctx.fillStyle = color;
+                    ctx.font = 'bold 80px "Segoe UI", Tahoma, Arial, sans-serif';
+                    ctx.fillText(String(value), x + w/2, y + h/2 + 10);
+                    ctx.fillStyle = '#475569';
+                    ctx.font = 'bold 26px "Segoe UI", Tahoma, Arial, sans-serif';
+                    ctx.fillText(title, x + w/2, y + h - 30);
+                }
+
+                function roundRect(ctx, x, y, w, h, r, fill, stroke) {
+                    ctx.beginPath();
+                    ctx.moveTo(x+r, y);
+                    ctx.arcTo(x+w, y, x+w, y+h, r);
+                    ctx.arcTo(x+w, y+h, x, y+h, r);
+                    ctx.arcTo(x, y+h, x, y, r);
+                    ctx.arcTo(x, y, x+w, y, r);
+                    ctx.closePath();
+                    if (fill) ctx.fill();
+                    if (stroke) ctx.stroke();
+                }
+
+                // بطاقتان رئيسيتان (بدون "شامل المتكرر")
+                drawCard(80, 300, 700, 220, 'زيارات الموقع الفريدة', d.displayedVisits, '#0f5132');
+                drawCard(820, 300, 700, 220, 'دخول النتائج (فريد)', d.uniqueResults, '#15803d');
+
+                // عنوان قسم الرسوم
+                ctx.fillStyle = '#0f5132';
+                ctx.textAlign = 'right';
+                ctx.font = 'bold 32px "Segoe UI", Tahoma, Arial, sans-serif';
+                ctx.fillText('الرسوم البيانية', W - 80, 580);
+
+                // إدراج صور المخططات (بدون "شامل المتكرر")
+                const chartIds = [
+                    {id: 'dailyVisitsChart', title: 'إجمالي الزيارات اليومية'},
+                    {id: 'dailyResultsChart', title: 'دخول قسم النتائج اليومي'},
+                    {id: 'specChart', title: 'التخصصات'},
+                    {id: 'levelChart', title: 'المستويات'}
+                ];
+
+                const cw = 700, ch = 480;
+                const positions = [
+                    [80, 620], [820, 620],
+                    [80, 1140], [820, 1140]
+                ];
+
+                // إنشاء نسخ نظيفة ومستقلة من المخططات للتصدير فقط.
+                // هذا يلغي جذرياً أي tooltip أو hover عالق مثل L1، ولا يعتمد على حالة المخطط المعروض في الشاشة.
+                if (document.fonts && document.fonts.ready) {
+                    try { await document.fonts.ready; } catch(_) {}
+                }
+
+                async function createCleanChartSnapshot(canvasId, width, height) {
+                    const srcChart = activeCharts[canvasId];
+                    const fallbackCanvas = document.getElementById(canvasId);
+                    if (!srcChart || !window.Chart) return { canvas: fallbackCanvas, destroy: function(){} };
+
+                    const ratio = 2;
+                    const snapCanvas = document.createElement('canvas');
+                    snapCanvas.width = Math.round(width * ratio);
+                    snapCanvas.height = Math.round(height * ratio);
+                    snapCanvas.style.width = width + 'px';
+                    snapCanvas.style.height = height + 'px';
+
+                    const clonedData = {
+                        labels: Array.from(srcChart.data.labels || []),
+                        datasets: (srcChart.data.datasets || []).map(ds => ({
+                            label: ds.label,
+                            data: Array.from(ds.data || []),
+                            backgroundColor: Array.isArray(ds.backgroundColor) ? Array.from(ds.backgroundColor) : ds.backgroundColor,
+                            borderColor: ds.borderColor,
+                            borderWidth: ds.borderWidth,
+                            fill: ds.fill,
+                            tension: ds.tension,
+                            pointBackgroundColor: ds.pointBackgroundColor,
+                            pointBorderColor: ds.pointBorderColor,
+                            pointBorderWidth: ds.pointBorderWidth,
+                            pointRadius: ds.pointRadius,
+                            pointHoverRadius: 0,
+                            hoverOffset: 0
+                        }))
+                    };
+
+                    const chartType = srcChart.config.type;
+                    const isLine = chartType === 'line';
+                    const cleanChart = new Chart(snapCanvas.getContext('2d'), {
+                        type: chartType,
+                        data: clonedData,
+                        options: {
+                            responsive: false,
+                            maintainAspectRatio: false,
+                            animation: false,
+                            events: [],
+                            devicePixelRatio: 1,
+                            hover: { mode: null },
+                            layout: { padding: 12 },
+                            plugins: {
+                                legend: { position: 'bottom', labels: { color: '#0f172a', font: { family: 'Tajawal, Segoe UI, Tahoma, Arial, sans-serif', size: 26, weight: 'bold' } } },
+                                tooltip: { enabled: false }
+                            },
+                            scales: isLine ? {
+                                y: { beginAtZero: true, ticks: { color: '#0f172a', font: { family: 'Tajawal, Segoe UI, Tahoma, Arial, sans-serif', weight: 'bold', size: 22 } }, grid: { color: 'rgba(15,23,42,0.12)' } },
+                                x: { ticks: { color: '#0f172a', font: { family: 'Tajawal, Segoe UI, Tahoma, Arial, sans-serif', weight: 'bold', size: 20 } }, grid: { color: 'rgba(15,23,42,0.08)' } }
+                            } : {}
+                        }
+                    });
+
+                    try { cleanChart.setActiveElements([]); } catch(_) {}
+                    if (cleanChart.tooltip) {
+                        try { cleanChart.tooltip.setActiveElements([], { x: -9999, y: -9999 }); } catch(_) {}
+                    }
+                    cleanChart.update('none');
+                    cleanChart.draw();
+                    await new Promise(r => requestAnimationFrame(r));
+                    return { canvas: snapCanvas, destroy: function(){ try { cleanChart.destroy(); } catch(_) {} } };
+                }
+
+                for (let i = 0; i < chartIds.length; i++) {
+                    const c = document.getElementById(chartIds[i].id);
+                    const [px, py] = positions[i];
+                    ctx.fillStyle = '#ffffff';
+                    ctx.strokeStyle = '#bbf7d0'; ctx.lineWidth = 2;
+                    roundRect(ctx, px, py, cw, ch, 20, true, true);
+                    ctx.fillStyle = '#0f5132';
+                    ctx.textAlign = 'center';
+                    ctx.font = 'bold 24px "Segoe UI", Tahoma, Arial, sans-serif';
+                    ctx.fillText(chartIds[i].title, px + cw/2, py + 40);
+                    if (c) {
+                        try {
+                            const innerW = cw - 40, innerH = ch - 80;
+                            const snap = await createCleanChartSnapshot(chartIds[i].id, innerW, innerH);
+                            const sourceCanvas = snap.canvas || c;
+                            const cr = sourceCanvas.width / sourceCanvas.height;
+                            let dw = innerW, dh = innerW / cr;
+                            if (dh > innerH) { dh = innerH; dw = innerH * cr; }
+                            const dx = px + (cw - dw)/2;
+                            const dy = py + 60 + (innerH - dh)/2;
+                            ctx.drawImage(sourceCanvas, dx, dy, dw, dh);
+                            snap.destroy();
+                        } catch(e) { console.warn('chart draw fail', e); }
+                    }
+                }
+
+                // تذييل أساسي
+                ctx.fillStyle = '#0f5132';
+                ctx.fillRect(0, H - 90, W, 90);
+                ctx.textAlign = 'center';
+                ctx.font = 'bold 28px "Segoe UI", Tahoma, Arial, sans-serif';
+                // رسم "UNEM ISCAE • " بالأصفر و URL بالأزرق على نفس السطر
+                {
+                    const prefix = 'UNEM ISCAE • ';
+                    const url = 'https://unem-iscae.vercel.app/';
+                    const wPrefix = ctx.measureText(prefix).width;
+                    const wUrl = ctx.measureText(url).width;
+                    const total = wPrefix + wUrl;
+                    const startX = (W - total) / 2;
+                    ctx.textAlign = 'left';
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillText(prefix, startX, H - 50);
+                    ctx.fillStyle = '#60a5fa';
+                    ctx.fillText(url, startX + wPrefix, H - 50);
+                    // تسطير للرابط لتمييزه
+                    ctx.strokeStyle = '#60a5fa';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(startX + wPrefix, H - 42);
+                    ctx.lineTo(startX + wPrefix + wUrl, H - 42);
+                    ctx.stroke();
+                    ctx.textAlign = 'center';
+                }
+                ctx.fillStyle = '#e6f4ea';
+                ctx.font = '20px "Segoe UI", Tahoma, Arial, sans-serif';
+                ctx.fillText('© ' + now.getFullYear() + ' — جميع الحقوق محفوظة', W/2, H - 20);
+
+                // تذييل المشرف (اختياري)
+                if (includeAdminFooter) {
+                    ctx.fillStyle = '#0f5132';
+                    ctx.fillRect(0, H, W, extraFooter);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.textAlign = 'center';
+                    ctx.font = 'bold 26px "Segoe UI", Tahoma, Arial, sans-serif';
+                    ctx.fillText('إعداد المشرف: ' + adminName, W/2, H + 44);
+                }
+
+                // تنزيل بجودة عالية
+                const suffix = (d.startDate || d.endDate)
+                    ? `${d.startDate || 'بداية'}_الى_${d.endDate || 'اليوم'}`
+                    : 'عامة';
+                const link = document.createElement('a');
+                link.download = `UNEM_ISCAE_احصائيات_${suffix}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            } catch(err) {
+                console.error(err);
+                alert('فشل توليد الصورة: ' + err.message);
+            } finally {
+                if (btn) { btn.disabled = false; btn.innerHTML = oldHtml; }
+            }
+        }
+
 
         let tapCount = 0; let tapTimer;
         document.getElementById('copyright-year').addEventListener('click', () => {
@@ -1865,12 +2155,6 @@ function closeAnalyticsDashboard() {
             reg.addEventListener('updatefound', () => {
               newWorker = reg.installing;
               newWorker.addEventListener('statechange', () => {
-                // iOS Safari: إذا لم يكن هناك controller (أول تثبيت أو بعد مسح الكاش)
-                // نُجبر SW الجديد على التفعيل فوراً بدون انتظار المستخدم
-                if (newWorker.state === 'installed' && !navigator.serviceWorker.controller) {
-                  newWorker.postMessage({ action: 'skipWaiting' });
-                }
-
                 if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                   
                   // --- نظام الفحص الذكي للإصدارات، النتائج، والتظلمات (بالأرقام الصحيحة) ---
