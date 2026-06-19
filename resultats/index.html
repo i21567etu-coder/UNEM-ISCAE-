@@ -14,6 +14,8 @@
 
     <!-- Confetti library -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1"></script>
+    <!-- Chart.js for professional statistics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
     <!-- مكتبات المعالجة -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
@@ -1082,6 +1084,59 @@
             </div>
             <button class="admin-btn" style="margin-top:20px; background:#7c3aed; color:white;" onclick="uploadAnnualFiles()">دمج، استخراج البيانات والرفع (سنوي)</button>
             <div id="upload-annual-status" style="margin-top:15px; font-weight:bold; font-size:0.9rem; text-align:center;"></div>
+
+            <hr style="border: 1px solid #eee; margin: 20px 0;">
+            <!-- ============================================================
+                 📊 SUCCESS STATISTICS (per uploaded class)
+                 Reads from `student_results` table populated on every upload.
+                 ============================================================ -->
+            <h2 style="color:#0284c7;">📊 إحصائيات النجاح</h2>
+            <p style="font-size:0.85rem; color:#475569; margin:0 0 10px 0;">
+                عرض نسب النجاح لكل التخصصات والمستويات والفصول التي تم رفعها.
+            </p>
+            <button class="admin-btn" style="background:#0284c7; color:#fff;" onclick="loadSuccessStats()">🔄 تحديث الإحصائيات</button>
+            <div id="stats-status" style="margin-top:10px; font-size:0.85rem; text-align:center; color:#475569;"></div>
+            <div id="stats-container" style="margin-top:14px; max-height:420px; overflow-y:auto;"></div>
+
+            <hr style="border: 1px solid #eee; margin: 20px 0;">
+            <!-- ============================================================
+                 🗑️ DELETE A CLASS RESULT (no Cloudinary/Supabase visit needed)
+                 - Removes rows from results_metadata + student_results
+                 - Removes any Supabase Storage objects (for >10MB fallbacks)
+                 - Cloudinary files become unreachable from the site once the
+                   metadata row is gone (orphan blobs are harmless).
+                 ============================================================ -->
+            <!-- ============================================================
+                 🧹 BULK DELETE: WIPE AN ENTIRE SEMESTER ACROSS ALL MAJORS
+                 ============================================================ -->
+            <h2 style="color:#b91c1c;">🧹 حذف فصل كامل (جميع التخصصات)</h2>
+            <p style="font-size:0.85rem; color:#475569; margin:0 0 10px 0;">
+                اختر فصلاً (مثلاً S2 أو S4 أو Annuel) ليتم حذف نتائجه نهائياً
+                لكل التخصصات والمستويات والسنوات دفعة واحدة — مع كل ملفاته على Cloudinary و Supabase Storage.
+            </p>
+            <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
+                <select id="bulk-sem-select" style="flex:1; min-width:140px; padding:10px; border-radius:8px; border:1px solid #cbd5e1; font-weight:700;">
+                    <option value="S1">S1</option>
+                    <option value="S2">S2</option>
+                    <option value="S3">S3</option>
+                    <option value="S4">S4</option>
+                    <option value="S5">S5</option>
+                    <option value="S6">S6</option>
+                    <option value="ANNUEL">Annuel (السنوي)</option>
+                </select>
+                <button class="admin-btn" style="background:#b91c1c; color:#fff;" onclick="deleteEntireSemester()">🧹 حذف الفصل بالكامل</button>
+            </div>
+            <div id="bulk-delete-status" style="margin-top:10px; font-size:0.85rem; text-align:center; color:#475569;"></div>
+
+            <hr style="border: 1px solid #eee; margin: 20px 0;">
+            <h2 style="color:#dc2626;">🗑️ حذف نتائج فصل</h2>
+            <p style="font-size:0.85rem; color:#475569; margin:0 0 10px 0;">
+                احذف نتائج أي فصل مباشرة من هنا. سيتم إزالتها من قاعدة البيانات
+                والتخزين ولن تظهر بعد الآن في الموقع.
+            </p>
+            <button class="admin-btn" style="background:#dc2626; color:#fff;" onclick="loadDeletableResults()">📂 عرض جميع النتائج المرفوعة</button>
+            <div id="delete-status" style="margin-top:10px; font-size:0.85rem; text-align:center; color:#475569;"></div>
+            <div id="delete-container" style="margin-top:14px; max-height:420px; overflow-y:auto;"></div>
 
             <hr style="border: 1px solid #eee; margin: 20px 0;">
             <button class="admin-btn" style="background:#dc2626; color:white;" onclick="adminLogout()">تسجيل الخروج 🚪</button>
@@ -3678,14 +3733,14 @@
 
         await _supabase.from('student_results')
             .delete()
-            .match({ year: academicYear, major, level, semester });
+            .match({ academic_year: academicYear, major, level, semester });
 
         const rows = studentsArray.map(s => ({
             matricule: s.id,
             name: s.name,
             moyenne: typeof s.avgNum === 'number' ? s.avgNum : parseFloat(String(s.avg).replace(',', '.')),
             decision: s.decision || null,
-            year: academicYear,
+            academic_year: academicYear,
             major,
             level,
             semester,
@@ -3699,6 +3754,656 @@
             if (error) throw error;
         }
     }
+
+    // ============================================================
+    //                  ADMIN: SUCCESS STATISTICS
+    // ============================================================
+    // Aggregates `student_results` by (year/major/level/semester)
+    // and renders a per-class table with success rates and averages.
+    // ============================================================
+    // Holds Chart.js instances so we can destroy them before redraws
+    const __charts = {};
+    function __destroyChart(key) {
+        if (__charts[key]) { try { __charts[key].destroy(); } catch(_) {} __charts[key] = null; }
+    }
+
+    async function loadSuccessStats() {
+        const status    = document.getElementById('stats-status');
+        const container = document.getElementById('stats-container');
+        status.textContent = '⏳ جاري تحميل الإحصائيات...';
+        container.innerHTML = '';
+        try {
+            const { data: meta, error: mErr } = await _supabase
+                .from('results_metadata')
+                .select('*')
+                .order('created_at', { ascending: false });
+            if (mErr) throw mErr;
+            if (!meta || meta.length === 0) {
+                status.textContent = 'لا توجد ملفات مرفوعة بعد.';
+                return;
+            }
+            const seen = new Map();
+            for (const f of meta) {
+                const k = `${f.academic_year}|${f.major}|${f.level}|${f.semester}`;
+                if (!seen.has(k)) seen.set(k, f);
+            }
+            const files = Array.from(seen.values());
+            status.textContent = `⏳ تحليل ${files.length} ملف...`;
+
+            const groups = new Map();
+            let done = 0;
+            // Track UNIQUE students per (year|major|level) so a student that appears
+            // in both S1 and S2 of the same year/level/major is counted only once.
+            // For each unique student we aggregate ALL their per-semester results so
+            // we can derive the annual success / fail / honorable / rate accurately.
+            const uniqueStudents = new Map(); // uKey -> { major, decisions:[], avgs:[] }
+            for (const f of files) {
+                done++;
+                status.textContent = `⏳ تحليل (${done}/${files.length}) ${f.major} ${f.level} ${f.semester}...`;
+                let students = [];
+                try {
+                    if (f.ranking_url) students = await fetchRankingData(f.ranking_url);
+                } catch (e) {
+                    console.warn('[stats] ranking fetch failed for', f, e);
+                }
+                if (!Array.isArray(students)) students = [];
+                const key = `${f.academic_year}|${f.major}|${f.level}|${f.semester}`;
+                const g = { year: f.academic_year, major: f.major, level: f.level, semester: f.semester,
+                            total: 0, success: 0, fail: 0, honorable: 0, sumAvg: 0, countAvg: 0,
+                            bucketsAvg: [0,0,0,0,0], // [<8, 8-10, 10-12, 12-14, >=14]
+                            missing: students.length === 0 };
+                for (const s of students) {
+                    g.total += 1;
+                    let uRec = null;
+                    if (s && s.id) {
+                        const uKey = `${f.academic_year}|${f.major}|${f.level}|${s.id}`;
+                        uRec = uniqueStudents.get(uKey);
+                        if (!uRec) {
+                            uRec = { major: f.major, semester: f.semester, decisions: [], avgs: [] };
+                            uniqueStudents.set(uKey, uRec);
+                        }
+                        uRec.decisions.push(classifyDecision(s.decision));
+                    }
+                    if (classifyDecision(s.decision) === 'success') g.success += 1; else g.fail += 1;
+                    const m = typeof s.avgNum === 'number' ? s.avgNum : parseFloat(String(s.avg || '').replace(',', '.'));
+                    if (!isNaN(m)) {
+                        g.sumAvg += m; g.countAvg += 1;
+                        if (m >= 13) g.honorable += 1;
+                        if (m < 8) g.bucketsAvg[0]++;
+                        else if (m < 10) g.bucketsAvg[1]++;
+                        else if (m < 12) g.bucketsAvg[2]++;
+                        else if (m < 14) g.bucketsAvg[3]++;
+                        else g.bucketsAvg[4]++;
+                    }
+                    if (uRec && !isNaN(m)) uRec.avgs.push(m);
+                }
+                groups.set(key, g);
+            }
+
+            // Overall totals (per-semester, kept for the detail rows / per-semester chart)
+            let oT = 0, oS = 0, oH = 0, oF = 0, sumAllAvg = 0, cntAllAvg = 0;
+            const bucketsAll = [0,0,0,0,0];
+            const perMajor = new Map();
+            const perSemester = new Map();
+            for (const g of groups.values()) {
+                oT += g.total; oS += g.success; oF += g.fail; oH += g.honorable;
+                sumAllAvg += g.sumAvg; cntAllAvg += g.countAvg;
+                for (let i=0;i<5;i++) bucketsAll[i] += g.bucketsAvg[i];
+                const ps = perSemester.get(g.semester) || { total:0, success:0 };
+                ps.total += g.total; ps.success += g.success;
+                perSemester.set(g.semester, ps);
+            }
+            const overallAvg  = cntAllAvg ? (sumAllAvg / cntAllAvg).toFixed(2) : '—';
+
+            // ===== Deduplicated annual stats (counted once per unique student) =====
+            // A student is "successful" for the year only if they passed in EVERY
+            // semester where they appear. Their annual average is the mean of
+            // their per-semester averages, and a student is "honorable" if that
+            // annual average is ≥ 13.
+            let uniqueTotal = 0, uniqueSuccess = 0, uniqueFail = 0, uniqueHonorable = 0;
+            for (const rec of uniqueStudents.values()) {
+                uniqueTotal += 1;
+                const passed = rec.decisions.length > 0 && rec.decisions.every(d => d === 'success');
+                if (passed) uniqueSuccess += 1; else uniqueFail += 1;
+                if (rec.avgs.length > 0) {
+                    const mean = rec.avgs.reduce((a, b) => a + b, 0) / rec.avgs.length;
+                    if (mean >= 13) uniqueHonorable += 1;
+                }
+                const pm = perMajor.get(rec.major) || { total: 0, success: 0 };
+                pm.total += 1; if (passed) pm.success += 1;
+                perMajor.set(rec.major, pm);
+            }
+            // Fallback (no student IDs at all): use raw per-semester sums.
+            if (uniqueTotal === 0) {
+                uniqueTotal = oT; uniqueSuccess = oS; uniqueFail = oF; uniqueHonorable = oH;
+                for (const g of groups.values()) {
+                    const pm = perMajor.get(g.major) || { total:0, success:0 };
+                    pm.total += g.total; pm.success += g.success;
+                    perMajor.set(g.major, pm);
+                }
+            }
+            const overallRate = uniqueTotal ? ((uniqueSuccess / uniqueTotal) * 100).toFixed(1) : '0.0';
+
+            const list = Array.from(groups.values()).sort((a, b) => {
+                if (a.year !== b.year) return a.year > b.year ? -1 : 1;
+                if (a.major !== b.major) return a.major < b.major ? -1 : 1;
+                if (a.level !== b.level) return a.level < b.level ? -1 : 1;
+                return (a.semester || '') < (b.semester || '') ? -1 : 1;
+            });
+
+            // KPI cards + chart canvases
+            container.innerHTML = `
+                <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin-bottom:14px;">
+                    <div style="background:linear-gradient(135deg,#0284c7,#0369a1); color:#fff; padding:14px; border-radius:14px; text-align:center; box-shadow:0 6px 18px rgba(2,132,199,0.25);">
+                        <div style="font-size:0.72rem; opacity:0.9;">إجمالي الطلاب</div>
+                        <div style="font-size:1.6rem; font-weight:900; margin-top:4px;">${uniqueTotal}</div>
+                    </div>
+                    <div style="background:linear-gradient(135deg,#059669,#047857); color:#fff; padding:14px; border-radius:14px; text-align:center; box-shadow:0 6px 18px rgba(5,150,105,0.25);">
+                        <div style="font-size:0.72rem; opacity:0.9;">نسبة النجاح</div>
+                        <div style="font-size:1.6rem; font-weight:900; margin-top:4px;">${overallRate}%</div>
+                    </div>
+                    <div style="background:linear-gradient(135deg,#dc2626,#991b1b); color:#fff; padding:14px; border-radius:14px; text-align:center; box-shadow:0 6px 18px rgba(220,38,38,0.25);">
+                        <div style="font-size:0.72rem; opacity:0.9;">راسبون</div>
+                        <div style="font-size:1.6rem; font-weight:900; margin-top:4px;">${uniqueFail}</div>
+                    </div>
+                    <div style="background:linear-gradient(135deg,#f59e0b,#b45309); color:#fff; padding:14px; border-radius:14px; text-align:center; box-shadow:0 6px 18px rgba(245,158,11,0.25);">
+                        <div style="font-size:0.72rem; opacity:0.9;">معدلات مشرفة (≥13)</div>
+                        <div style="font-size:1.6rem; font-weight:900; margin-top:4px;">${uniqueHonorable}</div>
+                    </div>
+                    <div style="background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; padding:14px; border-radius:14px; text-align:center; box-shadow:0 6px 18px rgba(99,102,241,0.25);">
+                        <div style="font-size:0.72rem; opacity:0.9;">متوسط المعدلات</div>
+                        <div style="font-size:1.6rem; font-weight:900; margin-top:4px;">${overallAvg}</div>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px; margin-bottom:14px;">
+                    <div style="background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:12px;">
+                        <div style="font-weight:800; color:#0f172a; margin-bottom:6px; font-size:0.9rem;">📊 توزيع النجاح / الرسوب</div>
+                        <canvas id="chart-success-fail" height="180"></canvas>
+                    </div>
+                    <div style="background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:12px;">
+                        <div style="font-weight:800; color:#0f172a; margin-bottom:6px; font-size:0.9rem;">📈 توزيع المعدلات</div>
+                        <canvas id="chart-avg-buckets" height="180"></canvas>
+                    </div>
+                    <div style="background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:12px;">
+                        <div style="font-weight:800; color:#0f172a; margin-bottom:6px; font-size:0.9rem;">🎓 نسبة النجاح حسب التخصص</div>
+                        <canvas id="chart-by-major" height="180"></canvas>
+                    </div>
+                    <div style="background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:12px;">
+                        <div style="font-weight:800; color:#0f172a; margin-bottom:6px; font-size:0.9rem;">📚 نسبة النجاح حسب الفصل</div>
+                        <canvas id="chart-by-sem" height="180"></canvas>
+                    </div>
+                </div>
+
+                <div style="font-weight:800; color:#0f172a; margin:14px 0 8px;">🗂️ تفاصيل كل مجموعة</div>
+                <div id="stats-rows"></div>
+            `;
+
+            // Detail rows
+            const rowsHtml = list.map(g => {
+                const rate = g.total ? ((g.success / g.total) * 100) : 0;
+                const avg  = g.countAvg ? (g.sumAvg / g.countAvg).toFixed(2) : '—';
+                const color = rate >= 70 ? '#047857' : rate >= 40 ? '#b45309' : '#b91c1c';
+                const bg    = rate >= 70 ? '#d1fae5' : rate >= 40 ? '#fef3c7' : '#fee2e2';
+                return `
+                <div style="border:1px solid #e2e8f0; border-radius:12px; padding:12px; margin-bottom:10px; background:#fff;">
+                    <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px;">
+                        <div style="font-weight:800; color:#0f172a; font-size:0.95rem;">
+                            ${g.year} · ${g.major} · ${g.level} · ${g.semester}
+                        </div>
+                        <div style="background:${bg}; color:${color}; padding:4px 10px; border-radius:8px; font-weight:800; font-size:0.85rem;">
+                            ${g.total ? rate.toFixed(1) + '%' : '—'}
+                        </div>
+                    </div>
+                    <div style="margin-top:8px; background:#f1f5f9; border-radius:8px; height:8px; overflow:hidden;">
+                        <div style="height:100%; width:${rate.toFixed(1)}%; background:linear-gradient(90deg,${color},${color}); transition:width .6s;"></div>
+                    </div>
+                    <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:6px; margin-top:8px; font-size:0.82rem; color:#334155;">
+                        <div>👥 المجموع: <b>${g.total}</b></div>
+                        <div>✅ ناجحون: <b style="color:#047857;">${g.success}</b></div>
+                        <div>❌ راسبون: <b style="color:#b91c1c;">${g.fail}</b></div>
+                        <div>🏆 معدل ≥ 13: <b style="color:#0284c7;">${g.honorable}</b></div>
+                        <div style="grid-column:1/-1;">📊 متوسط المعدلات: <b>${avg}</b> / 20</div>
+                        ${g.missing ? '<div style="grid-column:1/-1; color:#b45309;">⚠️ تعذّر قراءة ملف الترتيب لهذا الفصل.</div>' : ''}
+                    </div>
+                </div>`;
+            }).join('');
+            document.getElementById('stats-rows').innerHTML = rowsHtml;
+
+            // Draw charts (after DOM nodes exist)
+            if (window.Chart) {
+                Chart.defaults.font.family = "'Cairo','Tajawal','Inter',sans-serif";
+
+                __destroyChart('sf');
+                __charts.sf = new Chart(document.getElementById('chart-success-fail'), {
+                    type:'doughnut',
+                    data:{ labels:['ناجحون','راسبون'],
+                        datasets:[{ data:[uniqueSuccess, uniqueFail], backgroundColor:['#059669','#dc2626'], borderWidth:0 }] },
+                    options:{ plugins:{ legend:{ position:'bottom' } }, cutout:'62%' }
+                });
+
+                __destroyChart('avg');
+                __charts.avg = new Chart(document.getElementById('chart-avg-buckets'), {
+                    type:'bar',
+                    data:{ labels:['<8','8-10','10-12','12-14','≥14'],
+                        datasets:[{ label:'عدد الطلاب', data:bucketsAll,
+                            backgroundColor:['#dc2626','#f59e0b','#0284c7','#10b981','#6366f1'], borderRadius:6 }] },
+                    options:{ plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true } } }
+                });
+
+                const majors = Array.from(perMajor.keys());
+                const majorRates = majors.map(m => {
+                    const v = perMajor.get(m); return v.total ? +(v.success/v.total*100).toFixed(1) : 0;
+                });
+                __destroyChart('maj');
+                __charts.maj = new Chart(document.getElementById('chart-by-major'), {
+                    type:'bar',
+                    data:{ labels:majors,
+                        datasets:[{ label:'%', data:majorRates, backgroundColor:'#0284c7', borderRadius:6 }] },
+                    options:{ indexAxis:'y', plugins:{ legend:{ display:false } },
+                        scales:{ x:{ beginAtZero:true, max:100, ticks:{ callback:v=>v+'%' } } } }
+                });
+
+                const semOrder = ['S1','S2','S3','S4','S5','S6','ANNUEL'];
+                const sems = semOrder.filter(x => perSemester.has(x))
+                    .concat(Array.from(perSemester.keys()).filter(x => !semOrder.includes(x)));
+                const semRates = sems.map(x => {
+                    const v = perSemester.get(x); return v.total ? +(v.success/v.total*100).toFixed(1) : 0;
+                });
+                __destroyChart('sem');
+                __charts.sem = new Chart(document.getElementById('chart-by-sem'), {
+                    type:'line',
+                    data:{ labels:sems,
+                        datasets:[{ label:'نسبة النجاح %', data:semRates, borderColor:'#6366f1',
+                            backgroundColor:'rgba(99,102,241,0.18)', fill:true, tension:0.3,
+                            pointBackgroundColor:'#4338ca', pointRadius:5 }] },
+                    options:{ plugins:{ legend:{ display:false } },
+                        scales:{ y:{ beginAtZero:true, max:100, ticks:{ callback:v=>v+'%' } } } }
+                });
+            }
+
+            status.textContent = `تم تحميل ${list.length} مجموعة.`;
+        } catch (e) {
+            console.error('[stats] failed:', e);
+            status.textContent = '❌ فشل تحميل الإحصائيات: ' + (e.message || e);
+        }
+    }
+
+    // ============================================================
+    //                  ADMIN: DELETE A CLASS RESULT
+    // ============================================================
+    // Lists every uploaded class (results_metadata) with a delete
+    // button. Deletion wipes:
+    //   - student_results rows for the tuple
+    //   - results_metadata row(s) for the tuple
+    //   - any Supabase Storage object referenced by details_url /
+    //     ranking_url (used for files > 10MB)
+    // Cloudinary blobs become orphan but stay unreachable from the
+    // site once the metadata row is gone — no Cloudinary visit needed.
+    // ============================================================
+    async function loadDeletableResults() {
+        const status    = document.getElementById('delete-status');
+        const container = document.getElementById('delete-container');
+        status.textContent = '⏳ جاري تحميل القائمة...';
+        container.innerHTML = '';
+        try {
+            const { data, error } = await _supabase
+                .from('results_metadata')
+                .select('*')
+                .order('created_at', { ascending: false });
+            if (error) throw error;
+            if (!data || data.length === 0) {
+                status.textContent = 'لا توجد نتائج مرفوعة.';
+                return;
+            }
+            // De-duplicate per (year|major|level|semester), keep newest
+            const seen = new Map();
+            for (const f of data) {
+                const k = `${f.academic_year}|${f.major}|${f.level}|${f.semester}`;
+                if (!seen.has(k)) seen.set(k, f);
+            }
+            const list = Array.from(seen.values());
+            container.innerHTML = list.map(f => {
+                const semLabel = (f.semester === 'ANNUEL') ? 'Annuel' : f.semester;
+                return `
+                <div style="border:1px solid #fecaca; border-radius:12px; padding:12px; margin-bottom:10px; background:#fff;">
+                    <div style="font-weight:800; color:#0f172a; font-size:0.95rem;">
+                        ${f.academic_year} · ${f.major} · ${f.level} · ${semLabel}
+                    </div>
+                    <div style="font-size:0.78rem; color:#64748b; margin-top:4px;">
+                        تم الرفع: ${f.created_at ? new Date(f.created_at).toLocaleString() : '—'}
+                    </div>
+                    <button class="admin-btn" style="margin-top:10px; background:#dc2626; color:#fff; font-size:0.9rem; padding:10px;"
+                        onclick="deleteClassResult('${encodeURIComponent(f.academic_year)}','${encodeURIComponent(f.major)}','${encodeURIComponent(f.level)}','${encodeURIComponent(f.semester)}', this)">
+                        🗑️ حذف نتائج هذا الفصل نهائياً
+                    </button>
+                </div>`;
+            }).join('');
+            status.textContent = `${list.length} مجموعة قابلة للحذف.`;
+        } catch (e) {
+            console.error('[delete-list] failed:', e);
+            status.textContent = '❌ فشل تحميل القائمة: ' + (e.message || e);
+        }
+    }
+
+    /** Extract the storage path inside SUPABASE_BUCKET from a public URL. */
+    function _supabaseStoragePathFromUrl(url) {
+        if (!url || typeof url !== 'string') return null;
+        const marker = `/storage/v1/object/public/${SUPABASE_BUCKET}/`;
+        const i = url.indexOf(marker);
+        if (i === -1) return null;
+        try { return decodeURIComponent(url.slice(i + marker.length).split('?')[0]); }
+        catch { return url.slice(i + marker.length).split('?')[0]; }
+    }
+
+    // ============================================================
+    //   CLOUDINARY DESTROY (signed, admin-only)
+    // ============================================================
+    // Parses a Cloudinary delivery URL to recover {public_id, resource_type},
+    // then calls the signed /destroy endpoint. The API secret is stored
+    // ONLY in the admin's browser localStorage (never embedded in the page).
+    // ============================================================
+    function _getCloudinarySecret() {
+        let s = localStorage.getItem('CLOUDINARY_API_SECRET');
+        if (!s) {
+            s = prompt('🔐 أدخل Cloudinary API Secret (يحفظ محلياً في متصفحك فقط، لمرة واحدة)');
+            if (s) { s = s.trim(); localStorage.setItem('CLOUDINARY_API_SECRET', s); }
+        }
+        return s || null;
+    }
+
+    function _parseCloudinaryUrl(url) {
+        if (!url || typeof url !== 'string') return null;
+        if (!url.includes('res.cloudinary.com')) return null;
+        // .../<cloud>/<resource_type>/upload/[transforms/][vNNN/]<public_id>[.ext]
+        const m = url.match(/res\.cloudinary\.com\/[^/]+\/(image|raw|video)\/upload\/(.+)$/);
+        if (!m) return null;
+        let rest = m[2].split('?')[0];
+        // strip transformation segments (each "k_v[,k_v]*")
+        const parts = rest.split('/');
+        while (parts.length && /^[a-z]_[^/]+/.test(parts[0]) && !/^v\d+$/.test(parts[0])) parts.shift();
+        // strip version
+        if (parts.length && /^v\d+$/.test(parts[0])) parts.shift();
+        let publicId = parts.join('/');
+        // For 'image' & 'video', Cloudinary's public_id excludes the extension.
+        // For 'raw', the extension IS part of the public_id.
+        if (m[1] !== 'raw') publicId = publicId.replace(/\.[A-Za-z0-9]+$/, '');
+        return { resource_type: m[1], public_id: publicId };
+    }
+
+    async function _sha1Hex(str) {
+        const buf = new TextEncoder().encode(str);
+        const hash = await crypto.subtle.digest('SHA-1', buf);
+        return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
+    }
+
+    async function _cloudinarySign(params, secret) {
+        const toSign = Object.keys(params)
+            .sort()
+            .map(k => `${k}=${params[k]}`)
+            .join('&') + secret;
+        return _sha1Hex(toSign);
+    }
+
+    async function _cloudinaryDestroyPublicId(publicId, resourceType, secret) {
+        const timestamp = Math.floor(Date.now() / 1000);
+        // IMPORTANT: invalidate=true MUST be included in the signature.
+        // Without it Cloudinary rejects the request, so files only disappear
+        // from the site database while staying inside the Media Library.
+        const params = { invalidate: 'true', public_id: publicId, timestamp: String(timestamp) };
+        const signature = await _cloudinarySign(params, secret);
+        const fd = new FormData();
+        fd.append('public_id', publicId);
+        fd.append('timestamp', String(timestamp));
+        fd.append('api_key', CLOUDINARY_API_KEY);
+        fd.append('signature', signature);
+        fd.append('invalidate', 'true');
+        const endpoint = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/${resourceType}/destroy`;
+        const res = await fetch(endpoint, { method: 'POST', body: fd });
+        const j = await res.json().catch(() => ({}));
+        if (!res.ok || (j && j.error)) {
+            throw new Error(j.error?.message || j.result || res.status);
+        }
+        return j;
+    }
+
+    async function _cloudinaryDestroy(url) {
+        const info = _parseCloudinaryUrl(url);
+        if (!info) return { skipped: true };
+        const secret = _getCloudinarySecret();
+        if (!secret) throw new Error('Cloudinary API Secret غير مُدخل — لا يمكن الحذف من Cloudinary');
+
+        const candidates = [info.public_id];
+        // Raw resources (PDF/JSON) usually require the extension in public_id,
+        // but some old uploads were saved without it. Try both forms so
+        // details_url and ranking_url are removed permanently.
+        if (info.resource_type === 'raw') {
+            const noExt = info.public_id.replace(/\.(pdf|json)$/i, '');
+            if (noExt !== info.public_id) candidates.push(noExt);
+        }
+
+        let last = null;
+        for (const publicId of Array.from(new Set(candidates))) {
+            const result = await _cloudinaryDestroyPublicId(publicId, info.resource_type, secret);
+            last = result;
+            if (result && result.result === 'ok') return result;
+        }
+        return last || { result: 'not found' };
+    }
+
+    /**
+     * Fetch a ranking JSON (uploaded as 'raw' to Cloudinary or Supabase Storage)
+     * and extract every per-student Cloudinary thumbnail URL contained in it.
+     * Returns an array of Cloudinary delivery URLs (possibly empty).
+     */
+    async function _collectStudentThumbUrls(rankingUrl) {
+        if (!rankingUrl || typeof rankingUrl !== 'string') return [];
+        try {
+            const res = await fetch(rankingUrl, { cache: 'no-store' });
+            if (!res.ok) return [];
+            const data = await res.json();
+            const out = [];
+            const visit = (node) => {
+                if (!node) return;
+                if (Array.isArray(node)) { node.forEach(visit); return; }
+                if (typeof node === 'object') {
+                    for (const k in node) {
+                        const v = node[k];
+                        if (typeof v === 'string' && v.includes('res.cloudinary.com')) {
+                            out.push(v);
+                        } else if (v && typeof v === 'object') {
+                            visit(v);
+                        }
+                    }
+                }
+            };
+            visit(data);
+            // de-duplicate
+            return Array.from(new Set(out));
+        } catch (e) {
+            console.warn('[delete] could not parse ranking JSON for thumbs:', e.message || e);
+            return [];
+        }
+    }
+
+    async function deleteClassResult(yearEnc, majorEnc, levelEnc, semesterEnc, btn) {
+        const academic_year = decodeURIComponent(yearEnc);
+        const major         = decodeURIComponent(majorEnc);
+        const level         = decodeURIComponent(levelEnc);
+        const semester      = decodeURIComponent(semesterEnc);
+        const label = `${academic_year} · ${major} · ${level} · ${semester}`;
+        if (!confirm(`هل أنت متأكد من حذف نتائج:\n${label}\n\nلا يمكن التراجع عن هذه العملية.`)) return;
+
+        const origText = btn.innerText;
+        btn.disabled = true;
+        btn.innerText = '⏳ جاري الحذف...';
+        try {
+            // 1) Fetch all metadata rows for this tuple (there may be older duplicates)
+            const { data: rows, error: selErr } = await _supabase
+                .from('results_metadata')
+                .select('*')
+                .match({ academic_year, major, level, semester });
+            if (selErr) throw selErr;
+
+            // 2) Delete every referenced file from BOTH backends
+            //    - Supabase Storage: paths under SUPABASE_BUCKET
+            //    - Cloudinary: signed destroy via Admin API (needs API secret)
+            const storagePaths = [];
+            const cloudUrls    = [];
+            for (const r of (rows || [])) {
+                for (const u of [r.details_url, r.ranking_url]) {
+                    if (!u) continue;
+                    const p = _supabaseStoragePathFromUrl(u);
+                    if (p) storagePaths.push(p);
+                    else if (typeof u === 'string' && u.includes('res.cloudinary.com')) cloudUrls.push(u);
+                }
+            }
+            // Also collect per-student thumbnail URLs from each ranking JSON
+            for (const r of (rows || [])) {
+                if (!r.ranking_url) continue;
+                const thumbs = await _collectStudentThumbUrls(r.ranking_url);
+                for (const u of thumbs) {
+                    const p = _supabaseStoragePathFromUrl(u);
+                    if (p) storagePaths.push(p);
+                    else if (u.includes('res.cloudinary.com')) cloudUrls.push(u);
+                }
+            }
+            // De-duplicate cloud URLs to avoid redundant API calls
+            const _cloudUrlsUnique = Array.from(new Set(cloudUrls));
+            cloudUrls.length = 0; cloudUrls.push(..._cloudUrlsUnique);
+            if (storagePaths.length > 0) {
+                const { error: stErr } = await _supabase.storage.from(SUPABASE_BUCKET).remove(storagePaths);
+                if (stErr) console.warn('[delete] supabase storage warning:', stErr);
+            }
+            for (const u of cloudUrls) {
+                try { await _cloudinaryDestroy(u); }
+                catch (e) { console.warn('[delete] cloudinary warning:', e.message || e); }
+            }
+
+            // 3) Delete per-student rows
+            const { error: srErr } = await _supabase
+                .from('student_results')
+                .delete()
+                .match({ academic_year, major, level, semester });
+            if (srErr) console.warn('[delete] student_results warning:', srErr);
+
+            // 4) Delete metadata rows (removes from the site immediately)
+            const { error: mdErr } = await _supabase
+                .from('results_metadata')
+                .delete()
+                .match({ academic_year, major, level, semester });
+            if (mdErr) throw mdErr;
+
+            // 5) Refresh both admin panels
+            const card = btn.closest('div');
+            if (card && card.parentNode) card.parentNode.removeChild(card);
+            const status = document.getElementById('delete-status');
+            if (status) status.textContent = `✅ تم حذف ${label}`;
+        } catch (e) {
+            console.error('[delete] failed:', e);
+            btn.disabled = false;
+            btn.innerText = origText;
+            alert('❌ فشل الحذف: ' + (e.message || e));
+        }
+    }
+
+    // ============================================================
+    //   BULK DELETE: an entire semester across all majors/levels
+    // ============================================================
+    async function deleteEntireSemester() {
+        const sel = document.getElementById('bulk-sem-select');
+        const status = document.getElementById('bulk-delete-status');
+        const semester = sel ? sel.value : null;
+        if (!semester) return;
+        if (!confirm(`⚠️ سيتم حذف كل نتائج "${semester}" لكل التخصصات والمستويات والسنوات نهائياً.\n\nهل أنت متأكد؟`)) return;
+        if (!confirm(`تأكيد أخير: حذف كامل لفصل ${semester} — لا يمكن التراجع.`)) return;
+
+        status.innerHTML = '⏳ جاري جلب جميع النتائج لهذا الفصل...';
+        try {
+            const { data: rows, error: selErr } = await _supabase
+                .from('results_metadata')
+                .select('*')
+                .eq('semester', semester);
+            if (selErr) throw selErr;
+            if (!rows || rows.length === 0) {
+                status.innerHTML = `لا توجد نتائج بفصل ${semester}.`;
+                return;
+            }
+
+            // Group by unique tuple to report progress
+            const tuples = new Map();
+            for (const r of rows) {
+                const k = `${r.academic_year}|${r.major}|${r.level}|${r.semester}`;
+                if (!tuples.has(k)) tuples.set(k, r);
+            }
+            status.innerHTML = `⏳ حذف ${tuples.size} مجموعة (${rows.length} ملف)...`;
+
+            // 1) Storage cleanup (Supabase Storage + Cloudinary)
+            const storagePaths = [];
+            const cloudUrls    = [];
+            for (const r of rows) {
+                for (const u of [r.details_url, r.ranking_url]) {
+                    if (!u) continue;
+                    const p = _supabaseStoragePathFromUrl(u);
+                    if (p) storagePaths.push(p);
+                    else if (typeof u === 'string' && u.includes('res.cloudinary.com')) cloudUrls.push(u);
+                }
+            }
+            // Also harvest per-student thumbnail URLs from each ranking JSON
+            status.innerHTML = `⏳ جلب ملفات الصور الفردية من ${rows.length} ملف ranking ...`;
+            for (const r of rows) {
+                if (!r.ranking_url) continue;
+                const thumbs = await _collectStudentThumbUrls(r.ranking_url);
+                for (const u of thumbs) {
+                    const p = _supabaseStoragePathFromUrl(u);
+                    if (p) storagePaths.push(p);
+                    else if (u.includes('res.cloudinary.com')) cloudUrls.push(u);
+                }
+            }
+            // De-duplicate
+            const _bulkCloudUnique = Array.from(new Set(cloudUrls));
+            cloudUrls.length = 0; cloudUrls.push(..._bulkCloudUnique);
+            const _bulkStorageUnique = Array.from(new Set(storagePaths));
+            storagePaths.length = 0; storagePaths.push(..._bulkStorageUnique);
+            status.innerHTML = `⏳ حذف ${tuples.size} مجموعة (${rows.length} ملف ميتاداتا + ${cloudUrls.length} صورة Cloudinary)...`;
+            if (storagePaths.length > 0) {
+                try {
+                    const { error: stErr } = await _supabase.storage.from(SUPABASE_BUCKET).remove(storagePaths);
+                    if (stErr) console.warn('[bulk-delete] storage warning:', stErr);
+                } catch (e) { console.warn('[bulk-delete] storage exception:', e); }
+            }
+            let cloudOk = 0, cloudFail = 0;
+            for (const u of cloudUrls) {
+                try { await _cloudinaryDestroy(u); cloudOk++; }
+                catch (e) { cloudFail++; console.warn('[bulk-delete] cloudinary warning:', e.message || e); }
+            }
+
+            // 2) Delete per-student rows for this semester (all majors/levels/years)
+            try {
+                const { error: srErr } = await _supabase
+                    .from('student_results')
+                    .delete()
+                    .eq('semester', semester);
+                if (srErr) console.warn('[bulk-delete] student_results warning:', srErr);
+            } catch (e) { console.warn('[bulk-delete] student_results exception:', e); }
+
+            // 3) Delete metadata rows
+            const { error: mdErr } = await _supabase
+                .from('results_metadata')
+                .delete()
+                .eq('semester', semester);
+            if (mdErr) throw mdErr;
+
+            status.innerHTML = `✅ تم حذف فصل ${semester} بالكامل (${tuples.size} مجموعة، ${rows.length} ملف، Cloudinary: ${cloudOk} نجح/${cloudFail} تخطّى).`;
+
+            // Refresh the per-class delete list if it's loaded
+            try { await loadDeletableResults(); } catch(_) {}
+        } catch (e) {
+            console.error('[bulk-delete] failed:', e);
+            status.innerHTML = '❌ فشل الحذف الكلي: ' + (e.message || e);
+        }
+    }
+
 
 </script>
 
