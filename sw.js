@@ -1,5 +1,5 @@
 // قم بتغيير هذا الرقم في كل مرة تقوم بتحديث الموقع ليظهر الإشعار للمستخدمين
-const CACHE_NAME = 'unem-iscae-V49';
+const CACHE_NAME = 'unem-iscae-V50';
 
 const urlsToCache = [
   './',
