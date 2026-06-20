@@ -4643,7 +4643,10 @@
                 data:{ labels:majors,
                     datasets:[{ label:'%', data:majorRates, backgroundColor:'#0284c7', borderRadius:6 }] },
                 options:{ indexAxis:'y', plugins:{ legend:{ display:false } },
-                    scales:{ x:{ beginAtZero:true, max:100, ticks:{ callback:v=>v+'%' } } } }
+                    scales:{
+                        x:{ beginAtZero:true, max:100, ticks:{ callback:v=>v+'%' } },
+                        y:{ ticks:{ autoSkip:false, font:{ size:11 } } }
+                    } }
             });
 
             const semOrder = ['S1','S2','S3','S4','S5','S6','ANNUEL'];
