@@ -1019,7 +1019,7 @@
 
         <div id="admin-upload-step" style="display:none;">
             <h2>📤 رفع النتائج (دمج وترتيب تلقائي)</h2>
-            <div class="form-group"><label>السنة الجامعية:</label><select id="up-year"></select></div>
+            <div class="form-group"><label>السنة الجامعية:</label><input type="text" id="up-year" placeholder="مثال: 2024-2025" pattern="\d{4}-\d{4}" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; font-weight:700; font-size:0.95rem;"></div>
             <div class="form-group">
                 <label>التخصص:</label>
                 <select id="up-major">
@@ -1053,7 +1053,7 @@
             <hr style="border: 2px dashed #cbd5e1; margin: 25px 0;">
 
             <h2 style="color:#7c3aed;">📅 رفع النتائج السنوية (Résultat Annuel)</h2>
-            <div class="form-group"><label>السنة الجامعية:</label><select id="up-annual-year"></select></div>
+            <div class="form-group"><label>السنة الجامعية:</label><input type="text" id="up-annual-year" placeholder="مثال: 2024-2025" pattern="\d{4}-\d{4}" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; font-weight:700; font-size:0.95rem;"></div>
             <div class="form-group">
                 <label>التخصص:</label>
                 <select id="up-annual-major">
@@ -1088,102 +1088,226 @@
             <hr style="border: 2px dashed #cbd5e1; margin: 25px 0;">
 
             <!-- ============================================================
-                 🚀 BULK UPLOAD — Upload many PDFs (different majors / semesters /
-                 annual) at once. Files are auto-classified from their filenames
-                 (with manual override per row), grouped, and each group is
-                 processed through the SAME pipeline as the single upload above
-                 (merge → parse → split-by-student → upload → metadata + analytics).
-                 No existing flow is changed — this is purely additive.
+                 ✨ PRO ACTIONS HUB — Three premium action cards that each open
+                 a dedicated full-page workspace:
+                   • 🚀 Bulk Upload
+                   • 📊 Success Statistics
+                   • 🧹 Bulk Delete (entire semester)
+                 The original IDs, handlers, and DOM elements are preserved
+                 verbatim inside each full-page sheet so all existing JS keeps
+                 working without any change.
             ============================================================= -->
-            <h2 style="color:#0ea5e9;">🚀 رفع جماعي ذكي (Bulk) — عدة فصول/تخصصات دفعة واحدة</h2>
-            <div class="form-group"><label>السنة الجامعية (افتراضية إن لم تُكتشف من اسم الملف):</label><select id="up-bulk-year"></select></div>
+            <style>
+                .pro-hub { display:grid; grid-template-columns:repeat(auto-fit, minmax(230px, 1fr)); gap:16px; margin:6px 0 4px; }
+                .pro-card { position:relative; overflow:hidden; cursor:pointer; text-align:right; padding:22px 20px; border-radius:20px; border:none; color:#fff; font-family:inherit;
+                    box-shadow:0 14px 34px -14px rgba(15,23,42,0.35); transition:transform .25s ease, box-shadow .25s ease; }
+                .pro-card:hover { transform:translateY(-4px); box-shadow:0 22px 44px -16px rgba(15,23,42,0.45); }
+                .pro-card .pc-icon { font-size:2.2rem; margin-bottom:10px; display:block; }
+                .pro-card .pc-title { font-size:1.1rem; font-weight:900; margin-bottom:6px; }
+                .pro-card .pc-desc  { font-size:0.82rem; opacity:.92; line-height:1.55; min-height:42px; }
+                .pro-card .pc-cta   { margin-top:14px; display:inline-flex; align-items:center; gap:6px; font-size:0.82rem; font-weight:800;
+                    background:rgba(255,255,255,0.18); padding:7px 12px; border-radius:999px; backdrop-filter:blur(6px); }
+                .pro-card::after { content:""; position:absolute; inset:auto -40px -40px auto; width:140px; height:140px; border-radius:50%;
+                    background:rgba(255,255,255,0.10); pointer-events:none; }
+                .pc-upload { background:linear-gradient(135deg,#0ea5e9 0%,#0369a1 100%); }
+                .pc-stats  { background:linear-gradient(135deg,#0284c7 0%,#075985 100%); }
+                .pc-delete { background:linear-gradient(135deg,#dc2626 0%,#7f1d1d 100%); }
 
-            <div class="file-input-wrapper">
-                <label>📄 اختر كل ملفات PDF التي تريد رفعها معاً:</label>
-                <input type="file" id="file-bulk" accept="application/pdf" multiple onchange="prepareBulkUploadTable()">
-                <small style="display:block; color:#666; font-size:0.85rem; margin-top:8px;">
-                    💡 يمكنك اختيار عشرات الملفات في وقت واحد (S1, S2, S3, S4, S5, S6, Annuel) ولكل التخصصات. سيقوم النظام بقراءة اسم كل ملف وتصنيفه تلقائياً (التخصص + المستوى + الفصل) ثم رفع كل ملف إلى مكانه الصحيح. يمكنك مراجعة وتعديل التصنيف قبل البدء.
-                </small>
+                .admin-sheet { display:none; position:fixed; inset:0; z-index:9998; background:var(--bg-gradient, #f7fcf9); overflow-y:auto; -webkit-overflow-scrolling:touch; animation:sheetIn .25s ease; }
+                @keyframes sheetIn { from { opacity:0; transform:translateY(12px);} to { opacity:1; transform:none;} }
+                .admin-sheet .as-header { position:sticky; top:0; z-index:5; color:#fff; padding:14px 18px;
+                    display:flex; align-items:center; justify-content:space-between; gap:10px;
+                    box-shadow:0 8px 22px rgba(0,0,0,0.14); }
+                .admin-sheet .as-title { font-size:1.08rem; font-weight:900; letter-spacing:.2px; flex:1; text-align:center; }
+                .admin-sheet .as-back { background:rgba(255,255,255,0.22); color:#fff; border:none; padding:9px 14px; border-radius:12px;
+                    font-weight:800; cursor:pointer; font-family:inherit; font-size:0.9rem; }
+                .admin-sheet .as-back:hover { background:rgba(255,255,255,0.32); }
+                .admin-sheet .as-body { max-width:1100px; margin:0 auto; padding:22px 18px 60px; }
+                .admin-sheet .as-card { background:#fff; border-radius:18px; padding:20px; box-shadow:0 10px 30px -16px rgba(15,23,42,0.18); border:1px solid #eef2f7; }
+                .as-hdr-upload { background:linear-gradient(135deg,#0ea5e9,#0369a1); }
+                .as-hdr-stats  { background:linear-gradient(135deg,#0284c7,#075985); }
+                .as-hdr-delete { background:linear-gradient(135deg,#dc2626,#7f1d1d); }
+            </style>
+
+            <div class="pro-hub">
+                <button type="button" class="pro-card pc-upload" onclick="openAdminSheet('sheet-bulk-upload')">
+                    <span class="pc-icon">🚀</span>
+                    <div class="pc-title">رفع جماعي ذكي</div>
+                    <div class="pc-desc">رفع عدة ملفات PDF لفصول وتخصصات مختلفة دفعة واحدة مع التصنيف التلقائي.</div>
+                    <span class="pc-cta">فتح الصفحة ←</span>
+                </button>
+
+                <button type="button" class="pro-card pc-stats" onclick="openAdminSheet('sheet-stats'); setTimeout(function(){ try{ loadSuccessStats(); }catch(e){} }, 60);">
+                    <span class="pc-icon">📊</span>
+                    <div class="pc-title">إحصائيات النجاح</div>
+                    <div class="pc-desc">نسب النجاح لكل التخصصات والمستويات والفصول التي تم رفعها.</div>
+                    <span class="pc-cta">فتح الصفحة ←</span>
+                </button>
+
+                <button type="button" class="pro-card pc-delete" onclick="openAdminSheet('sheet-bulk-delete')">
+                    <span class="pc-icon">🧹</span>
+                    <div class="pc-title">حذف فصل كامل</div>
+                    <div class="pc-desc">حذف نتائج فصل (S1…S6 أو Annuel) لكل التخصصات والمستويات دفعة واحدة.</div>
+                    <span class="pc-cta">فتح الصفحة ←</span>
+                </button>
             </div>
 
-            <div id="bulk-preview-wrap" style="display:none; margin-top:15px;">
-                <div style="overflow-x:auto; border:1px solid #e5e7eb; border-radius:10px;">
-                    <table id="bulk-preview-table" style="width:100%; border-collapse:collapse; font-size:0.85rem;">
-                        <thead style="background:#f1f5f9;">
-                            <tr>
-                                <th style="padding:8px; text-align:right;">#</th>
-                                <th style="padding:8px; text-align:right;">اسم الملف</th>
-                                <th style="padding:8px;">التخصص</th>
-                                <th style="padding:8px;">المستوى</th>
-                                <th style="padding:8px;">الفصل</th>
-                                <th style="padding:8px;">السنة</th>
-                                <th style="padding:8px;">حذف</th>
-                            </tr>
-                        </thead>
-                        <tbody id="bulk-preview-body"></tbody>
-                    </table>
+            <!-- ===================== FULL-PAGE SHEET: BULK UPLOAD ===================== -->
+            <div id="sheet-bulk-upload" class="admin-sheet">
+                <div class="as-header as-hdr-upload">
+                    <button type="button" class="as-back" onclick="closeAdminSheet('sheet-bulk-upload')">→ رجوع</button>
+                    <div class="as-title">🚀 رفع جماعي ذكي — عدة فصول/تخصصات</div>
+                    <span style="width:78px;"></span>
                 </div>
-                <div style="margin-top:10px; font-size:0.8rem; color:#475569;">
-                    💡 الملفات التي لها نفس (التخصص + المستوى + الفصل + السنة) سيتم <b>دمجها تلقائياً</b> ورفعها كملف واحد.
+                <div class="as-body">
+                    <div class="as-card">
+                        <p style="font-size:0.9rem; color:#475569; margin:0 0 14px 0; line-height:1.7;">
+                            ارفع عشرات ملفات PDF دفعة واحدة (S1, S2, S3, S4, S5, S6, Annuel) لكل التخصصات.
+                            سيتم تصنيف كل ملف تلقائياً (التخصص + المستوى + الفصل) مع إمكانية تعديل التصنيف قبل البدء.
+                        </p>
+                        <div class="form-group"><label>السنة الجامعية (افتراضية إن لم تُكتشف من اسم الملف):</label><select id="up-bulk-year"></select></div>
+
+                        <div class="file-input-wrapper">
+                            <label>📄 اختر كل ملفات PDF التي تريد رفعها معاً:</label>
+                            <input type="file" id="file-bulk" accept="application/pdf" multiple onchange="prepareBulkUploadTable()">
+                            <small style="display:block; color:#666; font-size:0.85rem; margin-top:8px;">
+                                💡 يمكنك اختيار عشرات الملفات في وقت واحد ولكل التخصصات. الملفات التي لها نفس (التخصص + المستوى + الفصل + السنة) سيتم <b>دمجها تلقائياً</b>.
+                            </small>
+                        </div>
+
+                        <div id="bulk-preview-wrap" style="display:none; margin-top:15px;">
+                            <div style="overflow-x:auto; border:1px solid #e5e7eb; border-radius:10px;">
+                                <table id="bulk-preview-table" style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+                                    <thead style="background:#f1f5f9;">
+                                        <tr>
+                                            <th style="padding:8px; text-align:right;">#</th>
+                                            <th style="padding:8px; text-align:right;">اسم الملف</th>
+                                            <th style="padding:8px;">التخصص</th>
+                                            <th style="padding:8px;">المستوى</th>
+                                            <th style="padding:8px;">الفصل</th>
+                                            <th style="padding:8px;">السنة</th>
+                                            <th style="padding:8px;">حذف</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="bulk-preview-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <button class="admin-btn" style="margin-top:20px; background:#0ea5e9; color:white;" onclick="bulkUploadFiles()">🚀 بدء الرفع الجماعي الذكي</button>
+                        <div id="upload-bulk-status" style="margin-top:15px; font-weight:bold; font-size:0.95rem; text-align:center; white-space:pre-line;"></div>
+                        <div id="upload-bulk-log" style="margin-top:10px; font-size:0.8rem; max-height:280px; overflow-y:auto; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px; display:none;"></div>
+                    </div>
                 </div>
             </div>
 
-            <button class="admin-btn" style="margin-top:20px; background:#0ea5e9; color:white;" onclick="bulkUploadFiles()">🚀 بدء الرفع الجماعي الذكي</button>
-            <div id="upload-bulk-status" style="margin-top:15px; font-weight:bold; font-size:0.9rem; text-align:center; white-space:pre-line;"></div>
-            <div id="upload-bulk-log" style="margin-top:10px; font-size:0.8rem; max-height:240px; overflow-y:auto; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:8px; display:none;"></div>
-
-            <hr style="border: 1px solid #eee; margin: 20px 0;">
-            <!-- ============================================================
-                 📊 SUCCESS STATISTICS (per uploaded class)
-                 Reads from `student_results` table populated on every upload.
-                 ============================================================ -->
-            <h2 style="color:#0284c7;">📊 إحصائيات النجاح</h2>
-            <p style="font-size:0.85rem; color:#475569; margin:0 0 10px 0;">
-                عرض نسب النجاح لكل التخصصات والمستويات والفصول التي تم رفعها.
-            </p>
-            <button class="admin-btn" style="background:#0284c7; color:#fff;" onclick="loadSuccessStats()">🔄 تحديث الإحصائيات</button>
-            <div id="stats-status" style="margin-top:10px; font-size:0.85rem; text-align:center; color:#475569;"></div>
-            <div id="stats-container" style="margin-top:14px; max-height:420px; overflow-y:auto;"></div>
-
-            <hr style="border: 1px solid #eee; margin: 20px 0;">
-            <!-- ============================================================
-                 🗑️ DELETE A CLASS RESULT (no Cloudinary/Supabase visit needed)
-                 - Removes rows from results_metadata + student_results
-                 - Removes any Supabase Storage objects (for >10MB fallbacks)
-                 - Cloudinary files become unreachable from the site once the
-                   metadata row is gone (orphan blobs are harmless).
-                 ============================================================ -->
-            <!-- ============================================================
-                 🧹 BULK DELETE: WIPE AN ENTIRE SEMESTER ACROSS ALL MAJORS
-                 ============================================================ -->
-            <h2 style="color:#b91c1c;">🧹 حذف فصل كامل (جميع التخصصات)</h2>
-            <p style="font-size:0.85rem; color:#475569; margin:0 0 10px 0;">
-                اختر فصلاً (مثلاً S2 أو S4 أو Annuel) ليتم حذف نتائجه نهائياً
-                لكل التخصصات والمستويات والسنوات دفعة واحدة — مع كل ملفاته على Cloudinary و Supabase Storage.
-            </p>
-            <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
-                <select id="bulk-sem-select" style="flex:1; min-width:140px; padding:10px; border-radius:8px; border:1px solid #cbd5e1; font-weight:700;">
-                    <option value="S1">S1</option>
-                    <option value="S2">S2</option>
-                    <option value="S3">S3</option>
-                    <option value="S4">S4</option>
-                    <option value="S5">S5</option>
-                    <option value="S6">S6</option>
-                    <option value="ANNUEL">Annuel (السنوي)</option>
-                </select>
-                <button class="admin-btn" style="background:#b91c1c; color:#fff;" onclick="deleteEntireSemester()">🧹 حذف الفصل بالكامل</button>
+            <!-- ===================== FULL-PAGE SHEET: STATISTICS ===================== -->
+            <div id="sheet-stats" class="admin-sheet">
+                <div class="as-header as-hdr-stats">
+                    <button type="button" class="as-back" onclick="closeAdminSheet('sheet-stats')">→ رجوع</button>
+                    <div class="as-title">📊 إحصائيات النجاح</div>
+                    <button type="button" class="as-back" onclick="loadSuccessStats()">🔄 تحديث</button>
+                </div>
+                <div class="as-body">
+                    <div class="as-card">
+                        <p style="font-size:0.9rem; color:#475569; margin:0 0 14px 0; line-height:1.7;">
+                            عرض احترافي لنسب النجاح لكل التخصصات والمستويات والفصول التي تم رفعها على النظام.
+                        </p>
+                        <div id="stats-filters" style="display:none; gap:10px; flex-wrap:wrap; margin:6px 0 10px; padding:12px; background:linear-gradient(135deg,#f0f9ff,#e0f2fe); border:1px solid #bae6fd; border-radius:14px;">
+                            <div style="flex:1; min-width:140px;">
+                                <label style="font-size:0.78rem; color:#0c4a6e; font-weight:800; display:block; margin-bottom:4px;">📅 السنة الجامعية</label>
+                                <select id="stats-f-year" onchange="renderSuccessStats()" style="width:100%; padding:9px; border-radius:10px; border:1px solid #7dd3fc; font-weight:700; background:#fff;"></select>
+                            </div>
+                            <div style="flex:1; min-width:140px;">
+                                <label style="font-size:0.78rem; color:#0c4a6e; font-weight:800; display:block; margin-bottom:4px;">🎓 التخصص</label>
+                                <select id="stats-f-major" onchange="renderSuccessStats()" style="width:100%; padding:9px; border-radius:10px; border:1px solid #7dd3fc; font-weight:700; background:#fff;"></select>
+                            </div>
+                            <div style="flex:1; min-width:140px;">
+                                <label style="font-size:0.78rem; color:#0c4a6e; font-weight:800; display:block; margin-bottom:4px;">🏷️ المستوى</label>
+                                <select id="stats-f-level" onchange="renderSuccessStats()" style="width:100%; padding:9px; border-radius:10px; border:1px solid #7dd3fc; font-weight:700; background:#fff;"></select>
+                            </div>
+                            <div style="flex:1; min-width:140px;">
+                                <label style="font-size:0.78rem; color:#0c4a6e; font-weight:800; display:block; margin-bottom:4px;">📚 الفصل</label>
+                                <select id="stats-f-semester" onchange="renderSuccessStats()" style="width:100%; padding:9px; border-radius:10px; border:1px solid #7dd3fc; font-weight:700; background:#fff;"></select>
+                            </div>
+                        </div>
+                        <div id="stats-status" style="margin-top:6px; font-size:0.9rem; text-align:center; color:#475569;"></div>
+                        <div id="stats-container" style="margin-top:14px;"></div>
+                    </div>
+                </div>
             </div>
-            <div id="bulk-delete-status" style="margin-top:10px; font-size:0.85rem; text-align:center; color:#475569;"></div>
 
-            <hr style="border: 1px solid #eee; margin: 20px 0;">
-            <h2 style="color:#dc2626;">🗑️ حذف نتائج فصل</h2>
-            <p style="font-size:0.85rem; color:#475569; margin:0 0 10px 0;">
-                احذف نتائج أي فصل مباشرة من هنا. سيتم إزالتها من قاعدة البيانات
-                والتخزين ولن تظهر بعد الآن في الموقع.
-            </p>
-            <button class="admin-btn" style="background:#dc2626; color:#fff;" onclick="loadDeletableResults()">📂 عرض جميع النتائج المرفوعة</button>
-            <div id="delete-status" style="margin-top:10px; font-size:0.85rem; text-align:center; color:#475569;"></div>
-            <div id="delete-container" style="margin-top:14px; max-height:420px; overflow-y:auto;"></div>
+            <!-- ===================== FULL-PAGE SHEET: BULK DELETE ===================== -->
+            <div id="sheet-bulk-delete" class="admin-sheet">
+                <div class="as-header as-hdr-delete">
+                    <button type="button" class="as-back" onclick="closeAdminSheet('sheet-bulk-delete')">→ رجوع</button>
+                    <div class="as-title">🗑️ مركز الحذف</div>
+                    <span style="width:78px;"></span>
+                </div>
+                <div class="as-body">
+                    <div class="as-card" style="border:1px solid #fecaca;">
+                        <h3 style="margin:0 0 12px 0; color:#b91c1c; font-size:1.05rem;">🧹 حذف فصل كامل (جميع التخصصات)</h3>
+                        <div style="background:linear-gradient(135deg,#fef2f2,#fee2e2); border:1px solid #fecaca; border-radius:14px; padding:16px; margin-bottom:18px;">
+                            <p style="font-size:0.92rem; color:#7f1d1d; margin:0; line-height:1.75; font-weight:600;">
+                                ⚠️ تنبيه: اختر فصلاً (مثلاً S2 أو S4 أو Annuel) ليتم حذف نتائجه <b>نهائياً</b>
+                                لكل التخصصات والمستويات والسنوات دفعة واحدة — مع كل ملفاته على Cloudinary و Supabase Storage.
+                                هذه العملية لا يمكن التراجع عنها.
+                            </p>
+                        </div>
+                        <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
+                            <select id="bulk-sem-select" style="flex:1; min-width:180px; padding:12px; border-radius:10px; border:1px solid #cbd5e1; font-weight:700; font-size:0.95rem;">
+                                <option value="S1">S1</option>
+                                <option value="S2">S2</option>
+                                <option value="S3">S3</option>
+                                <option value="S4">S4</option>
+                                <option value="S5">S5</option>
+                                <option value="S6">S6</option>
+                                <option value="ANNUEL">Annuel (السنوي)</option>
+                            </select>
+                            <button class="admin-btn" style="background:#b91c1c; color:#fff;" onclick="deleteEntireSemester()">🧹 حذف الفصل بالكامل</button>
+                        </div>
+                        <div id="bulk-delete-status" style="margin-top:14px; font-size:0.9rem; text-align:center; color:#475569; white-space:pre-line;"></div>
+                    </div>
+
+                    <div class="as-card" style="border:1px solid #fecaca; margin-top:18px;">
+                        <h3 style="margin:0 0 8px 0; color:#dc2626; font-size:1.05rem;">🗑️ حذف ملف نتائج فصل (فردي)</h3>
+                        <p style="font-size:0.85rem; color:#475569; margin:0 0 12px 0;">
+                            احذف نتائج أي فصل مباشرة من هنا. سيتم إزالتها من قاعدة البيانات
+                            والتخزين ولن تظهر بعد الآن في الموقع.
+                        </p>
+                        <button class="admin-btn" style="background:#dc2626; color:#fff;" onclick="loadDeletableResults()">📂 عرض جميع النتائج المرفوعة</button>
+                        <div id="delete-status" style="margin-top:10px; font-size:0.85rem; text-align:center; color:#475569;"></div>
+                        <div id="delete-container" style="margin-top:14px; max-height:420px; overflow-y:auto;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                function openAdminSheet(id){
+                    var el = document.getElementById(id);
+                    if(!el) return;
+                    el.style.display = 'block';
+                    document.body.style.overflow = 'hidden';
+                    try { el.scrollTop = 0; } catch(e) {}
+                }
+                function closeAdminSheet(id){
+                    var el = document.getElementById(id);
+                    if(!el) return;
+                    el.style.display = 'none';
+                    document.body.style.overflow = '';
+                }
+                // Close any open sheet with Escape
+                document.addEventListener('keydown', function(e){
+                    if (e.key === 'Escape') {
+                        ['sheet-bulk-upload','sheet-stats','sheet-bulk-delete'].forEach(function(id){
+                            var el = document.getElementById(id);
+                            if (el && el.style.display === 'block') closeAdminSheet(id);
+                        });
+                    }
+                });
+            </script>
+
+
 
             <hr style="border: 1px solid #eee; margin: 20px 0;">
             <button class="admin-btn" style="background:#dc2626; color:white;" onclick="adminLogout()">تسجيل الخروج 🚪</button>
@@ -1926,9 +2050,12 @@
         const publicOptsHTML =
             `<option value="${currentAcYear}">${currentAcYear}</option>`;
 
-        // Admin upload forms (semester + annual): current + next academic years.
-        document.getElementById('up-year').innerHTML        = adminOptsHTML;
-        document.getElementById('up-annual-year').innerHTML = adminOptsHTML;
+        // Admin upload forms (semester + annual): year is now a free-text input
+        // (manually editable by the admin). Pre-fill with the current academic year.
+        const upYearEl = document.getElementById('up-year');
+        if (upYearEl) { if (upYearEl.tagName === 'SELECT') upYearEl.innerHTML = adminOptsHTML; else if (!upYearEl.value) upYearEl.value = currentAcYear; }
+        const upAnnualYearEl = document.getElementById('up-annual-year');
+        if (upAnnualYearEl) { if (upAnnualYearEl.tagName === 'SELECT') upAnnualYearEl.innerHTML = adminOptsHTML; else if (!upAnnualYearEl.value) upAnnualYearEl.value = currentAcYear; }
         const bulkYearSel = document.getElementById('up-bulk-year');
         if (bulkYearSel) bulkYearSel.innerHTML = adminOptsHTML;
 
@@ -2018,7 +2145,7 @@
 
     async function uploadFiles() {
         const statusDiv = document.getElementById('upload-status');
-        const academicYear = document.getElementById('up-year').value; 
+        const academicYear = (document.getElementById('up-year').value || '').trim(); if (!/^\d{4}-\d{4}$/.test(academicYear)) { alert('⚠️ يرجى كتابة السنة الجامعية بصيغة صحيحة مثل 2024-2025'); return; } 
         const major = document.getElementById('up-major').value;
         const level = document.getElementById('up-level').value; 
         const semester = document.getElementById('up-semester').value;
@@ -2363,15 +2490,19 @@
             // l'ordre métier historique : année ↓, ANNUEL en premier, puis
             // S6 → S1.
             foundResults.sort((a, b) => {
-                const aTime = a.file.created_at || '';
-                const bTime = b.file.created_at || '';
-                if (aTime !== bTime) return aTime > bTime ? -1 : 1;
-                if (a.file.academic_year !== b.file.academic_year) return a.file.academic_year > b.file.academic_year ? -1 : 1;
+                // Priorité: trier par semestre du plus élevé (S6/S5) au plus bas (S1).
+                // ANNUEL reste en tête. À semestre égal: année ↓ puis date de publication ↓.
                 const aIsAnnual = a.file.semester === 'ANNUEL';
                 const bIsAnnual = b.file.semester === 'ANNUEL';
                 if (aIsAnnual && !bIsAnnual) return -1;
                 if (bIsAnnual && !aIsAnnual) return 1;
-                if (a.file.semester !== b.file.semester) return a.file.semester > b.file.semester ? -1 : 1;
+                if (!aIsAnnual && !bIsAnnual && a.file.semester !== b.file.semester) {
+                    return a.file.semester > b.file.semester ? -1 : 1;
+                }
+                if (a.file.academic_year !== b.file.academic_year) return a.file.academic_year > b.file.academic_year ? -1 : 1;
+                const aTime = a.file.created_at || '';
+                const bTime = b.file.created_at || '';
+                if (aTime !== bTime) return aTime > bTime ? -1 : 1;
                 return 0;
             });
 
@@ -2648,7 +2779,7 @@
 
     async function uploadAnnualFiles() {
         const statusDiv = document.getElementById('upload-annual-status');
-        const academicYear = document.getElementById('up-annual-year').value;
+        const academicYear = (document.getElementById('up-annual-year').value || '').trim(); if (!/^\d{4}-\d{4}$/.test(academicYear)) { alert('⚠️ يرجى كتابة السنة الجامعية بصيغة صحيحة مثل 2024-2025'); return; }
         const major        = document.getElementById('up-annual-major').value;
         const level        = document.getElementById('up-annual-level').value;
         const semester     = 'ANNUEL';
@@ -4191,11 +4322,22 @@
         if (__charts[key]) { try { __charts[key].destroy(); } catch(_) {} __charts[key] = null; }
     }
 
+    // ============================================================
+    //              ADMIN: SUCCESS STATISTICS (filterable)
+    // ============================================================
+    // Loads every uploaded class once, caches the raw per-student
+    // data in __statsRawGroups, then re-renders KPI cards, charts
+    // and detail rows based on three filters (year / major / semester).
+    // ============================================================
+    let __statsRawGroups = null;
+
     async function loadSuccessStats() {
         const status    = document.getElementById('stats-status');
         const container = document.getElementById('stats-container');
+        const filtersEl = document.getElementById('stats-filters');
         status.textContent = '⏳ جاري تحميل الإحصائيات...';
         container.innerHTML = '';
+        if (filtersEl) filtersEl.style.display = 'none';
         try {
             const { data: meta, error: mErr } = await _supabase
                 .from('results_metadata')
@@ -4203,6 +4345,7 @@
                 .order('created_at', { ascending: false });
             if (mErr) throw mErr;
             if (!meta || meta.length === 0) {
+                __statsRawGroups = [];
                 status.textContent = 'لا توجد ملفات مرفوعة بعد.';
                 return;
             }
@@ -4214,13 +4357,8 @@
             const files = Array.from(seen.values());
             status.textContent = `⏳ تحليل ${files.length} ملف...`;
 
-            const groups = new Map();
+            const raw = [];
             let done = 0;
-            // Track UNIQUE students per (year|major|level) so a student that appears
-            // in both S1 and S2 of the same year/level/major is counted only once.
-            // For each unique student we aggregate ALL their per-semester results so
-            // we can derive the annual success / fail / honorable / rate accurately.
-            const uniqueStudents = new Map(); // uKey -> { major, decisions:[], avgs:[] }
             for (const f of files) {
                 done++;
                 status.textContent = `⏳ تحليل (${done}/${files.length}) ${f.major} ${f.level} ${f.semester}...`;
@@ -4231,226 +4369,290 @@
                     console.warn('[stats] ranking fetch failed for', f, e);
                 }
                 if (!Array.isArray(students)) students = [];
-                const key = `${f.academic_year}|${f.major}|${f.level}|${f.semester}`;
-                const g = { year: f.academic_year, major: f.major, level: f.level, semester: f.semester,
-                            total: 0, success: 0, fail: 0, honorable: 0, sumAvg: 0, countAvg: 0,
-                            bucketsAvg: [0,0,0,0,0], // [<8, 8-10, 10-12, 12-14, >=14]
-                            missing: students.length === 0 };
-                for (const s of students) {
-                    g.total += 1;
-                    let uRec = null;
-                    if (s && s.id) {
-                        const uKey = `${f.academic_year}|${f.major}|${f.level}|${s.id}`;
-                        uRec = uniqueStudents.get(uKey);
-                        if (!uRec) {
-                            uRec = { major: f.major, semester: f.semester, decisions: [], avgs: [] };
-                            uniqueStudents.set(uKey, uRec);
-                        }
-                        uRec.decisions.push(classifyDecision(s.decision));
-                    }
-                    if (classifyDecision(s.decision) === 'success') g.success += 1; else g.fail += 1;
-                    const m = typeof s.avgNum === 'number' ? s.avgNum : parseFloat(String(s.avg || '').replace(',', '.'));
-                    if (!isNaN(m)) {
-                        g.sumAvg += m; g.countAvg += 1;
-                        if (m >= 13) g.honorable += 1;
-                        if (m < 8) g.bucketsAvg[0]++;
-                        else if (m < 10) g.bucketsAvg[1]++;
-                        else if (m < 12) g.bucketsAvg[2]++;
-                        else if (m < 14) g.bucketsAvg[3]++;
-                        else g.bucketsAvg[4]++;
-                    }
-                    if (uRec && !isNaN(m)) uRec.avgs.push(m);
-                }
-                groups.set(key, g);
-            }
-
-            // Overall totals (per-semester, kept for the detail rows / per-semester chart)
-            let oT = 0, oS = 0, oH = 0, oF = 0, sumAllAvg = 0, cntAllAvg = 0;
-            const bucketsAll = [0,0,0,0,0];
-            const perMajor = new Map();
-            const perSemester = new Map();
-            for (const g of groups.values()) {
-                oT += g.total; oS += g.success; oF += g.fail; oH += g.honorable;
-                sumAllAvg += g.sumAvg; cntAllAvg += g.countAvg;
-                for (let i=0;i<5;i++) bucketsAll[i] += g.bucketsAvg[i];
-                const ps = perSemester.get(g.semester) || { total:0, success:0 };
-                ps.total += g.total; ps.success += g.success;
-                perSemester.set(g.semester, ps);
-            }
-            const overallAvg  = cntAllAvg ? (sumAllAvg / cntAllAvg).toFixed(2) : '—';
-
-            // ===== Deduplicated annual stats (counted once per unique student) =====
-            // A student is "successful" for the year only if they passed in EVERY
-            // semester where they appear. Their annual average is the mean of
-            // their per-semester averages, and a student is "honorable" if that
-            // annual average is ≥ 13.
-            let uniqueTotal = 0, uniqueSuccess = 0, uniqueFail = 0, uniqueHonorable = 0;
-            for (const rec of uniqueStudents.values()) {
-                uniqueTotal += 1;
-                const passed = rec.decisions.length > 0 && rec.decisions.every(d => d === 'success');
-                if (passed) uniqueSuccess += 1; else uniqueFail += 1;
-                if (rec.avgs.length > 0) {
-                    const mean = rec.avgs.reduce((a, b) => a + b, 0) / rec.avgs.length;
-                    if (mean >= 13) uniqueHonorable += 1;
-                }
-                const pm = perMajor.get(rec.major) || { total: 0, success: 0 };
-                pm.total += 1; if (passed) pm.success += 1;
-                perMajor.set(rec.major, pm);
-            }
-            // Fallback (no student IDs at all): use raw per-semester sums.
-            if (uniqueTotal === 0) {
-                uniqueTotal = oT; uniqueSuccess = oS; uniqueFail = oF; uniqueHonorable = oH;
-                for (const g of groups.values()) {
-                    const pm = perMajor.get(g.major) || { total:0, success:0 };
-                    pm.total += g.total; pm.success += g.success;
-                    perMajor.set(g.major, pm);
-                }
-            }
-            const overallRate = uniqueTotal ? ((uniqueSuccess / uniqueTotal) * 100).toFixed(1) : '0.0';
-
-            const list = Array.from(groups.values()).sort((a, b) => {
-                if (a.year !== b.year) return a.year > b.year ? -1 : 1;
-                if (a.major !== b.major) return a.major < b.major ? -1 : 1;
-                if (a.level !== b.level) return a.level < b.level ? -1 : 1;
-                return (a.semester || '') < (b.semester || '') ? -1 : 1;
-            });
-
-            // KPI cards + chart canvases
-            container.innerHTML = `
-                <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin-bottom:14px;">
-                    <div style="background:linear-gradient(135deg,#0284c7,#0369a1); color:#fff; padding:14px; border-radius:14px; text-align:center; box-shadow:0 6px 18px rgba(2,132,199,0.25);">
-                        <div style="font-size:0.72rem; opacity:0.9;">إجمالي الطلاب</div>
-                        <div style="font-size:1.6rem; font-weight:900; margin-top:4px;">${uniqueTotal}</div>
-                    </div>
-                    <div style="background:linear-gradient(135deg,#059669,#047857); color:#fff; padding:14px; border-radius:14px; text-align:center; box-shadow:0 6px 18px rgba(5,150,105,0.25);">
-                        <div style="font-size:0.72rem; opacity:0.9;">نسبة النجاح</div>
-                        <div style="font-size:1.6rem; font-weight:900; margin-top:4px;">${overallRate}%</div>
-                    </div>
-                    <div style="background:linear-gradient(135deg,#dc2626,#991b1b); color:#fff; padding:14px; border-radius:14px; text-align:center; box-shadow:0 6px 18px rgba(220,38,38,0.25);">
-                        <div style="font-size:0.72rem; opacity:0.9;">راسبون</div>
-                        <div style="font-size:1.6rem; font-weight:900; margin-top:4px;">${uniqueFail}</div>
-                    </div>
-                    <div style="background:linear-gradient(135deg,#f59e0b,#b45309); color:#fff; padding:14px; border-radius:14px; text-align:center; box-shadow:0 6px 18px rgba(245,158,11,0.25);">
-                        <div style="font-size:0.72rem; opacity:0.9;">معدلات مشرفة (≥13)</div>
-                        <div style="font-size:1.6rem; font-weight:900; margin-top:4px;">${uniqueHonorable}</div>
-                    </div>
-                    <div style="background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; padding:14px; border-radius:14px; text-align:center; box-shadow:0 6px 18px rgba(99,102,241,0.25);">
-                        <div style="font-size:0.72rem; opacity:0.9;">متوسط المعدلات</div>
-                        <div style="font-size:1.6rem; font-weight:900; margin-top:4px;">${overallAvg}</div>
-                    </div>
-                </div>
-
-                <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px; margin-bottom:14px;">
-                    <div style="background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:12px;">
-                        <div style="font-weight:800; color:#0f172a; margin-bottom:6px; font-size:0.9rem;">📊 توزيع النجاح / الرسوب</div>
-                        <canvas id="chart-success-fail" height="180"></canvas>
-                    </div>
-                    <div style="background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:12px;">
-                        <div style="font-weight:800; color:#0f172a; margin-bottom:6px; font-size:0.9rem;">📈 توزيع المعدلات</div>
-                        <canvas id="chart-avg-buckets" height="180"></canvas>
-                    </div>
-                    <div style="background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:12px;">
-                        <div style="font-weight:800; color:#0f172a; margin-bottom:6px; font-size:0.9rem;">🎓 نسبة النجاح حسب التخصص</div>
-                        <canvas id="chart-by-major" height="180"></canvas>
-                    </div>
-                    <div style="background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:12px;">
-                        <div style="font-weight:800; color:#0f172a; margin-bottom:6px; font-size:0.9rem;">📚 نسبة النجاح حسب الفصل</div>
-                        <canvas id="chart-by-sem" height="180"></canvas>
-                    </div>
-                </div>
-
-                <div style="font-weight:800; color:#0f172a; margin:14px 0 8px;">🗂️ تفاصيل كل مجموعة</div>
-                <div id="stats-rows"></div>
-            `;
-
-            // Detail rows
-            const rowsHtml = list.map(g => {
-                const rate = g.total ? ((g.success / g.total) * 100) : 0;
-                const avg  = g.countAvg ? (g.sumAvg / g.countAvg).toFixed(2) : '—';
-                const color = rate >= 70 ? '#047857' : rate >= 40 ? '#b45309' : '#b91c1c';
-                const bg    = rate >= 70 ? '#d1fae5' : rate >= 40 ? '#fef3c7' : '#fee2e2';
-                return `
-                <div style="border:1px solid #e2e8f0; border-radius:12px; padding:12px; margin-bottom:10px; background:#fff;">
-                    <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px;">
-                        <div style="font-weight:800; color:#0f172a; font-size:0.95rem;">
-                            ${g.year} · ${g.major} · ${g.level} · ${g.semester}
-                        </div>
-                        <div style="background:${bg}; color:${color}; padding:4px 10px; border-radius:8px; font-weight:800; font-size:0.85rem;">
-                            ${g.total ? rate.toFixed(1) + '%' : '—'}
-                        </div>
-                    </div>
-                    <div style="margin-top:8px; background:#f1f5f9; border-radius:8px; height:8px; overflow:hidden;">
-                        <div style="height:100%; width:${rate.toFixed(1)}%; background:linear-gradient(90deg,${color},${color}); transition:width .6s;"></div>
-                    </div>
-                    <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:6px; margin-top:8px; font-size:0.82rem; color:#334155;">
-                        <div>👥 المجموع: <b>${g.total}</b></div>
-                        <div>✅ ناجحون: <b style="color:#047857;">${g.success}</b></div>
-                        <div>❌ راسبون: <b style="color:#b91c1c;">${g.fail}</b></div>
-                        <div>🏆 معدل ≥ 13: <b style="color:#0284c7;">${g.honorable}</b></div>
-                        <div style="grid-column:1/-1;">📊 متوسط المعدلات: <b>${avg}</b> / 20</div>
-                        ${g.missing ? '<div style="grid-column:1/-1; color:#b45309;">⚠️ تعذّر قراءة ملف الترتيب لهذا الفصل.</div>' : ''}
-                    </div>
-                </div>`;
-            }).join('');
-            document.getElementById('stats-rows').innerHTML = rowsHtml;
-
-            // Draw charts (after DOM nodes exist)
-            if (window.Chart) {
-                Chart.defaults.font.family = "'Cairo','Tajawal','Inter',sans-serif";
-
-                __destroyChart('sf');
-                __charts.sf = new Chart(document.getElementById('chart-success-fail'), {
-                    type:'doughnut',
-                    data:{ labels:['ناجحون','راسبون'],
-                        datasets:[{ data:[uniqueSuccess, uniqueFail], backgroundColor:['#059669','#dc2626'], borderWidth:0 }] },
-                    options:{ plugins:{ legend:{ position:'bottom' } }, cutout:'62%' }
-                });
-
-                __destroyChart('avg');
-                __charts.avg = new Chart(document.getElementById('chart-avg-buckets'), {
-                    type:'bar',
-                    data:{ labels:['<8','8-10','10-12','12-14','≥14'],
-                        datasets:[{ label:'عدد الطلاب', data:bucketsAll,
-                            backgroundColor:['#dc2626','#f59e0b','#0284c7','#10b981','#6366f1'], borderRadius:6 }] },
-                    options:{ plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true } } }
-                });
-
-                const majors = Array.from(perMajor.keys());
-                const majorRates = majors.map(m => {
-                    const v = perMajor.get(m); return v.total ? +(v.success/v.total*100).toFixed(1) : 0;
-                });
-                __destroyChart('maj');
-                __charts.maj = new Chart(document.getElementById('chart-by-major'), {
-                    type:'bar',
-                    data:{ labels:majors,
-                        datasets:[{ label:'%', data:majorRates, backgroundColor:'#0284c7', borderRadius:6 }] },
-                    options:{ indexAxis:'y', plugins:{ legend:{ display:false } },
-                        scales:{ x:{ beginAtZero:true, max:100, ticks:{ callback:v=>v+'%' } } } }
-                });
-
-                const semOrder = ['S1','S2','S3','S4','S5','S6','ANNUEL'];
-                const sems = semOrder.filter(x => perSemester.has(x))
-                    .concat(Array.from(perSemester.keys()).filter(x => !semOrder.includes(x)));
-                const semRates = sems.map(x => {
-                    const v = perSemester.get(x); return v.total ? +(v.success/v.total*100).toFixed(1) : 0;
-                });
-                __destroyChart('sem');
-                __charts.sem = new Chart(document.getElementById('chart-by-sem'), {
-                    type:'line',
-                    data:{ labels:sems,
-                        datasets:[{ label:'نسبة النجاح %', data:semRates, borderColor:'#6366f1',
-                            backgroundColor:'rgba(99,102,241,0.18)', fill:true, tension:0.3,
-                            pointBackgroundColor:'#4338ca', pointRadius:5 }] },
-                    options:{ plugins:{ legend:{ display:false } },
-                        scales:{ y:{ beginAtZero:true, max:100, ticks:{ callback:v=>v+'%' } } } }
+                raw.push({
+                    year: f.academic_year, major: f.major, level: f.level, semester: f.semester,
+                    missing: students.length === 0,
+                    students: students.map(s => ({
+                        id: s && s.id,
+                        decision: classifyDecision(s && s.decision),
+                        m: (s && typeof s.avgNum === 'number')
+                            ? s.avgNum
+                            : parseFloat(String((s && s.avg) || '').replace(',', '.'))
+                    }))
                 });
             }
-
-            status.textContent = `تم تحميل ${list.length} مجموعة.`;
+            __statsRawGroups = raw;
+            populateStatsFilters();
+            if (filtersEl) filtersEl.style.display = 'flex';
+            renderSuccessStats();
         } catch (e) {
             console.error('[stats] failed:', e);
             status.textContent = '❌ فشل تحميل الإحصائيات: ' + (e.message || e);
         }
+    }
+
+    function populateStatsFilters() {
+        const ySel = document.getElementById('stats-f-year');
+        const mSel = document.getElementById('stats-f-major');
+        const lSel = document.getElementById('stats-f-level');
+        const sSel = document.getElementById('stats-f-semester');
+        if (!ySel || !mSel || !sSel || !__statsRawGroups) return;
+        const prevY = ySel.value, prevM = mSel.value, prevL = lSel ? lSel.value : '', prevS = sSel.value;
+        const years  = Array.from(new Set(__statsRawGroups.map(g => g.year))).sort().reverse();
+        const majors = Array.from(new Set(__statsRawGroups.map(g => g.major))).sort();
+        const levelOrder = ['L1','L2','L3'];
+        const levels = Array.from(new Set(__statsRawGroups.map(g => g.level)))
+            .sort((a,b) => {
+                const ia = levelOrder.indexOf(a), ib = levelOrder.indexOf(b);
+                return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+            });
+        const semOrder = ['S1','S2','S3','S4','S5','S6','ANNUEL'];
+        const sems = Array.from(new Set(__statsRawGroups.map(g => g.semester)))
+            .sort((a,b) => {
+                const ia = semOrder.indexOf(a), ib = semOrder.indexOf(b);
+                return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+            });
+        const opt = (v, label) => `<option value="${v}">${label}</option>`;
+        ySel.innerHTML = opt('__ALL__','كل السنوات') + years.map(v => opt(v, v)).join('');
+        mSel.innerHTML = opt('__ALL__','كل التخصصات') + majors.map(v => opt(v, v)).join('');
+        if (lSel) lSel.innerHTML = opt('__ALL__','كل المستويات') + levels.map(v => opt(v, v)).join('');
+        sSel.innerHTML = opt('__ALL__','كل الفصول') + sems.map(v => opt(v, v === 'ANNUEL' ? 'Annuel' : v)).join('');
+        if (prevY && Array.from(ySel.options).some(o => o.value === prevY)) ySel.value = prevY;
+        if (prevM && Array.from(mSel.options).some(o => o.value === prevM)) mSel.value = prevM;
+        if (lSel && prevL && Array.from(lSel.options).some(o => o.value === prevL)) lSel.value = prevL;
+        if (prevS && Array.from(sSel.options).some(o => o.value === prevS)) sSel.value = prevS;
+    }
+
+    function renderSuccessStats() {
+        const status    = document.getElementById('stats-status');
+        const container = document.getElementById('stats-container');
+        if (!__statsRawGroups) return;
+        const fy = (document.getElementById('stats-f-year')     || {}).value || '__ALL__';
+        const fm = (document.getElementById('stats-f-major')    || {}).value || '__ALL__';
+        const fl = (document.getElementById('stats-f-level')    || {}).value || '__ALL__';
+        const fs = (document.getElementById('stats-f-semester') || {}).value || '__ALL__';
+
+        const filtered = __statsRawGroups.filter(g =>
+            (fy === '__ALL__' || g.year === fy) &&
+            (fm === '__ALL__' || g.major === fm) &&
+            (fl === '__ALL__' || g.level === fl) &&
+            (fs === '__ALL__' || g.semester === fs)
+        );
+
+        const groups = new Map();
+        const uniqueStudents = new Map();
+        for (const rg of filtered) {
+            const key = `${rg.year}|${rg.major}|${rg.level}|${rg.semester}`;
+            const g = { year: rg.year, major: rg.major, level: rg.level, semester: rg.semester,
+                        total: 0, success: 0, fail: 0, honorable: 0, sumAvg: 0, countAvg: 0,
+                        bucketsAvg: [0,0,0,0,0], missing: rg.missing };
+            for (const s of rg.students) {
+                g.total += 1;
+                let uRec = null;
+                if (s.id) {
+                    const uKey = `${rg.year}|${rg.major}|${rg.level}|${s.id}`;
+                    uRec = uniqueStudents.get(uKey);
+                    if (!uRec) {
+                        uRec = { major: rg.major, decisions: [], avgs: [] };
+                        uniqueStudents.set(uKey, uRec);
+                    }
+                    uRec.decisions.push(s.decision);
+                }
+                if (s.decision === 'success') g.success += 1; else g.fail += 1;
+                const m = s.m;
+                if (!isNaN(m)) {
+                    g.sumAvg += m; g.countAvg += 1;
+                    if (m >= 13) g.honorable += 1;
+                    if (m < 8) g.bucketsAvg[0]++;
+                    else if (m < 10) g.bucketsAvg[1]++;
+                    else if (m < 12) g.bucketsAvg[2]++;
+                    else if (m < 14) g.bucketsAvg[3]++;
+                    else g.bucketsAvg[4]++;
+                }
+                if (uRec && !isNaN(m)) uRec.avgs.push(m);
+            }
+            groups.set(key, g);
+        }
+
+        let oT=0, oS=0, oH=0, oF=0, sumAllAvg=0, cntAllAvg=0;
+        const bucketsAll = [0,0,0,0,0];
+        const perMajor = new Map();
+        const perSemester = new Map();
+        for (const g of groups.values()) {
+            oT += g.total; oS += g.success; oF += g.fail; oH += g.honorable;
+            sumAllAvg += g.sumAvg; cntAllAvg += g.countAvg;
+            for (let i=0;i<5;i++) bucketsAll[i] += g.bucketsAvg[i];
+            const ps = perSemester.get(g.semester) || { total:0, success:0 };
+            ps.total += g.total; ps.success += g.success;
+            perSemester.set(g.semester, ps);
+        }
+        const overallAvg = cntAllAvg ? (sumAllAvg / cntAllAvg).toFixed(2) : '—';
+
+        let uniqueTotal=0, uniqueSuccess=0, uniqueFail=0, uniqueHonorable=0;
+        for (const rec of uniqueStudents.values()) {
+            uniqueTotal += 1;
+            const passed = rec.decisions.length > 0 && rec.decisions.every(d => d === 'success');
+            if (passed) uniqueSuccess += 1; else uniqueFail += 1;
+            if (rec.avgs.length > 0) {
+                const mean = rec.avgs.reduce((a,b) => a+b, 0) / rec.avgs.length;
+                if (mean >= 13) uniqueHonorable += 1;
+            }
+            const pm = perMajor.get(rec.major) || { total:0, success:0 };
+            pm.total += 1; if (passed) pm.success += 1;
+            perMajor.set(rec.major, pm);
+        }
+        if (uniqueTotal === 0) {
+            uniqueTotal = oT; uniqueSuccess = oS; uniqueFail = oF; uniqueHonorable = oH;
+            for (const g of groups.values()) {
+                const pm = perMajor.get(g.major) || { total:0, success:0 };
+                pm.total += g.total; pm.success += g.success;
+                perMajor.set(g.major, pm);
+            }
+        }
+        const overallRate = uniqueTotal ? ((uniqueSuccess / uniqueTotal) * 100).toFixed(1) : '0.0';
+
+        const list = Array.from(groups.values()).sort((a, b) => {
+            if (a.year !== b.year) return a.year > b.year ? -1 : 1;
+            if (a.major !== b.major) return a.major < b.major ? -1 : 1;
+            if (a.level !== b.level) return a.level < b.level ? -1 : 1;
+            return (a.semester || '') < (b.semester || '') ? -1 : 1;
+        });
+
+        if (list.length === 0) {
+            container.innerHTML = `<div style="text-align:center; padding:30px; color:#64748b; background:#f8fafc; border-radius:14px; border:1px dashed #cbd5e1;">لا توجد بيانات مطابقة للفلاتر المختارة.</div>`;
+            status.textContent = 'لا توجد نتائج لهذا الاختيار.';
+            return;
+        }
+
+        container.innerHTML = `
+            <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin-bottom:14px;">
+                <div style="background:linear-gradient(135deg,#0284c7,#0369a1); color:#fff; padding:14px; border-radius:14px; text-align:center; box-shadow:0 6px 18px rgba(2,132,199,0.25);">
+                    <div style="font-size:0.72rem; opacity:0.9;">إجمالي الطلاب</div>
+                    <div style="font-size:1.6rem; font-weight:900; margin-top:4px;">${uniqueTotal}</div>
+                </div>
+                <div style="background:linear-gradient(135deg,#059669,#047857); color:#fff; padding:14px; border-radius:14px; text-align:center; box-shadow:0 6px 18px rgba(5,150,105,0.25);">
+                    <div style="font-size:0.72rem; opacity:0.9;">نسبة النجاح</div>
+                    <div style="font-size:1.6rem; font-weight:900; margin-top:4px;">${overallRate}%</div>
+                </div>
+                <div style="background:linear-gradient(135deg,#dc2626,#991b1b); color:#fff; padding:14px; border-radius:14px; text-align:center; box-shadow:0 6px 18px rgba(220,38,38,0.25);">
+                    <div style="font-size:0.72rem; opacity:0.9;">راسبون</div>
+                    <div style="font-size:1.6rem; font-weight:900; margin-top:4px;">${uniqueFail}</div>
+                </div>
+                <div style="background:linear-gradient(135deg,#f59e0b,#b45309); color:#fff; padding:14px; border-radius:14px; text-align:center; box-shadow:0 6px 18px rgba(245,158,11,0.25);">
+                    <div style="font-size:0.72rem; opacity:0.9;"><bdi>معدل 13 فما فوق</bdi></div>
+                    <div style="font-size:1.6rem; font-weight:900; margin-top:4px;">${uniqueHonorable}</div>
+                </div>
+                <div style="background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; padding:14px; border-radius:14px; text-align:center; box-shadow:0 6px 18px rgba(99,102,241,0.25);">
+                    <div style="font-size:0.72rem; opacity:0.9;">متوسط المعدلات</div>
+                    <div style="font-size:1.6rem; font-weight:900; margin-top:4px;">${overallAvg}</div>
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px; margin-bottom:14px;">
+                <div style="background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:12px;">
+                    <div style="font-weight:800; color:#0f172a; margin-bottom:6px; font-size:0.9rem;">📊 توزيع النجاح / الرسوب</div>
+                    <canvas id="chart-success-fail" height="180"></canvas>
+                </div>
+                <div style="background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:12px;">
+                    <div style="font-weight:800; color:#0f172a; margin-bottom:6px; font-size:0.9rem;">📈 توزيع المعدلات</div>
+                    <canvas id="chart-avg-buckets" height="180"></canvas>
+                </div>
+                <div style="background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:12px;">
+                    <div style="font-weight:800; color:#0f172a; margin-bottom:6px; font-size:0.9rem;">🎓 نسبة النجاح حسب التخصص</div>
+                    <canvas id="chart-by-major" height="180"></canvas>
+                </div>
+                <div style="background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:12px;">
+                    <div style="font-weight:800; color:#0f172a; margin-bottom:6px; font-size:0.9rem;">📚 نسبة النجاح حسب الفصل</div>
+                    <canvas id="chart-by-sem" height="180"></canvas>
+                </div>
+            </div>
+
+            <div style="font-weight:800; color:#0f172a; margin:14px 0 8px;">🗂️ تفاصيل كل مجموعة</div>
+            <div id="stats-rows"></div>
+        `;
+
+        const rowsHtml = list.map(g => {
+            const rate = g.total ? ((g.success / g.total) * 100) : 0;
+            const avg  = g.countAvg ? (g.sumAvg / g.countAvg).toFixed(2) : '—';
+            const color = rate >= 70 ? '#047857' : rate >= 40 ? '#b45309' : '#b91c1c';
+            const bg    = rate >= 70 ? '#d1fae5' : rate >= 40 ? '#fef3c7' : '#fee2e2';
+            return `
+            <div style="border:1px solid #e2e8f0; border-radius:12px; padding:12px; margin-bottom:10px; background:#fff;">
+                <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px;">
+                    <div style="font-weight:800; color:#0f172a; font-size:0.95rem;">
+                        ${g.year} · ${g.major} · ${g.level} · ${g.semester}
+                    </div>
+                    <div style="background:${bg}; color:${color}; padding:4px 10px; border-radius:8px; font-weight:800; font-size:0.85rem;">
+                        ${g.total ? rate.toFixed(1) + '%' : '—'}
+                    </div>
+                </div>
+                <div style="margin-top:8px; background:#f1f5f9; border-radius:8px; height:8px; overflow:hidden;">
+                    <div style="height:100%; width:${rate.toFixed(1)}%; background:linear-gradient(90deg,${color},${color}); transition:width .6s;"></div>
+                </div>
+                <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:6px; margin-top:8px; font-size:0.82rem; color:#334155;">
+                    <div>👥 المجموع: <b>${g.total}</b></div>
+                    <div>✅ ناجحون: <b style="color:#047857;">${g.success}</b></div>
+                    <div>❌ راسبون: <b style="color:#b91c1c;">${g.fail}</b></div>
+                    <div>🏆 <bdi>معدل 13 فما فوق</bdi>: <b style="color:#0284c7;">${g.honorable}</b></div>
+                    <div style="grid-column:1/-1;">📊 متوسط المعدلات: <b>${avg}</b> / 20</div>
+                    ${g.missing ? '<div style="grid-column:1/-1; color:#b45309;">⚠️ تعذّر قراءة ملف الترتيب لهذا الفصل.</div>' : ''}
+                </div>
+            </div>`;
+        }).join('');
+        document.getElementById('stats-rows').innerHTML = rowsHtml;
+
+        if (window.Chart) {
+            Chart.defaults.font.family = "'Cairo','Tajawal','Inter',sans-serif";
+
+            __destroyChart('sf');
+            __charts.sf = new Chart(document.getElementById('chart-success-fail'), {
+                type:'doughnut',
+                data:{ labels:['ناجحون','راسبون'],
+                    datasets:[{ data:[uniqueSuccess, uniqueFail], backgroundColor:['#059669','#dc2626'], borderWidth:0 }] },
+                options:{ plugins:{ legend:{ position:'bottom' } }, cutout:'62%' }
+            });
+
+            __destroyChart('avg');
+            __charts.avg = new Chart(document.getElementById('chart-avg-buckets'), {
+                type:'bar',
+                data:{ labels:['0-8','8-10','10-12','12-14','14-20'],
+                    datasets:[{ label:'عدد الطلاب', data:bucketsAll,
+                        backgroundColor:['#dc2626','#f59e0b','#0284c7','#10b981','#6366f1'], borderRadius:6 }] },
+                options:{ plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true } } }
+            });
+
+            const majors = Array.from(perMajor.keys());
+            const majorRates = majors.map(m => {
+                const v = perMajor.get(m); return v.total ? +(v.success/v.total*100).toFixed(1) : 0;
+            });
+            __destroyChart('maj');
+            __charts.maj = new Chart(document.getElementById('chart-by-major'), {
+                type:'bar',
+                data:{ labels:majors,
+                    datasets:[{ label:'%', data:majorRates, backgroundColor:'#0284c7', borderRadius:6 }] },
+                options:{ indexAxis:'y', plugins:{ legend:{ display:false } },
+                    scales:{ x:{ beginAtZero:true, max:100, ticks:{ callback:v=>v+'%' } } } }
+            });
+
+            const semOrder = ['S1','S2','S3','S4','S5','S6','ANNUEL'];
+            const sems = semOrder.filter(x => perSemester.has(x))
+                .concat(Array.from(perSemester.keys()).filter(x => !semOrder.includes(x)));
+            const semRates = sems.map(x => {
+                const v = perSemester.get(x); return v.total ? +(v.success/v.total*100).toFixed(1) : 0;
+            });
+            __destroyChart('sem');
+            __charts.sem = new Chart(document.getElementById('chart-by-sem'), {
+                type:'line',
+                data:{ labels:sems,
+                    datasets:[{ label:'نسبة النجاح %', data:semRates, borderColor:'#6366f1',
+                        backgroundColor:'rgba(99,102,241,0.18)', fill:true, tension:0.3,
+                        pointBackgroundColor:'#4338ca', pointRadius:5 }] },
+                options:{ plugins:{ legend:{ display:false } },
+                    scales:{ y:{ beginAtZero:true, max:100, ticks:{ callback:v=>v+'%' } } } }
+            });
+        }
+
+        status.textContent = `تم عرض ${list.length} مجموعة.`;
     }
 
     // ============================================================
