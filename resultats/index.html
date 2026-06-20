@@ -1085,6 +1085,53 @@
             <button class="admin-btn" style="margin-top:20px; background:#7c3aed; color:white;" onclick="uploadAnnualFiles()">دمج، استخراج البيانات والرفع (سنوي)</button>
             <div id="upload-annual-status" style="margin-top:15px; font-weight:bold; font-size:0.9rem; text-align:center;"></div>
 
+            <hr style="border: 2px dashed #cbd5e1; margin: 25px 0;">
+
+            <!-- ============================================================
+                 🚀 BULK UPLOAD — Upload many PDFs (different majors / semesters /
+                 annual) at once. Files are auto-classified from their filenames
+                 (with manual override per row), grouped, and each group is
+                 processed through the SAME pipeline as the single upload above
+                 (merge → parse → split-by-student → upload → metadata + analytics).
+                 No existing flow is changed — this is purely additive.
+            ============================================================= -->
+            <h2 style="color:#0ea5e9;">🚀 رفع جماعي ذكي (Bulk) — عدة فصول/تخصصات دفعة واحدة</h2>
+            <div class="form-group"><label>السنة الجامعية (افتراضية إن لم تُكتشف من اسم الملف):</label><select id="up-bulk-year"></select></div>
+
+            <div class="file-input-wrapper">
+                <label>📄 اختر كل ملفات PDF التي تريد رفعها معاً:</label>
+                <input type="file" id="file-bulk" accept="application/pdf" multiple onchange="prepareBulkUploadTable()">
+                <small style="display:block; color:#666; font-size:0.85rem; margin-top:8px;">
+                    💡 يمكنك اختيار عشرات الملفات في وقت واحد (S1, S2, S3, S4, S5, S6, Annuel) ولكل التخصصات. سيقوم النظام بقراءة اسم كل ملف وتصنيفه تلقائياً (التخصص + المستوى + الفصل) ثم رفع كل ملف إلى مكانه الصحيح. يمكنك مراجعة وتعديل التصنيف قبل البدء.
+                </small>
+            </div>
+
+            <div id="bulk-preview-wrap" style="display:none; margin-top:15px;">
+                <div style="overflow-x:auto; border:1px solid #e5e7eb; border-radius:10px;">
+                    <table id="bulk-preview-table" style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+                        <thead style="background:#f1f5f9;">
+                            <tr>
+                                <th style="padding:8px; text-align:right;">#</th>
+                                <th style="padding:8px; text-align:right;">اسم الملف</th>
+                                <th style="padding:8px;">التخصص</th>
+                                <th style="padding:8px;">المستوى</th>
+                                <th style="padding:8px;">الفصل</th>
+                                <th style="padding:8px;">السنة</th>
+                                <th style="padding:8px;">حذف</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bulk-preview-body"></tbody>
+                    </table>
+                </div>
+                <div style="margin-top:10px; font-size:0.8rem; color:#475569;">
+                    💡 الملفات التي لها نفس (التخصص + المستوى + الفصل + السنة) سيتم <b>دمجها تلقائياً</b> ورفعها كملف واحد.
+                </div>
+            </div>
+
+            <button class="admin-btn" style="margin-top:20px; background:#0ea5e9; color:white;" onclick="bulkUploadFiles()">🚀 بدء الرفع الجماعي الذكي</button>
+            <div id="upload-bulk-status" style="margin-top:15px; font-weight:bold; font-size:0.9rem; text-align:center; white-space:pre-line;"></div>
+            <div id="upload-bulk-log" style="margin-top:10px; font-size:0.8rem; max-height:240px; overflow-y:auto; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:8px; display:none;"></div>
+
             <hr style="border: 1px solid #eee; margin: 20px 0;">
             <!-- ============================================================
                  📊 SUCCESS STATISTICS (per uploaded class)
@@ -1882,6 +1929,8 @@
         // Admin upload forms (semester + annual): current + next academic years.
         document.getElementById('up-year').innerHTML        = adminOptsHTML;
         document.getElementById('up-annual-year').innerHTML = adminOptsHTML;
+        const bulkYearSel = document.getElementById('up-bulk-year');
+        if (bulkYearSel) bulkYearSel.innerHTML = adminOptsHTML;
 
         // Public Top 20 forms (semester + annual): only the current academic year.
         document.getElementById('t20-year').innerHTML        = publicOptsHTML;
@@ -2721,6 +2770,381 @@
             console.error(err);
         }
     }
+
+    /* ============================================================
+       BULK UPLOAD — multi-file, multi-class smart processor
+       ------------------------------------------------------------
+       Reuses the EXACT same processing pipeline as uploadFiles() and
+       uploadAnnualFiles(): extract text → parse students → split PDF
+       by student → upload PDF + JSON → write results_metadata row →
+       saveStudentResults(). The only addition is filename-based
+       classification + grouping so the admin can drop many files at
+       once and each one lands in its correct (major, level, semester)
+       slot — semester PDFs OR annual PDFs, mixed freely.
+    ============================================================= */
+    const BULK_MAJORS = ['FCFP','IGFP','GRH','TCM','SAE','BA','FC','IG','DI','RT']; // longest first
+    const BULK_LEVELS = ['L1','L2','L3'];
+    const BULK_SEMS   = ['S1','S2','S3','S4','S5','S6'];
+
+    function detectFromFilename(name) {
+        // ----- Normalization -----
+        // 1) strip extension, 2) convert Arabic-Indic & Persian digits to ASCII,
+        // 3) remove diacritics (é→e, è→e, ê→e, à→a…), 4) uppercase,
+        // 5) build two views: spaced (separators→space) and compact (no separators).
+        let raw = (name || '').replace(/\.[A-Za-z0-9]+$/,'');
+        // Arabic-Indic 0660-0669 and Eastern-Arabic 06F0-06F9 → ASCII
+        raw = raw.replace(/[\u0660-\u0669]/g, d => String.fromCharCode(d.charCodeAt(0) - 0x0660 + 48))
+                 .replace(/[\u06F0-\u06F9]/g, d => String.fromCharCode(d.charCodeAt(0) - 0x06F0 + 48));
+        // Remove diacritics
+        try { raw = raw.normalize('NFD').replace(/[\u0300-\u036f]/g,''); } catch(e) {}
+        const base    = raw.toUpperCase();
+        const spaced  = ' ' + base.replace(/[^A-Z0-9]+/g,' ').replace(/\s+/g,' ').trim() + ' ';
+        const compact = base.replace(/[^A-Z0-9]/g,'');
+
+        const detect = { major:'', level:'', semester:'', year:'' };
+
+        // ----- Semester / Annual -----
+        // Annual keywords (FR/EN/typos): ANNUEL, ANNUELLE, ANNUAL, ANNUELE, ANUEL, ANNEE,
+        // "RESULTAT ANNUEL", "PV ANNUEL", "DEL ANNUEL"…
+        const annualRe = /\b(ANNUEL{1,2}E?S?|ANNUAL|ANUEL{1,2}E?|ANNEE|YEARLY)\b/;
+        if (annualRe.test(spaced) || /ANNUEL|ANNUAL|ANUEL/.test(compact)) {
+            detect.semester = 'ANNUEL';
+        } else {
+            // Match S1..S6 with optional separators: "S 2", "S-2", "SEM2", "SEMESTRE 2",
+            // "SEMESTER2", or even glued forms like "FCFPS2".
+            // Try spaced form first.
+            let m = spaced.match(/\b(?:S|SEM|SEMESTRE|SEMESTER)\s*([1-6])\b/);
+            if (!m) m = compact.match(/(?:SEMESTRE|SEMESTER|SEM|S)([1-6])(?!\d)/);
+            if (m) detect.semester = 'S' + m[1];
+        }
+
+        // ----- Level (L1/L2/L3) -----
+        // Accept L1, L 1, NIVEAU 1, NIV1, LEVEL 1, LICENCE 1, "1ERE ANNEE", "1A".
+        let lm = spaced.match(/\b(?:L|NIV|NIVEAU|LEVEL|LIC|LICENCE)\s*([1-3])\b/);
+        if (!lm) lm = spaced.match(/\b([1-3])\s*(?:ERE|EME|E)?\s*(?:ANNEE|AN|A)\b/);
+        if (!lm) lm = compact.match(/(?:NIVEAU|LICENCE|LEVEL|NIV|LIC|L)([1-3])(?!\d)/);
+        if (lm) detect.level = 'L' + lm[1];
+
+        // ----- Major -----
+        // Longest-first to avoid FC matching inside FCFP, IG inside IGFP, etc.
+        // Try word-boundary match on spaced view, then a glued match on compact view.
+        for (const m of BULK_MAJORS) {
+            if (new RegExp('\\b' + m + '\\b').test(spaced)) { detect.major = m; break; }
+        }
+        if (!detect.major) {
+            for (const m of BULK_MAJORS) {
+                // Glued forms like "FCFPS2L1": major is followed by a digit
+                // or by a classifier letter (S/L/N/A). Longest-first ordering
+                // prevents FC matching inside FCFP since FCFP is tried first.
+                const re = new RegExp('(^|[^A-Z])' + m + '(?=[0-9SLNA]|$)');
+                if (re.test(compact)) { detect.major = m; break; }
+            }
+        }
+
+        // ----- Academic year -----
+        // 2024-2025 / 2024_2025 / 2024 2025 / 2024/2025 / 2024.2025
+        let ym = base.match(/(20\d{2})\s*[\-_\/\. ]\s*(20\d{2})/);
+        if (ym) {
+            detect.year = ym[1] + '-' + ym[2];
+        } else {
+            // 2024-25 / 2024/25 → 2024-2025
+            ym = base.match(/(20\d{2})\s*[\-_\/\. ]\s*(\d{2})\b/);
+            if (ym) detect.year = ym[1] + '-' + ('20' + ym[2]);
+            else {
+                // 24-25 → 2024-2025
+                const ys = base.match(/\b(\d{2})\s*[\-_\/\.]\s*(\d{2})\b/);
+                if (ys) detect.year = '20' + ys[1] + '-20' + ys[2];
+                else {
+                    // Single year token (e.g. "2025") → assume Y-1 / Y range
+                    const yo = base.match(/\b(20\d{2})\b/);
+                    if (yo) {
+                        const y = parseInt(yo[1], 10);
+                        detect.year = (y - 1) + '-' + y;
+                    }
+                }
+            }
+        }
+
+        // Derive level from semester if missing & not annual
+        if (!detect.level && detect.semester && detect.semester !== 'ANNUEL') {
+            const map = { S1:'L1', S2:'L1', S3:'L2', S4:'L2', S5:'L3', S6:'L3' };
+            detect.level = map[detect.semester] || '';
+        }
+
+        return detect;
+    }
+
+    // Cache the selected FileList in a stable array so user edits persist.
+    let __bulkFiles = [];
+
+    function prepareBulkUploadTable() {
+        const input  = document.getElementById('file-bulk');
+        const wrap   = document.getElementById('bulk-preview-wrap');
+        const tbody  = document.getElementById('bulk-preview-body');
+        const defYr  = document.getElementById('up-bulk-year').value;
+
+        __bulkFiles = Array.from(input.files || []);
+        if (__bulkFiles.length === 0) { wrap.style.display = 'none'; tbody.innerHTML = ''; return; }
+
+        tbody.innerHTML = '';
+        __bulkFiles.forEach((f, idx) => {
+            const d = detectFromFilename(f.name);
+            const tr = document.createElement('tr');
+            tr.style.borderTop = '1px solid #e5e7eb';
+            tr.dataset.idx = idx;
+
+            const majorOpts = BULK_MAJORS.slice().sort().map(m => `<option value="${m}">${m}</option>`).join('');
+            const levelOpts = BULK_LEVELS.map(l => `<option value="${l}">${l}</option>`).join('');
+            const semOpts   = [...BULK_SEMS, 'ANNUEL'].map(s => `<option value="${s}">${s}</option>`).join('');
+            const yearOpts  = Array.from(document.getElementById('up-bulk-year').options)
+                                   .map(o => `<option value="${o.value}">${o.value}</option>`).join('');
+
+            tr.innerHTML = `
+                <td style="padding:6px; text-align:center;">${idx+1}</td>
+                <td style="padding:6px; word-break:break-all; max-width:220px;">${f.name}</td>
+                <td style="padding:6px;"><select class="bk-major">${majorOpts}</select></td>
+                <td style="padding:6px;"><select class="bk-level">${levelOpts}</select></td>
+                <td style="padding:6px;"><select class="bk-sem">${semOpts}</select></td>
+                <td style="padding:6px;"><select class="bk-year">${yearOpts}</select></td>
+                <td style="padding:6px; text-align:center;"><button type="button" class="bk-del" style="background:#ef4444; color:white; border:none; border-radius:6px; padding:4px 10px; cursor:pointer;">×</button></td>
+            `;
+            tbody.appendChild(tr);
+
+            const selMajor = tr.querySelector('.bk-major');
+            const selLevel = tr.querySelector('.bk-level');
+            const selSem   = tr.querySelector('.bk-sem');
+            const selYear  = tr.querySelector('.bk-year');
+            if (d.major) selMajor.value = d.major;
+            if (d.level) selLevel.value = d.level;
+            if (d.semester) selSem.value = d.semester;
+            selYear.value = d.year || defYr;
+
+            // Mark rows where detection was incomplete
+            if (!d.major || !d.semester || (!d.level && d.semester !== 'ANNUEL')) {
+                tr.style.background = '#fff7ed';
+            }
+
+            tr.querySelector('.bk-del').addEventListener('click', () => {
+                tr.remove();
+                // re-number visible rows
+                Array.from(tbody.querySelectorAll('tr')).forEach((row, i) => {
+                    row.firstElementChild.textContent = i + 1;
+                });
+            });
+        });
+
+        wrap.style.display = 'block';
+    }
+
+    function bulkLog(msg, color) {
+        const box = document.getElementById('upload-bulk-log');
+        box.style.display = 'block';
+        const line = document.createElement('div');
+        line.style.color = color || '#0f172a';
+        line.style.padding = '2px 0';
+        line.textContent = msg;
+        box.appendChild(line);
+        box.scrollTop = box.scrollHeight;
+    }
+
+    /**
+     * Process ONE group of files (already classified as same major/level/sem/year).
+     * Mirrors uploadFiles() / uploadAnnualFiles() but reusable + silent (caller
+     * handles status). Returns { ok, count, error }.
+     */
+    async function processBulkGroup(files, ctx, onStatus) {
+        const { academicYear, major, level, semester } = ctx;
+        try {
+            // 1) Merge if multiple
+            let finalPdfBytes, finalPdfBlob;
+            if (files.length === 1) {
+                onStatus && onStatus('قراءة الملف...');
+                finalPdfBytes = await files[0].arrayBuffer();
+                finalPdfBlob  = files[0];
+            } else {
+                onStatus && onStatus(`دمج ${files.length} ملفات...`);
+                const { PDFDocument } = PDFLib;
+                const mergedPdf = await PDFDocument.create();
+                const sorted    = files.slice().sort((a,b) => a.name.localeCompare(b.name));
+                for (const f of sorted) {
+                    const buf = await f.arrayBuffer();
+                    const doc = await PDFDocument.load(buf);
+                    const cp  = await mergedPdf.copyPages(doc, doc.getPageIndices());
+                    cp.forEach(p => mergedPdf.addPage(p));
+                }
+                finalPdfBytes = await mergedPdf.save();
+                finalPdfBlob  = new Blob([finalPdfBytes], { type: 'application/pdf' });
+            }
+
+            // 2) Extract text
+            onStatus && onStatus('استخراج النص...');
+            const pdf = await pdfjsLib.getDocument({ data: finalPdfBytes }).promise;
+            let fullText = '';
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const tc   = await page.getTextContent();
+                fullText  += tc.items.map(it => it.str).join(' ') + ' ';
+            }
+            fullText = fullText.replace(/\s+/g, ' ');
+
+            // 3) Parse — semester vs annual use different parsers (mirrors existing code)
+            let studentsArray = [];
+            if (semester === 'ANNUEL') {
+                studentsArray = parseAnnualPdfText(fullText);
+            } else {
+                const segments = fullText.split(/(?=I\s*\d{4,6}\s)/i);
+                const studentsMap = new Map();
+                segments.forEach(segment => {
+                    if (!segment.trim().match(/^I\s*\d{4,6}/i)) return;
+                    const idMatch = segment.match(/^(I\s*\d{4,6})/i);
+                    if (!idMatch) return;
+                    const id = idMatch[1].replace(/\s+/g,'').toUpperCase();
+                    const decisionRegex = /(\d{1,2}[.,]\d{1,2})\s+(Non\s+Validé|Validé|Rattrapage|Ajourn[ée]|Session|Admis)/i;
+                    const decMatch = segment.match(decisionRegex);
+                    if (!decMatch) return;
+                    let avgStr = decMatch[1].replace(',', '.');
+                    let decision = decMatch[2].trim().replace(/\s+/g,' ');
+                    if (/^non\s+valid/i.test(decision)) decision = 'Non Validé';
+                    const avg = parseFloat(avgStr);
+                    if (avg > 20) return;
+                    const avgIndex = decMatch.index;
+                    let rawNameSection = segment.substring(idMatch[1].length, avgIndex).trim();
+                    let cleanName = rawNameSection.replace(/^\d+\s+/, '').trim();
+                    cleanName = cleanName.replace(/Modul.*$/i, '').trim();
+                    const nameOnly = cleanName.match(/^[A-Za-zÀ-ÿ'’\-\.\s]+/);
+                    if (nameOnly) cleanName = nameOnly[0].trim().replace(/\s+/g,' ');
+                    cleanName = cleanName.replace(/\s+(Non|Validé|Ajourn[ée]|Rattrapage|Session|Admis)\b.*$/i,'').trim();
+                    if (!cleanName || cleanName.length < 2) return;
+                    if (!studentsMap.has(id)) studentsMap.set(id, { id, name: cleanName, avg: avgStr, avgNum: avg, decision });
+                });
+                studentsArray = Array.from(studentsMap.values());
+            }
+
+            if (studentsArray.length === 0) {
+                return { ok:false, count:0, error:'لم يتم العثور على أي طالب في الملف' };
+            }
+
+            studentsArray.sort((a,b) => b.avgNum - a.avgNum);
+            studentsArray.forEach((s,i) => s.rank = i + 1);
+
+            // 4) Reorganize PDF (student/page) — best effort
+            onStatus && onStatus('إعادة تنظيم الملف...');
+            try {
+                const sr = await splitPdfByStudent(finalPdfBytes, m => onStatus && onStatus(m));
+                studentsArray.forEach(s => { if (Object.prototype.hasOwnProperty.call(sr.pageMap, s.id)) s.pageIndex = sr.pageMap[s.id]; });
+                finalPdfBlob = new Blob([sr.pdfBytes], { type: 'application/pdf' });
+                if (sr.detailsMap) studentsArray.forEach(s => { if (sr.detailsMap[s.id]) s.details = sr.detailsMap[s.id]; });
+            } catch (e) {
+                console.warn('Bulk splitter failed, uploading original PDF:', e);
+            }
+
+            // 5) Upload PDF + JSON
+            onStatus && onStatus('رفع الملفات...');
+            const ts        = Date.now();
+            const detailsId = cldId(`DETAILS_${major}_${level}_${semester}_${academicYear}_${ts}`);
+            const rankingId = cldId(`RANKING_${major}_${level}_${semester}_${academicYear}_${ts}`);
+            const jsonBlob  = new Blob([JSON.stringify(studentsArray)], { type: 'application/json' });
+            const [detailsUrl, rankingUrl] = await Promise.all([
+                uploadToCloudinary(finalPdfBlob, detailsId, 'raw', 'pdf'),
+                uploadToCloudinary(jsonBlob,     rankingId, 'raw', 'json')
+            ]);
+
+            // 6) Metadata replace
+            await _supabase.from('results_metadata')
+                .delete()
+                .match({ academic_year: academicYear, major, level, semester });
+            const { error: dbError } = await _supabase.from('results_metadata').insert([{
+                academic_year: academicYear, major, level, semester,
+                details_url: detailsUrl, ranking_url: rankingUrl
+            }]);
+            if (dbError) throw dbError;
+
+            // 7) Per-student analytics rows
+            try { await saveStudentResults(studentsArray, { academicYear, major, level, semester }); }
+            catch (e) { console.warn('saveStudentResults failed:', e); }
+
+            return { ok:true, count: studentsArray.length };
+        } catch (err) {
+            console.error('[Bulk] group failed', ctx, err);
+            return { ok:false, count:0, error: err.message || String(err) };
+        }
+    }
+
+    async function bulkUploadFiles() {
+        const statusDiv = document.getElementById('upload-bulk-status');
+        const logBox    = document.getElementById('upload-bulk-log');
+        logBox.innerHTML = '';
+        logBox.style.display = 'none';
+
+        const tbody = document.getElementById('bulk-preview-body');
+        const rows  = Array.from(tbody.querySelectorAll('tr'));
+        if (rows.length === 0) {
+            statusDiv.innerHTML = '<span style="color:red">يرجى اختيار الملفات أولاً.</span>';
+            return;
+        }
+
+        // Build classified file list from the (possibly edited) table
+        const classified = [];
+        for (const tr of rows) {
+            const idx   = Number(tr.dataset.idx);
+            const file  = __bulkFiles[idx];
+            if (!file) continue;
+            const major    = tr.querySelector('.bk-major').value;
+            const level    = tr.querySelector('.bk-level').value;
+            const semester = tr.querySelector('.bk-sem').value;
+            const year     = tr.querySelector('.bk-year').value;
+            if (!major || !level || !semester || !year) {
+                statusDiv.innerHTML = `<span style="color:red">صف غير مكتمل التصنيف: ${file.name}</span>`;
+                return;
+            }
+            classified.push({ file, major, level, semester, academicYear: year });
+        }
+
+        // Group by (year|major|level|semester) so duplicates merge automatically
+        const groups = new Map();
+        for (const c of classified) {
+            const key = `${c.academicYear}|${c.major}|${c.level}|${c.semester}`;
+            if (!groups.has(key)) groups.set(key, { ctx: c, files: [] });
+            groups.get(key).files.push(c.file);
+        }
+
+        const total = groups.size;
+        let done = 0, okCount = 0, failCount = 0, studentsTotal = 0;
+        statusDiv.innerHTML = `⏳ بدء معالجة ${total} مجموعة (${classified.length} ملف)...`;
+
+        for (const [key, g] of groups) {
+            done++;
+            const label = `[${done}/${total}] ${g.ctx.major} ${g.ctx.level} ${g.ctx.semester} ${g.ctx.academicYear} (${g.files.length} ملف)`;
+            bulkLog('▶️  ' + label);
+            statusDiv.innerHTML = `⏳ ${label}`;
+            const res = await processBulkGroup(g.files, g.ctx, (m) => {
+                statusDiv.innerHTML = `⏳ ${label} — ${m}`;
+            });
+            if (res.ok) {
+                okCount++; studentsTotal += res.count;
+                bulkLog(`✅ ${label} — ${res.count} طالب`, 'green');
+            } else {
+                failCount++;
+                bulkLog(`❌ ${label} — ${res.error}`, 'red');
+            }
+        }
+
+        // Refresh caches/UI like single uploads do
+        globalFilesCache = null;
+        try { applyDisplayMode(); } catch(_) {}
+
+        statusDiv.innerHTML =
+            `<span style="color:${failCount?'#b45309':'green'}">` +
+            `✅ انتهى الرفع الجماعي — نجح: ${okCount}/${total} مجموعة، إجمالي الطلاب: ${studentsTotal}` +
+            (failCount ? ` — فشل: ${failCount}` : '') +
+            `</span>`;
+        document.getElementById('file-bulk').value = '';
+        __bulkFiles = [];
+        document.getElementById('bulk-preview-wrap').style.display = 'none';
+        document.getElementById('bulk-preview-body').innerHTML = '';
+    }
+
+
 
     async function fetchAndShowAnnualTop20() {
         closeAnnualTop20Modal(); resetView();
