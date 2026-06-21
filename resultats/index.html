@@ -1506,6 +1506,9 @@
      * too large for Cloudinary's free tier.
      */
     async function uploadToSupabaseStorage(blob, publicId, ext = '') {
+        // Refresh the auth session before upload to prevent "exp" JWT claim
+        // check failures that occur when the admin session token has expired.
+        try { await _supabase.auth.refreshSession(); } catch (_) { /* no active session — proceed */ }
         const cleanExt = (ext || '').replace(/^\./, '');
         const fname    = (publicId || ('file_' + Date.now())) + (cleanExt ? ('.' + cleanExt) : '');
         const path     = `${SUPABASE_FOLDER}/${fname}`;
@@ -2203,35 +2206,44 @@
                     if (!idMatch) return;
                     const id = idMatch[1].replace(/\s+/g, '').toUpperCase();
 
-                    // Include "Non Validé" FIRST so it wins over a later sub-row "Validé".
-                    const decisionRegex = /(\d{1,2}[.,]\d{1,2})\s+(Non\s+Validé|Validé|Rattrapage|Ajourn[ée]|Session|Admis)/i;
-                    const decMatch = segment.match(decisionRegex);
+                    // ── Prefer the ANNUAL footer over per-semester rows:
+                    //    "Moyenne annuelle L1 : 9.95" + "Décision du jury : Admis(e) avec dette"
+                    //    so the search result reflects the jury decision (incl. "avec dette")
+                    //    not the semester sub-decision ("Validé" / "Non Validé").
+                    let avg = NaN, avgStr = '', decision = '';
+                    const annualAvgM = segment.match(/Moyenne\s+annuelle[^:]*:\s*(\d{1,2}[.,]\d{1,2})/i);
+                    const juryM = segment.match(/D[ée]cision\s+du\s+jury\s*:?\s*(Admis(?:\s*\(e\))?(?:\s+avec\s+dette)?|Ajourn[ée](?:\s*\(e\))?|Valid[ée](?:\s*\(e\))?|Non\s+Valid[ée](?:\s*\(e\))?|Rattrapage)/i);
 
-                    if (decMatch) {
-                        let avgStr = decMatch[1].replace(',', '.');
-                        let decision = decMatch[2].trim().replace(/\s+/g, ' ');
-                        // Normalize capitalization
-                        if (/^non\s+valid/i.test(decision)) decision = 'Non Validé';
-                        let avg = parseFloat(avgStr);
+                    if (annualAvgM && juryM) {
+                        avgStr   = annualAvgM[1].replace(',', '.');
+                        avg      = parseFloat(avgStr);
+                        decision = juryM[1].trim().replace(/\s+/g, ' ');
+                    } else {
+                        // Fallback (older PV layouts): per-semester regex.
+                        const decisionRegex = /(\d{1,2}[.,]\d{1,2})\s+(Non\s+Validé|Validé(?:\s*\(e\))?|Rattrapage|Ajourn[ée](?:\s*\(e\))?|Session|Admis(?:\s*\(e\))?(?:\s+avec\s+dette)?)/i;
+                        const decMatch = segment.match(decisionRegex);
+                        if (!decMatch) return;
+                        avgStr   = decMatch[1].replace(',', '.');
+                        avg      = parseFloat(avgStr);
+                        decision = decMatch[2].trim().replace(/\s+/g, ' ');
+                    }
+                    if (/^non\s+valid/i.test(decision)) decision = 'Non Validé';
+                    if (!isFinite(avg) || avg > 20) return;
 
-                        if (avg <= 20.00) {
-                            const avgIndex = decMatch.index;
-                            let rawNameSection = segment.substring(idMatch[1].length, avgIndex).trim();
-                            let cleanName = rawNameSection.replace(/^\d+\s+/, "").trim();
-                            cleanName = cleanName.replace(/Modul.*$/i, "").trim();
-                            // Keep only the leading name portion (letters/spaces/accents/-/').
-                            // Stops at the first digit or subject code so wrapped rows
-                            // don't bleed grades/modules into the student name field.
-                            const nameOnly = cleanName.match(/^[A-Za-zÀ-ÿ'’\-\.\s]+/);
-                            if (nameOnly) cleanName = nameOnly[0].trim().replace(/\s+/g, ' ');
-                            // Drop trailing tokens that are not real name parts
-                            cleanName = cleanName.replace(/\s+(Non|Validé|Ajourn[ée]|Rattrapage|Session|Admis)\b.*$/i, '').trim();
-                            if (!cleanName || cleanName.length < 2) return;
+                    // Locate the boundary used to slice the name out of the segment.
+                    const boundaryIdx = (annualAvgM && juryM)
+                        ? Math.min(annualAvgM.index, juryM.index)
+                        : segment.search(/\d{1,2}[.,]\d{1,2}\s+(Non\s+Validé|Validé|Rattrapage|Ajourn|Session|Admis)/i);
+                    let rawNameSection = segment.substring(idMatch[1].length, boundaryIdx > 0 ? boundaryIdx : 200).trim();
+                    let cleanName = rawNameSection.replace(/^\d+\s+/, "").trim();
+                    cleanName = cleanName.replace(/Modul.*$/i, "").trim();
+                    const nameOnly = cleanName.match(/^[A-Za-zÀ-ÿ'’\-\.\s]+/);
+                    if (nameOnly) cleanName = nameOnly[0].trim().replace(/\s+/g, ' ');
+                    cleanName = cleanName.replace(/\s+(Non|Validé|Ajourn[ée]|Rattrapage|Session|Admis)\b.*$/i, '').trim();
+                    if (!cleanName || cleanName.length < 2) return;
 
-                            if (!studentsMap.has(id)) {
-                                studentsMap.set(id, { id, name: cleanName, avg: avgStr, avgNum: avg, decision });
-                            }
-                        }
+                    if (!studentsMap.has(id)) {
+                        studentsMap.set(id, { id, name: cleanName, avg: avgStr, avgNum: avg, decision });
                     }
                 }
             });
@@ -2396,9 +2408,9 @@
                         const lineItems = row.items.sort((a, b) => a.x - b.x); const lineStr = lineItems.map(t => t.str).join(" ").trim();
                         // Name must NOT contain digits — prevents merged rows from
                         // bleeding subject grades into the student name field.
-                        let match = lineStr.match(/^(\d+)\s+(I\s*\d+)\s+([^\d]+?)\s+(\d{1,2}(?:[.,]\d{1,2})?)\s+(\d{1,2})\s+(Non\s+Validé|Validé|Rattrapage|Ajourn[ée]|Session|Admis)\b/i);
+                        let match = lineStr.match(/^(\d+)\s+(I\s*\d+)\s+([^\d]+?)\s+(\d{1,2}(?:[.,]\d{1,2})?)\s+(\d{1,2})\s+(Non\s+Validé|Validé(?:\s*\(e\))?|Rattrapage|Ajourn[ée](?:\s*\(e\))?|Session|Admis(?:\s*\(e\))?(?:\s+avec\s+dette)?)\b/i);
                         let hasCredit = true;
-                        if (!match) { match = lineStr.match(/^(\d+)\s+(I\s*\d+)\s+([^\d]+?)\s+(\d{1,2}(?:[.,]\d{1,2})?)\s+(Non\s+Validé|Validé|Rattrapage|Ajourn[ée]|Session|Admis)\b/i); hasCredit = false; }
+                        if (!match) { match = lineStr.match(/^(\d+)\s+(I\s*\d+)\s+([^\d]+?)\s+(\d{1,2}(?:[.,]\d{1,2})?)\s+(Non\s+Validé|Validé(?:\s*\(e\))?|Rattrapage|Ajourn[ée](?:\s*\(e\))?|Session|Admis(?:\s*\(e\))?(?:\s+avec\s+dette)?)\b/i); hasCredit = false; }
                         if(match) {
                             let decision = (hasCredit ? match[6] : match[5]).trim().replace(/\s+/g, ' ');
                             if (/^non\s+valid/i.test(decision)) decision = 'Non Validé';
@@ -2516,11 +2528,12 @@
                 displayResults(foundResults);
                 // Preload the PDF in the background so the details button is instant
                 setTimeout(() => preloadPdfDocuments(foundResults), 300);
+                setTimeout(() => refreshAnnualDecisionsFromDetails(foundResults), 600);
                 const latestResult = foundResults[0].student;
                 const latestIsValid = isValidDecision(latestResult.decision);
                 const latestAvg = parseFloat(latestResult.avg) || 0;
                 
-                if (latestIsValid) {
+                if (latestIsValid && !/avec\s+dette/i.test(String(latestResult.decision || ''))) {
                     const isHonorable = (latestAvg >= 13);
                     triggerCelebration(isHonorable);
                     setTimeout(() => { const firstCard = document.querySelector('.result-card'); if (firstCard) firstCard.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 3500);
@@ -2667,7 +2680,8 @@
                         isAnnual: isAnnual,
                         level: f.level,
                         academicYear: f.academic_year,
-                        major: f.major
+                        major: f.major,
+                        totalCredits: (typeof s.totalCredits === 'number' && isFinite(s.totalCredits)) ? s.totalCredits : null
                     }
                 };
             }
@@ -2760,16 +2774,23 @@
             }
 
             // --- Decision -----------------------------------------------------
-            const decMatch = segment.match(/D[ée]cision\s+du\s+jury\s*:?\s*(Admis(?:\s*\(e\))?|Ajourn[ée](?:\s*\(e\))?|Validé(?:\(e\))?)/i);
-            const decision = decMatch ? decMatch[1].trim() : 'Inconnu';
+            // Accept: "Admis(e)", "Admis(e) avec dette", "Ajourné(e)", "Validé(e)"
+            const decMatch = segment.match(/D[ée]cision\s+du\s+jury\s*:?\s*(Admis(?:\s*\(e\))?(?:\s+avec\s+dette)?|Ajourn[ée](?:\s*\(e\))?|Validé(?:\(e\))?)/i);
+            let decision = decMatch ? decMatch[1].trim().replace(/\s+/g, ' ') : 'Inconnu';
 
             // --- NNI (Numéro National d'Identification) -----------------------
             // Appears on the same line as matricule: "NNI : 5187656613"
             const nniMatch = segment.match(/NNI\s*:?\s*(\d{7,15})/i);
             const nni = nniMatch ? nniMatch[1].trim() : '';
 
+            // --- Total credits (S1+S2) ----------------------------------------
+            // Matches "Total des crédits obtenus (S1+S2) : 52.0" or similar.
+            const creditsMatch = segment.match(/Total\s+des\s+cr[ée]dits\s+obtenus[^:]*:\s*(\d{1,3}(?:[.,]\d+)?)/i);
+            const totalCredits = creditsMatch ? parseFloat(creditsMatch[1].replace(',', '.')) : null;
+
             if (!studentsMap.has(id)) {
-                studentsMap.set(id, { id, name, avg: avgStr, avgNum: avg, decision, nni });
+                studentsMap.set(id, { id, name, avg: avgStr, avgNum: avg, decision, nni,
+                    totalCredits: (totalCredits !== null && isFinite(totalCredits)) ? totalCredits : null });
             }
         }
 
@@ -3130,7 +3151,7 @@
                     const idMatch = segment.match(/^(I\s*\d{4,6})/i);
                     if (!idMatch) return;
                     const id = idMatch[1].replace(/\s+/g,'').toUpperCase();
-                    const decisionRegex = /(\d{1,2}[.,]\d{1,2})\s+(Non\s+Validé|Validé|Rattrapage|Ajourn[ée]|Session|Admis)/i;
+                    const decisionRegex = /(\d{1,2}[.,]\d{1,2})\s+(Non\s+Validé|Validé(?:\s*\(e\))?|Rattrapage|Ajourn[ée](?:\s*\(e\))?|Session|Admis(?:\s*\(e\))?(?:\s+avec\s+dette)?)/i;
                     const decMatch = segment.match(decisionRegex);
                     if (!decMatch) return;
                     let avgStr = decMatch[1].replace(',', '.');
@@ -3554,7 +3575,12 @@
          // [FIX ANNUEL] Cluster near-equal Y's first so two-semester rows
          // (S1 + S2) collapse into one row with all their cells aligned.
          const isAnnualDetails = !!(details && details._summary && details._summary.isAnnual);
-         const Y_TOL = isAnnualDetails ? 8 : 3;
+         // For annual transcripts, the two semesters (S1 left / S2 right) often have
+         // mismatched Y by a few pixels because S2 may carry an extra "Rattrapage"
+         // column header. Use a more generous tolerance so the two halves merge into
+         // one logical row and the grid stays aligned for everyone, including
+         // "Admis(e) avec dette" cases.
+         const Y_TOL = isAnnualDetails ? 14 : 3;
          let preClustered = clusterRowsByY(details.rows || [], Y_TOL);
          // Merge continuation rows so long module names appear on a single line.
          let mergedRows = mergeDetailsContinuations(preClustered);
@@ -3563,6 +3589,11 @@
         //    blank band between the credits row and the footer (Date de
         //    naissance / Directeur), making them feel disconnected.
         const MAX_GAP = 26;
+        // [FIX ANNUEL] Also enforce a MINIMUM gap between consecutive rows so that
+        // near-overlapping rows (which happen in "Admis(e) avec dette" transcripts
+        // where S2 carries an extra rattrapage column) don't collapse to 2–6 px and
+        // become an unreadable overlapping mess.
+        const MIN_GAP = isAnnualDetails ? 22 : 0;
         const sortedYs = mergedRows
             .map(r => r.y || 0)
             .filter((v, i, a) => a.indexOf(v) === i)
@@ -3572,7 +3603,8 @@
         sortedYs.forEach((y, i) => {
             if (i === 0) { yMap.set(y, y); return; }
             const prev = sortedYs[i - 1];
-            const gap = Math.min(y - prev, MAX_GAP);
+            let gap = Math.min(y - prev, MAX_GAP);
+            if (gap < MIN_GAP) gap = MIN_GAP;
             cursor = (yMap.get(prev) || prev) + gap;
             yMap.set(y, cursor);
         });
@@ -3630,15 +3662,127 @@
         let bannerHtml = '';
         if (details && details._summary && details._summary.isAnnual) {
             const sum = details._summary;
-            const okDecision = /(admis|valid)/i.test(String(sum.decision || ''));
-            const decisionColor = okDecision ? '#047857' : '#b91c1c';
-            const decisionBg = okDecision ? '#d1fae5' : '#fee2e2';
+            const decStr = String(sum.decision || '');
+            const hasDette = /avec\s+dette/i.test(decStr);
+            const okDecision = /(admis|valid)/i.test(decStr);
+            // 3 visual states: clean pass (green), pass with dette (amber), fail (red)
+            const decisionColor = hasDette ? '#92400e' : (okDecision ? '#047857' : '#b91c1c');
+            const decisionBg    = hasDette ? '#fef3c7' : (okDecision ? '#d1fae5' : '#fee2e2');
             const safeName = String(sum.name || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
             const safeAvg = String(sum.avg || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
             const safeDec = String(sum.decision || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
             const ctx = [sum.academicYear, sum.major, sum.level ? `${sum.level} - Annuel` : 'Annuel']
                 .filter(Boolean).join(' | ');
             const safeCtx = String(ctx).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+            // ── Total Crédits (S1 + S2) ─────────────────────────────────────────
+            // Primary source: value parsed from PDF text at upload time and stored
+            // in _summary.totalCredits. Fallback: scan positioned detail rows.
+            let totalCredits = null;
+            if (sum.totalCredits !== null && sum.totalCredits !== undefined && isFinite(Number(sum.totalCredits))) {
+                totalCredits = Number(sum.totalCredits);
+            }
+            if (totalCredits === null) try {
+                // Extract per-semester "Total des crédits obtenus" from the
+                // transcript, then sum S1 + S2. Each semester contributes
+                // exactly ONE such row → at most 2 values are summed.
+                // Cell values may appear as "26", "26/30" or "26 / 30" — we
+                // always take the obtained value (numerator), never the max
+                // possible (denominator).
+                const totalRe   = /total\s+des\s+cr[ée]dits\s+obtenus/i;
+                const fallbackRe = /cr[ée]dits?\s+(?:acquis|obtenus)/i;
+                const extractObtained = (row) => {
+                    const cells = row.cells || [];
+                    // Build a flat text version for "X/Y" detection
+                    const joined = cells.map(c => String(c.s || '')).join(' ');
+                    const slashMatch = joined.match(/(\d{1,3})\s*\/\s*(\d{1,3})/);
+                    if (slashMatch) {
+                        const v = parseFloat(slashMatch[1]);
+                        if (isFinite(v) && v >= 0 && v <= 120) return v;
+                    }
+                    // Otherwise: take the LAST purely numeric cell (typical
+                    // table layout: [label..., value]).
+                    let last = null;
+                    for (const c of cells) {
+                        const raw = String(c.s || '').trim();
+                        const m = raw.match(/^(\d{1,3})(?:[.,]\d+)?$/);
+                        if (m) {
+                            const v = parseFloat(m[1]);
+                            if (isFinite(v) && v >= 0 && v <= 120) last = v;
+                        }
+                    }
+                    if (last !== null) return last;
+                    // Final fallback: pull the LAST numeric token out of the
+                    // joined row text (handles merged cells like
+                    // "Total des crédits obtenus (S1+S2) : 52.0").
+                    const nums = joined.match(/\d{1,3}(?:[.,]\d+)?/g);
+                    if (nums && nums.length) {
+                        // Skip the "(S1+S2)" tokens "1", "2" — only accept numbers >= 5
+                        // or the last token (the actual total is always last).
+                        const v = parseFloat(nums[nums.length - 1].replace(',', '.'));
+                        if (isFinite(v) && v >= 0 && v <= 120) return v;
+                    }
+                    return null;
+                };
+                const pickRows = (predicate) => {
+                    const out = [];
+                    const seenY = new Set();
+                    (details.rows || []).forEach(r => {
+                        const cells = r.cells || [];
+                        const text  = cells.map(c => String(c.s || '')).join(' ');
+                        if (!predicate(text)) return;
+                        const v = extractObtained(r);
+                        if (v === null || !isFinite(v)) return;
+                        const yKey = Math.round((r.y || 0) / 4);
+                        if (seenY.has(yKey)) return;
+                        seenY.add(yKey);
+                        out.push(v);
+                    });
+                    return out;
+                };
+                let vals = pickRows(t => totalRe.test(t));
+                if (!vals.length) vals = pickRows(t => fallbackRe.test(t));
+                if (vals.length) {
+                    // Cap at 2 rows (S1 + S2). If we caught more, sum the two largest.
+                    if (vals.length > 2) vals = vals.sort((a,b) => b - a).slice(0, 2);
+                    totalCredits = vals.reduce((a, b) => a + b, 0);
+                }
+                // ── Text-scan fallback: scan full text of merged rows ────────────
+                // Handles cases where the label cell and the number cell are on
+                // slightly different Y-positions (extracted as separate rows) so
+                // the row-level search above finds no number in the label row.
+                if (totalCredits === null) {
+                    const joinedMerged = mergedRows
+                        .map(r => (r.cells || []).map(c => String(c.s || '')).join(' '))
+                        .join(' ');
+                    const tm = joinedMerged.match(/Total\s+des\s+cr[ée]dits\s+obtenus[^:]*:\s*(\d{1,3}(?:[.,]\d+)?)/i)
+                            || joinedMerged.match(/cr[ée]dits?\s+(?:acquis|obtenus)[^:]*:\s*(\d{1,3}(?:[.,]\d+)?)/i);
+                    if (tm) {
+                        const tv = parseFloat(tm[1].replace(',', '.'));
+                        if (isFinite(tv) && tv >= 0 && tv <= 120) totalCredits = tv;
+                    }
+                }
+                // ── Raw-rows text-scan fallback (pre-merge) ──────────────────────
+                // Also scan the raw unmerged rows joined as one string, since
+                // mergeDetailsContinuations may not always preserve all rows.
+                if (totalCredits === null) {
+                    const joinedRaw = (details.rows || [])
+                        .map(r => (r.cells || []).map(c => String(c.s || '')).join(' '))
+                        .join(' ');
+                    const tr = joinedRaw.match(/Total\s+des\s+cr[ée]dits\s+obtenus[^:]*:\s*(\d{1,3}(?:[.,]\d+)?)/i)
+                            || joinedRaw.match(/cr[ée]dits?\s+(?:acquis|obtenus)[^:]*:\s*(\d{1,3}(?:[.,]\d+)?)/i);
+                    if (tr) {
+                        const rv = parseFloat(tr[1].replace(',', '.'));
+                        if (isFinite(rv) && rv >= 0 && rv <= 120) totalCredits = rv;
+                    }
+                }
+            } catch (e) { /* silent */ }
+            const creditsHtml = (totalCredits !== null) ? `
+                        <div style="background:rgba(255,255,255,0.15);padding:8px 14px;border-radius:10px;font-size:15px;font-weight:700;">
+                            Total Crédits (S1 + S2) :
+                            <span style="font-size:18px;font-weight:900;margin-left:6px;">${totalCredits}</span>
+                        </div>` : '';
+
             bannerHtml = `
                 <div style="width:${W.toFixed(0)}px;max-width:100%;margin:0 auto 10px auto;background:linear-gradient(135deg,#003d1a 0%,#005C29 50%,#047a36 100%);color:#fff;border-radius:12px;padding:14px 16px;box-sizing:border-box;box-shadow:0 10px 28px rgba(0,92,41,0.18);direction:ltr;text-align:left;font-family:'Cairo','Inter',Arial,sans-serif;">
                     <div style="font-size:12px;opacity:0.85;letter-spacing:0.4px;margin-bottom:6px;">${safeCtx}</div>
@@ -3650,7 +3794,7 @@
                         </div>
                         <div style="background:${decisionBg};color:${decisionColor};padding:8px 14px;border-radius:10px;font-size:15px;font-weight:800;">
                             Décision : ${safeDec}
-                        </div>
+                        </div>${creditsHtml}
                     </div>
                 </div>`;
         }
@@ -4140,8 +4284,33 @@
                 const canvas   = document.createElement('canvas');
                 canvas.width   = viewport.width;
                 canvas.height  = viewport.height;
-                await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+                // Render PDF page AND extract text in parallel for speed
+                const [, textContent] = await Promise.all([
+                    page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise,
+                    page.getTextContent()
+                ]);
                 container.innerHTML = '';
+                // ── Annual credits banner (shown above the transcript canvas) ────
+                // Extract "Total des crédits obtenus" from the page text and
+                // display it even when structured details rows are not available.
+                const isAnnualSlowPath = btnElement && btnElement.dataset && btnElement.dataset.annual === '1';
+                if (isAnnualSlowPath && textContent) {
+                    try {
+                        const pageTxt = textContent.items.map(it => it.str).join(' ').replace(/\s+/g, ' ');
+                        const cm = pageTxt.match(/Total\s+des\s+cr[ée]dits\s+obtenus[^:]*:\s*(\d{1,3}(?:[.,]\d+)?)/i)
+                                || pageTxt.match(/cr[ée]dits?\s+(?:acquis|obtenus)[^:]*:\s*(\d{1,3}(?:[.,]\d+)?)/i);
+                        if (cm) {
+                            const tc = parseFloat(cm[1].replace(',', '.'));
+                            if (isFinite(tc) && tc >= 0 && tc <= 120) {
+                                const banner = document.createElement('div');
+                                banner.style.cssText = 'background:linear-gradient(135deg,#003d1a,#005C29);color:#fff;border-radius:10px;padding:10px 16px;margin-bottom:8px;font-family:Cairo,Arial,sans-serif;display:flex;align-items:center;gap:12px;font-size:15px;font-weight:700;direction:ltr;';
+                                banner.innerHTML = '<span>Total Crédits (S1 + S2) :</span>'
+                                    + `<span style="font-size:20px;font-weight:900;">${Math.round(tc)}</span>`;
+                                container.appendChild(banner);
+                            }
+                        }
+                    } catch (_) {}
+                }
                 container.appendChild(canvas);
                 renderedCanvas = canvas;
             } else {
@@ -4203,6 +4372,88 @@
     // For annual results with NNI: shows verification form first.
     // For all other cases: renders PDF directly.
     // ---------------------------------------------------------------
+    // Re-extract the Decision du jury directly from each annual student's
+    // detail page so the QRar (info-val) and the in-banner decision always
+    // reflect the FULL decision string ("Admis(e) avec dette" included),
+    // even when the cached ranking JSON was uploaded by an older parser
+    // that captured only "Admis(e)".
+    async function refreshAnnualDecisionsFromDetails(results) {
+        if (!Array.isArray(results) || !results.length) return;
+        for (const res of results) {
+            try {
+                const f = res.file, s = res.student;
+                if (!f || !s) continue;
+                if (f.semester !== 'ANNUEL') continue;
+                if (!f.details_url) continue;
+                if (!Number.isInteger(s.pageIndex)) continue;
+                let pdf = pdfDocCache[f.details_url];
+                if (!pdf) {
+                    try {
+                        pdf = await pdfjsLib.getDocument({
+                            url: f.details_url,
+                            disableRange: true,
+                            disableStream: true
+                        }).promise;
+                        pdfDocCache[f.details_url] = pdf;
+                    } catch (e) { continue; }
+                }
+                const pageNum = s.pageIndex + 1;
+                if (pageNum < 1 || pageNum > pdf.numPages) continue;
+                const page = await pdf.getPage(pageNum);
+                const tc   = await page.getTextContent();
+                const txt  = tc.items.map(it => it.str).join(' ').replace(/\s+/g, ' ');
+
+                // ── 1. Extract decision (may or may not have changed) ────────────
+                const m = txt.match(/D[\u00E9\u00E8e]cision\s+du\s+jury\s*:?\s*(Admis(?:\s*\(e\))?(?:\s+avec\s+dette)?|Ajourn[\u00E9\u00E8e](?:\s*\(e\))?|Valid[\u00E9\u00E8e](?:\s*\(e\))?)/i);
+                const fullDecision = m ? m[1].trim().replace(/\s+/g, ' ') : null;
+                const decisionChanged = fullDecision && fullDecision !== s.decision;
+                if (decisionChanged) {
+                    // Update in-memory student record so future renders use it.
+                    s.decision = fullDecision;
+                    // Update every visible card for this student/semester combo.
+                    document.querySelectorAll('.result-card').forEach(card => {
+                        const vals = card.querySelectorAll('.info-val');
+                        if (vals.length < 4) return;
+                        if ((vals[0].innerText || '').trim() !== s.id) return;
+                        const decSpan = vals[3];
+                        decSpan.innerText = fullDecision;
+                        // Re-apply visual class (avec dette → keep success styling).
+                        const ok = isValidDecision(fullDecision);
+                        decSpan.classList.toggle('decision-valid', ok);
+                        decSpan.classList.toggle('decision-ratt', !ok);
+                    });
+                }
+
+                // ── 2. Extract total credits — always, regardless of decision ────
+                // "Total des crédits obtenus (S1+S2) : 52.0" or similar patterns.
+                // This runs for EVERY annual student so old uploads also get credits.
+                let pageTotalCredits = null;
+                const cm = txt.match(/Total\s+des\s+cr[ée]dits\s+obtenus[^:]*:\s*(\d{1,3}(?:[.,]\d+)?)/i)
+                        || txt.match(/cr[ée]dits?\s+(?:acquis|obtenus)[^:]*:\s*(\d{1,3}(?:[.,]\d+)?)/i);
+                if (cm) {
+                    const cv = parseFloat(cm[1].replace(',', '.'));
+                    if (isFinite(cv) && cv >= 0 && cv <= 120) pageTotalCredits = cv;
+                }
+
+                // ── 3. Push both updates into __detailsDataMap._summary ──────────
+                if (window.__detailsDataMap) {
+                    Object.values(window.__detailsDataMap).forEach(entry => {
+                        if (entry && entry._summary && entry._summary.isAnnual) {
+                            const sum = entry._summary;
+                            if (sum.name === s.name || sum.avg === s.avg) {
+                                if (decisionChanged) sum.decision = fullDecision;
+                                if (pageTotalCredits !== null &&
+                                    (sum.totalCredits === null || sum.totalCredits === undefined)) {
+                                    sum.totalCredits = pageTotalCredits;
+                                }
+                            }
+                        }
+                    });
+                }
+            } catch (e) { /* silent per-student */ }
+        }
+    }
+
     async function viewPreciseDetails(studentId, pdfUrl, btnElement, cardId, pageIndex) {
         const container  = document.getElementById(`details-container-${cardId}`);
         const isAnnual   = btnElement.dataset.annual === '1';
