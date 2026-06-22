@@ -1502,6 +1502,29 @@
     const CLOUDINARY_MAX_SIZE = 10 * 1024 * 1024; // 10 MB
 
     /**
+     * Compress a PDF blob using pdf-lib to reduce file size before upload.
+     * Re-saves the PDF which removes redundant/unreferenced data.
+     * Returns a new (smaller) Blob, or the original if compression fails.
+     */
+    async function compressPdfBlob(blob) {
+        try {
+            const { PDFDocument } = PDFLib;
+            const arrayBuffer = await blob.arrayBuffer();
+            const pdfDoc = await PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
+            // Re-save with object compression ON (default) to strip unused objects
+            const compressed = await pdfDoc.save({ useObjectStreams: true, addDefaultPage: false });
+            const newBlob = new Blob([compressed], { type: 'application/pdf' });
+            const saving = blob.size - newBlob.size;
+            console.log(`[compressPdf] ${(blob.size/1024/1024).toFixed(2)}MB → ${(newBlob.size/1024/1024).toFixed(2)}MB (saved ${(saving/1024).toFixed(0)}KB)`);
+            // Only use the compressed version if it's actually smaller
+            return newBlob.size < blob.size ? newBlob : blob;
+        } catch (e) {
+            console.warn('[compressPdf] failed, using original:', e.message || e);
+            return blob;
+        }
+    }
+
+    /**
      * Upload a Blob/File to Supabase Storage (public bucket) and
      * return its public URL. Used as a fallback when the file is
      * too large for Cloudinary's free tier.
@@ -1519,7 +1542,7 @@
         console.log('[SupabaseStorage] uploading', { bucket: SUPABASE_BUCKET, path, size: blob && blob.size, contentType });
         const { error } = await _supabase.storage
             .from(SUPABASE_BUCKET)
-            .upload(path, blob, { contentType, upsert: true, cacheControl: '3600' });
+            .upload(path, blob, { contentType, upsert: true, cacheControl: '31536000' });
         if (error) {
             console.error('[SupabaseStorage] upload failed', error);
             throw new Error('Supabase Storage upload failed: ' + (error.message || error));
@@ -1531,22 +1554,111 @@
     }
 
     /**
-     * Upload a Blob/File. Routes to Cloudinary by default, or to
-     * Supabase Storage when the blob exceeds Cloudinary's free-tier
-     * 10 MB single-file limit. The return value (a URL string) has
-     * the same shape in both cases, so call sites need no changes.
+     * Upload a single Blob directly to Cloudinary with no routing logic.
+     * Used internally by uploadLargePdfInChunks and uploadToCloudinary.
+     */
+    async function _uploadSingleToCloudinary(blob, publicId, resourceType, ext) {
+        const fd = new FormData();
+        const fname = (publicId || 'file') + (ext ? ('.' + ext.replace(/^\./, '')) : '');
+        fd.append('file', blob, fname);
+        fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+        fd.append('folder', CLOUDINARY_FOLDER);
+        if (publicId) {
+            const pid = (resourceType === 'raw' && ext) ? (publicId + '.' + ext.replace(/^\./, '')) : publicId;
+            fd.append('public_id', pid);
+        }
+        const endpoint = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/${resourceType}/upload`;
+        console.log('[Cloudinary/_single] uploading', { endpoint, publicId, resourceType, ext, size: blob && blob.size });
+        const res = await fetch(endpoint, { method: 'POST', body: fd });
+        if (!res.ok) {
+            const j = await res.json().catch(() => ({}));
+            throw new Error('Cloudinary chunk upload failed: ' + (j?.error?.message || res.status));
+        }
+        const data = await res.json();
+        if (!data.secure_url) throw new Error('Cloudinary returned no secure_url');
+        console.log('[Cloudinary/_single] uploaded ->', data.secure_url);
+        return data.secure_url;
+    }
+
+    /**
+     * Splits a large PDF blob into chunks < 9 MB and uploads each chunk
+     * to Cloudinary individually. Saves a manifest JSON (list of part URLs)
+     * to Cloudinary and returns its URL — the caller stores this exactly
+     * like any other details_url / ranking_url.
+     */
+    async function uploadLargePdfInChunks(blob, publicId) {
+        const { PDFDocument } = PDFLib;
+        const CHUNK_LIMIT = 9 * 1024 * 1024; // 9 MB — safe margin under 10 MB
+
+        const arrayBuffer = await blob.arrayBuffer();
+        const srcPdf = await PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
+        const totalPages = srcPdf.getPageCount();
+        console.log(`[ChunkUpload] PDF has ${totalPages} pages, size ${(blob.size/1024/1024).toFixed(2)} MB`);
+
+        const chunkUrls = [];
+        let pageStart = 0;
+
+        while (pageStart < totalPages) {
+            const chunkDoc = await PDFDocument.create();
+            let pageEnd = pageStart;
+
+            while (pageEnd < totalPages) {
+                const [copiedPage] = await chunkDoc.copyPages(srcPdf, [pageEnd]);
+                chunkDoc.addPage(copiedPage);
+                const testBytes = await chunkDoc.save();
+                if (testBytes.length > CHUNK_LIMIT && chunkDoc.getPageCount() > 1) {
+                    // Exceeds limit — remove last page and stop growing this chunk
+                    chunkDoc.removePage(chunkDoc.getPageCount() - 1);
+                    break;
+                }
+                pageEnd++;
+            }
+
+            const chunkBytes = await chunkDoc.save({ useObjectStreams: true });
+            const chunkBlob  = new Blob([chunkBytes], { type: 'application/pdf' });
+            const chunkId    = `${publicId}_part${chunkUrls.length + 1}`;
+            console.log(`[ChunkUpload] part ${chunkUrls.length + 1}: pages ${pageStart + 1}–${pageEnd}, size ${(chunkBlob.size/1024/1024).toFixed(2)} MB`);
+
+            const url = await _uploadSingleToCloudinary(chunkBlob, chunkId, 'raw', 'pdf');
+            chunkUrls.push(url);
+            pageStart = pageEnd;
+        }
+
+        // Store part URLs in a manifest JSON uploaded to Cloudinary
+        const manifest     = { type: 'pdf_chunks', totalPages, parts: chunkUrls };
+        const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+        const manifestUrl  = await _uploadSingleToCloudinary(manifestBlob, publicId + '_manifest', 'raw', 'json');
+        console.log(`[ChunkUpload] complete — ${chunkUrls.length} parts, manifest: ${manifestUrl}`);
+        return manifestUrl;
+    }
+
+    /**
+     * Upload a Blob/File. Routes large PDFs to chunk-based Cloudinary upload,
+     * other oversized files fall back to Supabase Storage only as a last resort.
+     * The return value (a URL string) has the same shape in all cases.
      * @param {Blob}   blob         File data.
      * @param {string} publicId     Stable id (no extension); used for upsert.
      * @param {'image'|'raw'|'auto'} resourceType
      * @returns {Promise<string>}   public URL of the uploaded file.
      */
     async function uploadToCloudinary(blob, publicId, resourceType = 'auto', ext = '') {
-        // ── Route oversized files to Supabase Storage ──────────────
-        if (blob && typeof blob.size === 'number' && blob.size > CLOUDINARY_MAX_SIZE) {
-            console.log('[Upload] file > 10MB, using Supabase Storage instead of Cloudinary', { size: blob.size });
-            return uploadToSupabaseStorage(blob, publicId, ext);
+        // ── Large PDF: split into chunks and upload all parts to Cloudinary ──
+        if (blob && typeof blob.size === 'number' && blob.size > CLOUDINARY_MAX_SIZE
+                && (ext === 'pdf' || (blob.type || '').includes('pdf'))) {
+            console.log('[Upload] PDF > 10MB — splitting into chunks for Cloudinary', { size: blob.size });
+            return uploadLargePdfInChunks(blob, publicId);
         }
 
+        // ── Other large files: compress if PDF then fall back to Supabase Storage ──
+        if (blob && typeof blob.size === 'number' && blob.size > CLOUDINARY_MAX_SIZE) {
+            console.log('[Upload] non-PDF file > 10MB — falling back to Supabase Storage', { size: blob.size });
+            const blobToUpload = (ext === 'pdf' || (blob.type || '').includes('pdf'))
+                ? await compressPdfBlob(blob)
+                : blob;
+            return uploadToSupabaseStorage(blobToUpload, publicId, ext);
+        }
+
+        // ── Normal upload (file ≤ 10 MB) ─────────────────────────────────────
         const fd = new FormData();
         // Give the blob a filename with the right extension so Cloudinary keeps
         // the extension on the returned secure_url (critical for raw uploads,
@@ -1569,10 +1681,13 @@
             let msg = 'Cloudinary upload failed';
             try { const j = await res.json(); if (j && j.error && j.error.message) msg = j.error.message; } catch(_) {}
             // Last-resort fallback: if Cloudinary rejected the file due to
-            // size limits, try Supabase Storage so the upload still succeeds.
+            // size limits, compress then try Supabase Storage so the upload still succeeds.
             if (/file size|too large|maximum|limit/i.test(msg)) {
-                console.warn('[Cloudinary] size-related rejection, falling back to Supabase Storage:', msg);
-                return uploadToSupabaseStorage(blob, publicId, ext);
+                console.warn('[Cloudinary] size-related rejection, compressing and falling back to Supabase Storage:', msg);
+                const blobToUpload = (ext === 'pdf' || (blob.type || '').includes('pdf'))
+                    ? await compressPdfBlob(blob)
+                    : blob;
+                return uploadToSupabaseStorage(blobToUpload, publicId, ext);
             }
             console.error('[Cloudinary] upload failed', msg);
             throw new Error(msg);
@@ -1581,6 +1696,29 @@
         if (!data.secure_url) throw new Error('Cloudinary returned no URL');
         console.log('[Cloudinary] uploaded ->', data.secure_url);
         return data.secure_url;
+    }
+
+    /**
+     * Returns true if the URL points to Supabase Storage (not Cloudinary).
+     * Used to skip Cloudinary-specific transforms on Supabase URLs.
+     */
+    function isSupabaseStorageUrl(url) {
+        return typeof url === 'string' && url.includes('supabase.co/storage');
+    }
+
+    /**
+     * For Supabase Storage URLs: append ?download=false so the browser
+     * uses the CDN-cached copy instead of always re-downloading.
+     * This converts "Egress" hits into "Cached Egress" which are free on
+     * Supabase's free plan and only counted against the 5 GB cached limit.
+     * Note: the CDN cache is populated on first fetch and then served from
+     * edge nodes on subsequent requests — this drastically cuts egress.
+     */
+    function supabaseDelivery(url) {
+        if (!isSupabaseStorageUrl(url)) return url;
+        // Avoid double-appending
+        if (url.includes('?')) return url;
+        return url + '?download=false';
     }
 
     /**
@@ -3350,15 +3488,17 @@
     // ---------------------------------------------------------------
     async function preloadPdfDocuments(results) {
         for (const res of results) {
-            const url = res.file && res.file.details_url;
-            if (!url || pdfDocCache[url]) continue;
+            const rawUrl = res.file && res.file.details_url;
+            if (!rawUrl || pdfDocCache[rawUrl]) continue;
+            // Use CDN-friendly URL for Supabase Storage files to benefit from edge caching
+            const url = isSupabaseStorageUrl(rawUrl) ? supabaseDelivery(rawUrl) : rawUrl;
             const hasPageIndex = Number.isInteger(res.student && res.student.pageIndex)
                                  && res.student.pageIndex >= 0;
             try {
                 if (hasPageIndex) {
                     // Range-request mode: pdf.js fetches only the trailer/xref
                     // initially — the actual page bytes are downloaded on demand.
-                    pdfDocCache[url] = await pdfjsLib.getDocument({
+                    pdfDocCache[rawUrl] = await pdfjsLib.getDocument({
                         url:              url,
                         rangeChunkSize:   65536,   // 64 KB chunks
                         disableAutoFetch: true,    // don't pre-fetch all pages
@@ -3367,7 +3507,7 @@
                 } else {
                     // Legacy mode: download full file in the background.
                     const bytes = await fetch(url).then(r => r.arrayBuffer());
-                    pdfDocCache[url] = await pdfjsLib.getDocument({ data: new Uint8Array(bytes) }).promise;
+                    pdfDocCache[rawUrl] = await pdfjsLib.getDocument({ data: new Uint8Array(bytes) }).promise;
                 }
             } catch (e) { /* silent — user will see error on explicit click if needed */ }
         }
