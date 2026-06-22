@@ -399,6 +399,7 @@
 
         .decision-valid { color: #047857; background: #d1fae5; padding: 4px 12px; border-radius: 8px; font-weight: 800; }
         .decision-ratt { color: #b91c1c; background: #fee2e2; padding: 4px 12px; border-radius: 8px; font-weight: 800; }
+        .decision-exclu { color: #ffffff; background: #b91c1c; padding: 4px 12px; border-radius: 8px; font-weight: 800; border: 2px solid #7f1d1d; }
 
         .view-details-btn { 
             display: block; 
@@ -2346,7 +2347,13 @@
         if (!d) return false;
         const s = String(d).toLowerCase().replace(/\s+/g, ' ').trim();
         if (s.startsWith('non ') || s.includes('non valid') || s.includes('non admis')) return false;
+        if (s.includes('exclu')) return false;
         return s.includes('valid') || s.includes('admis');
+    }
+
+    function isExcluDecision(d) {
+        if (!d) return false;
+        return /exclu/i.test(String(d));
     }
 
     function sanitizeStudentName(s) {
@@ -2354,7 +2361,7 @@
         let n = s.name;
         const m = n.match(/^[A-Za-zÀ-ÿ'’\-\.\s]+/);
         if (m) n = m[0];
-        n = n.replace(/\s+(Non|Validé|Ajourn[ée]|Rattrapage|Session|Admis)\b.*$/i, '');
+        n = n.replace(/\s+(Non|Validé|Ajourn[ée]|Rattrapage|Session|Admis|Exclu)\b.*$/i, '');
         n = n.replace(/\s+/g, ' ').trim();
         if (n) s.name = n;
         return s;
@@ -2689,7 +2696,7 @@
             card.innerHTML = `
                 ${rattrapageHtml}
                 <div class="card-header-custom"><div class="semester-badge">${f.academic_year} | ${f.major} - ${semesterLabel}</div><h2 class="student-name">${s.name}</h2></div>
-                <div class="student-info"><div class="info-row"><span>رقم التسجيل:</span> <span class="info-val">${s.id}</span></div><div class="info-row"><span>المعدل:</span> <span class="info-val" style="color:var(--primary);">${s.avg}</span></div><div class="info-row"><span>الترتيب:</span> <span class="info-val" style="color:var(--secondary);">${s.rank}</span></div><div class="info-row"><span>القرار:</span> <span class="info-val ${isValid?'decision-valid':'decision-ratt'}">${s.decision}</span></div></div>
+                <div class="student-info"><div class="info-row"><span>رقم التسجيل:</span> <span class="info-val">${s.id}</span></div><div class="info-row"><span>المعدل:</span> <span class="info-val" style="color:var(--primary);">${s.avg}</span></div><div class="info-row"><span>الترتيب:</span> <span class="info-val" style="color:var(--secondary);">${s.rank}</span></div><div class="info-row"><span>القرار:</span> <span class="info-val ${isExcluDecision(s.decision)?'decision-exclu':isValid?'decision-valid':'decision-ratt'}">${s.decision}</span></div></div>
                 <button class="view-details-btn" data-annual="${isAnnual ? '1' : '0'}" data-nni="${(s.nni || '').replace(/['"\\]/g, '')}" data-thumb="${(s.thumbUrl || '').replace(/['"\\]/g, '')}" onclick="viewPreciseDetails('${s.id}', '${f.details_url}', this, '${cardId}', ${Number.isInteger(s.pageIndex) ? s.pageIndex : 'null'})">👁️ عرض كشف النقاط التفصيلي</button>
                 <div id="details-container-${cardId}" class="details-canvas-container"></div>
                 <div class="details-scroll-hint">← اسحب لرؤية كامل الكشف ←</div>
@@ -2774,8 +2781,8 @@
             }
 
             // --- Decision -----------------------------------------------------
-            // Accept: "Admis(e)", "Admis(e) avec dette", "Ajourné(e)", "Validé(e)"
-            const decMatch = segment.match(/D[ée]cision\s+du\s+jury\s*:?\s*(Admis(?:\s*\(e\))?(?:\s+avec\s+dette)?|Ajourn[ée](?:\s*\(e\))?|Validé(?:\(e\))?)/i);
+            // Accept: "Admis(e)", "Admis(e) avec dette", "Ajourné(e)", "Validé(e)", "Exclu(e)"
+            const decMatch = segment.match(/D[ée]cision\s+du\s+jury\s*:?\s*(Admis(?:\s*\(e\))?(?:\s+avec\s+dette)?|Ajourn[ée](?:\s*\(e\))?|Validé(?:\(e\))?|Exclu(?:\s*\(e\))?)/i);
             let decision = decMatch ? decMatch[1].trim().replace(/\s+/g, ' ') : 'Inconnu';
 
             // --- NNI (Numéro National d'Identification) -----------------------
@@ -3570,7 +3577,329 @@
          });
      }
 
-     function renderDetailsAsHtml(container, details, studentId) {
+    // ────────────────────────────────────────────────────────────────────
+    //  ANNUAL TRANSCRIPT — structured "Relevé de Notes" table design.
+    //  Rebuilds the detailed annual transcript as a clean two-semester
+    //  table that mirrors the official reference layout, parsed from the
+    //  positioned PDF cells. Returns null on failure so the caller can
+    //  fall back to the legacy positioned-grid renderer.
+    // ────────────────────────────────────────────────────────────────────
+    function buildAnnualTranscriptHtml(details, mergedRows, studentId, W, bannerHtml, sum) {
+        const esc = (s) => String(s == null ? '' : s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const isNum = (s) => /^-?\d+([.,]\d+)?$/.test(String(s || '').trim());
+        const rows = (details.rows || []);
+        if (!rows.length || !W) return null;
+        // IMPORTANT: cell x-coordinates are RAW (un-scaled) page coordinates,
+        // so all geometric thresholds must use the RAW page width, not the
+        // scaled render width W. Using W here pushed the L/R split too far right
+        // and chopped the first word of right-semester module names (and mixed
+        // them with the Décisions column).
+        const rawW = details.w || (W / 1.05) || W;
+        const mid = rawW * 0.494;
+
+        // ── Header metadata (regex over raw transcript text) ───────────────
+        const allText = rows.map(r => (r.cells || []).map(c => c.s).join(' ')).join('\n');
+        const grab = (re) => { const m = allText.match(re); return m ? String(m[1]).trim() : ''; };
+        let nom = grab(/Nom et pr[ée]nom\s*:?\s*([^\n]+?)\s*(?:Date et lieu|$)/i) || (sum && sum.name) || '';
+        const dob = grab(/Naissance\s*:?\s*([0-9]{1,2}\/[0-9]{1,2}\/[0-9]{2,4})/i);
+        const lieu = grab(/Naissance[^\n]*?\bA\s*:?\s*([^\n]+?)\s*(?:Num[ée]ro|$)/i);
+        const inscr = grab(/inscription\s*:?\s*([A-Za-z]?\d{3,})/i) || studentId;
+        const nni = grab(/\b(?:NNI|INE)\s*:?\s*(\d{3,})/i);
+        const filiere = grab(/Fili[èe]re\s*:?\s*([^\n]+?)\s*(?:Libell[ée]|$)/i)
+            || (sum ? [sum.level, sum.major].filter(Boolean).join(' ') : '');
+        const dateStr = new Date().toLocaleDateString('fr-FR');
+
+        // ── Identify module (body) rows ────────────────────────────────────
+        const META_RE = /Nom et pr|Naissance|inscription|Fili[èe]re|\bNNI\b|\bINE\b|RELEVE|R[ée]publique|Minist|Institut|Libell[ée]|Contr[ôo]l|Semestre|Ann[ée]e Universitaire|Nouakchott|Rattrap|Continu|Finale/i;
+        const FOOT_RE = /Moyenne du semestre|Cr[ée]dit\s*\/?\s*30|Total des cr|Moyenne annuelle|D[ée]cision du jury|Pour le Directeur|Le Directeur|Directeur des/i;
+
+        // Build an ordered list of per-side module rows directly from the RAW
+        // rows (NOT the y-clustered rows). Each semester is parsed on its own
+        // so the two columns never bleed into each other, then paired by index.
+        function sideModuleRows(side) {
+            const list = [];
+            rows.slice().sort((a, b) => (a.y || 0) - (b.y || 0)).forEach(r => {
+                const t = (r.cells || []).map(c => c.s).join(' ');
+                if (META_RE.test(t) || FOOT_RE.test(t)) return;
+                const cells = (r.cells || [])
+                    .filter(c => side === 'L' ? (c.x || 0) < mid : (c.x || 0) >= mid)
+                    .sort((a, b) => (a.x || 0) - (b.x || 0));
+                if (!cells.length) return;
+                if (!cells.some(c => isNum(c.s))) return; // skip name-only / empty lines
+                list.push(cells);
+            });
+            return list;
+        }
+        const modL = sideModuleRows('L');
+        const modR = sideModuleRows('R');
+        if (!modL.length && !modR.length) return null;
+
+        // ── Detect numeric column centers per semester side ────────────────
+        function centers(mods) {
+            const xs = [];
+            mods.forEach(cells => cells.forEach(c => { if (isNum(c.s)) xs.push(c.x || 0); }));
+            xs.sort((a, b) => a - b);
+            const tol = rawW * 0.022, cl = [];
+            xs.forEach(x => {
+                const last = cl[cl.length - 1];
+                if (last && x - last.vals[last.vals.length - 1] <= tol) last.vals.push(x);
+                else cl.push({ vals: [x] });
+            });
+            const minN = Math.max(2, mods.length * 0.12);
+            return cl.map(c => ({ c: c.vals.reduce((a, b) => a + b, 0) / c.vals.length, n: c.vals.length }))
+                     .filter(c => c.n >= minN)
+                     .map(c => c.c);
+        }
+        function colLabels(cents) {
+            const n = cents.length;
+            if (n >= 5) return ['cc', 'cf', 'ratt', 'nf', 'cr'];
+            if (n === 4) return ['cc', 'cf', 'nf', 'cr'];
+            if (n === 3) return ['cc', 'nf', 'cr'];
+            if (n === 2) return ['nf', 'cr'];
+            if (n === 1) return ['cr'];
+            return [];
+        }
+        // ── Authoritative column structure from the PDF HEADER row ─────────
+        // Data-density clustering is unreliable: a single mis-positioned grade
+        // can chain two columns together (hiding "Note Rattrapage") or stray
+        // numbers can invent a phantom column. The header row in the original
+        // PDF lists exactly the columns that semester has, at exact x-centers,
+        // so we read column count + centers + labels straight from it.
+        function headerCols(side) {
+            const hc = [];
+            rows.forEach(r => {
+                const cells = (r.cells || []).filter(c => side === 'L' ? (c.x || 0) < mid : (c.x || 0) >= mid);
+                if (!cells.length) return;
+                const t = cells.map(c => c.s).join(' ');
+                if (!/Contr[ôo]l|Continu|Rattrap|Final|Cr[ée]di|\bage\b/i.test(t)) return;
+                if (/Moyenne|jury|Libell|Mati[èe]re|Semestre/i.test(t)) return;
+                if (FOOT_RE.test(t) || /\/\s*30|\/\s*20/.test(t)) return;
+                cells.forEach(c => { if (/[A-Za-zÀ-ÿ]/.test(String(c.s || ''))) hc.push(c); });
+            });
+            if (!hc.length) return null;
+            hc.sort((a, b) => (a.x || 0) - (b.x || 0));
+            const tol = rawW * 0.012, cl = [];
+            hc.forEach(c => {
+                const last = cl[cl.length - 1];
+                if (last && Math.abs((c.x || 0) - last.cx) <= tol) {
+                    last.items.push(c);
+                    last.cx = last.items.reduce((a, d) => a + (d.x || 0), 0) / last.items.length;
+                } else cl.push({ items: [c], cx: (c.x || 0) });
+            });
+            const order = ['cc', 'cf', 'ratt', 'nf', 'cr'];
+            const seen = {}, cols = [];
+            cl.forEach(g => {
+                const txt = g.items.map(c => c.s).join(' ');
+                let key = '';
+                if (/Rattrap|\bage\b/i.test(txt)) key = 'ratt';
+                else if (/Continu/i.test(txt)) key = 'cc';
+                else if (/Cr[ée]di/i.test(txt)) key = 'cr';
+                else if (/Finale/i.test(txt)) key = 'nf';
+                else if (/Final|Contr[ôo]/i.test(txt)) key = 'cf';
+                if (key && !seen[key]) { seen[key] = 1; cols.push({ c: g.cx, key }); }
+            });
+            if (cols.length < 2) return null;
+            cols.sort((a, b) => order.indexOf(a.key) - order.indexOf(b.key));
+            return { cents: cols.map(o => o.c), lbls: cols.map(o => o.key) };
+        }
+        const hCL = headerCols('L'), hCR = headerCols('R');
+        const cL = hCL ? hCL.cents : centers(modL);
+        const lblL = hCL ? hCL.lbls : colLabels(cL);
+        const cR = hCR ? hCR.cents : centers(modR);
+        const lblR = hCR ? hCR.lbls : colLabels(cR);
+
+        function parseSide(cells, cents, lbls) {
+            const out = { name: '', cc: '', cf: '', ratt: '', nf: '', cr: '', dec: '' };
+            if (!cells || !cells.length) return out;
+            if (!cents.length) {
+                out.name = cells.filter(c => !isNum(c.s)).map(c => c.s).join(' ').trim();
+                return out;
+            }
+            const firstC = cents[0], creditC = cents[cents.length - 1];
+            const nameParts = [], decParts = [];
+            cells.forEach(c => {
+                const x = c.x || 0;
+                if (isNum(c.s)) {
+                    let bi = 0, bd = Infinity;
+                    cents.forEach((cn, i) => { const d = Math.abs(cn - x); if (d < bd) { bd = d; bi = i; } });
+                    const key = lbls[bi];
+                    if (key && !out[key]) out[key] = c.s;
+                } else if (x > creditC + rawW * 0.005) {
+                    decParts.push(c.s);
+                } else {
+                    nameParts.push(c.s);
+                }
+            });
+            out.name = nameParts.join(' ').replace(/\s+/g, ' ').trim();
+            out.dec = decParts.join(' ').replace(/\bP\b/g, '').replace(/\s+/g, ' ').trim();
+            return out;
+        }
+
+        // For group/section summary rows (e.g. "Enseignement de la Spécialité I"),
+        // the PDF contains only ONE numeric value (the group average) plus the credit.
+        // The proximity algorithm sometimes maps that average to CF or Ratt instead of NF.
+        // Fix: if CC is empty and NF is still empty, pull the value from CF or Ratt into NF.
+        function fixGroupAvg(p) {
+            if (p.cc === '' && p.nf === '') {
+                if (p.cf !== '') {
+                    // value landed in CF instead of NF
+                    p.nf = p.cf;
+                    p.cf = '';
+                } else if (p.ratt !== '') {
+                    // value landed in Ratt instead of NF (occurs when rattrapage column exists)
+                    p.nf = p.ratt;
+                    p.ratt = '';
+                }
+            }
+            return p;
+        }
+
+        const nbRows = Math.max(modL.length, modR.length);
+        const tableRows = [];
+        for (let i = 0; i < nbRows; i++) {
+            const L = fixGroupAvg(parseSide(modL[i], cL, lblL));
+            const R = fixGroupAvg(parseSide(modR[i], cR, lblR));
+            if (L.name || R.name) tableRows.push({ L, R });
+        }
+        if (!tableRows.length) return null;
+
+
+        // ── Footer: per-semester moyenne / credit / decision ───────────────
+        const foot = { moyL: '', decL: '', moyR: '', decR: '', credL: '', credR: '' };
+        rows.forEach(r => {
+            const cells = r.cells || [];
+            const t = cells.map(c => c.s).join(' ');
+            if (/Moyenne du semestre/i.test(t)) {
+                cells.forEach(c => {
+                    const left = (c.x || 0) < mid;
+                    if (isNum(c.s)) { if (left) foot.moyL = foot.moyL || c.s; else foot.moyR = foot.moyR || c.s; }
+                    else if (/Non|Valid/i.test(c.s)) {
+                        if (left) foot.decL = (foot.decL + ' ' + c.s).trim();
+                        else foot.decR = (foot.decR + ' ' + c.s).trim();
+                    }
+                });
+            }
+            if (/Cr[ée]dit\s*\/?\s*30/i.test(t)) {
+                cells.forEach(c => {
+                    if (isNum(c.s)) { if ((c.x || 0) < mid) foot.credL = foot.credL || c.s; else foot.credR = foot.credR || c.s; }
+                });
+            }
+        });
+        const jury = (sum && sum.decision) ? sum.decision
+            : ((allText.match(/D[ée]cision du jury\s*:?\s*([^\n]+)/i) || [])[1] || '').trim();
+
+        // ── Build HTML ─────────────────────────────────────────────────────
+        const v = (x) => (x && String(x).trim() !== '') ? esc(x) : '-';
+        const bannerFixed = (bannerHtml || '').replace(
+            'width:' + W.toFixed(0) + 'px;max-width:100%', 'width:100%;max-width:100%');
+
+        const css = `<style>
+.atx-wrap{font-family:'Cairo','Inter',Arial,sans-serif;color:#0f172a;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 10px 28px rgba(0,0,0,0.12);direction:ltr;text-align:left;width:fit-content;min-width:1100px;max-width:none;margin:0 auto;}
+.atx-head{background:linear-gradient(135deg,#003d1a 0%,#005C29 55%,#047a36 100%);color:#fff;padding:16px 20px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
+.atx-head h2{margin:0;font-size:23px;font-weight:800;letter-spacing:.2px;}
+.atx-head .mat{font-size:13px;opacity:.92;margin-top:4px;}
+.atx-head .date{font-size:14px;opacity:.95;white-space:nowrap;font-weight:600;}
+.atx-body{padding:14px;box-sizing:border-box;}
+.atx-info{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:13px;}
+.atx-info td{border:1px solid #e2e8f0;padding:7px 10px;vertical-align:top;}
+.atx-info .lbl{color:#334155;font-weight:600;background:#f8fafc;}
+.atx-tbl{width:100%;border-collapse:collapse;font-size:12px;}
+.atx-tbl th,.atx-tbl td{border:1px solid #cbd5e1;padding:5px 6px;text-align:center;}
+.atx-tbl thead th{background:#eef2f7;font-weight:700;color:#0f172a;font-size:9px;line-height:1.25;white-space:normal;hyphens:none;}
+.atx-tbl thead th.sem{background:#005C29;color:#fff;font-size:12px;}
+.atx-tbl td.name{text-align:left;font-weight:600;white-space:nowrap;}
+.atx-tbl tbody tr:nth-child(even) td{background:#fafdfb;}
+.atx-tbl tr.atx-foot td{font-weight:700;background:#eef7f1;}
+.atx-tbl tr.atx-jury td{background:#fff;font-weight:700;font-size:12.5px;padding:10px;}
+.atx-tbl tr.atx-grp td{background:#e6f7ee;border-top:1.5px solid #a7f3d0;}
+.atx-tbl tr.atx-grp td.name{font-weight:800;color:#005C29;font-style:italic;text-align:left;}
+.atx-footer-note{text-align:center;color:#94a3b8;font-size:11px;padding:12px 8px 4px;}
+</style>`;
+
+        const headHtml = `<div class="atx-head"><div><h2>Relevé de Notes - Transcript</h2><div class="mat">Matricule: ${esc(inscr)}</div></div><div class="date">${dateStr}</div></div>`;
+
+        const infoHtml = `<table class="atx-info">
+            <tr><td class="lbl" style="width:24%">Nom et prénom :</td><td colspan="3">${esc(nom)}</td></tr>
+            <tr><td class="lbl">Date et lieu de Naissance :</td><td style="width:28%">${esc(dob)}</td><td class="lbl" style="width:10%">A :</td><td>${esc(lieu)}</td></tr>
+            <tr><td class="lbl">Numéro d'inscription - Filière :</td><td>${esc(inscr)}${filiere ? ' | ' + esc(filiere) : ''}</td><td class="lbl">NNI :</td><td>${esc(nni)}</td></tr>
+        </table>`;
+
+        // Show the "Note Rattrapage" column only for a semester that actually
+        // has it in the original PDF. Many students have S2 (or both) with no
+        // rattrapage column at all — in that case it must NOT appear.
+        const hasRattL = lblL.includes('ratt');
+        const hasRattR = lblR.includes('ratt');
+        const numColsL = hasRattL ? 5 : 4; // cc, cf, [ratt], nf, cr
+        const numColsR = hasRattR ? 5 : 4;
+        const sideColsL = 2 + numColsL;    // name + numeric + décision
+        const sideColsR = 2 + numColsR;
+        const grandCols = sideColsL + sideColsR;
+
+        const colGroup = '';
+
+        const subHead = (hasRatt) => hasRatt
+            ? `<th>Contrôle continu</th><th>Contrôle final</th><th>Note Rattrapage</th><th>Note finale</th><th>Crédit</th>`
+            : `<th>Contrôle continu</th><th>Contrôle final</th><th>Note finale</th><th>Crédit</th>`;
+
+        const theadHtml = `<thead>
+            <tr>
+                <th rowspan="2">Libellé de la Matière</th>
+                <th class="sem" colspan="${numColsL}">Premier Semestre</th>
+                <th rowspan="2">Décisions</th>
+                <th rowspan="2">Libellé de la Matière</th>
+                <th class="sem" colspan="${numColsR}">Deuxième Semestre</th>
+                <th rowspan="2">Décisions</th>
+            </tr>
+            <tr>
+                ${subHead(hasRattL)}
+                ${subHead(hasRattR)}
+            </tr>
+        </thead>`;
+
+        const bodyHtml = tableRows.map(tr => {
+            const L = tr.L, R = tr.R;
+            // A "group/section" row has no individual grades (cc and cf both empty)
+            // but carries a group average (nf) — e.g. "Enseignement de la Spécialité I"
+            const isGrpL = L.cc === '' && L.cf === '' && L.nf !== '';
+            const isGrpR = R.cc === '' && R.cf === '' && R.nf !== '';
+            let cellsL, cellsR;
+            if (isGrpL) {
+                // name spans: name + cc + cf [+ ratt] columns, then nf, cr, dec
+                const spanL = hasRattL ? 4 : 3;
+                cellsL = `<td class="name" colspan="${spanL}">${esc(L.name)}</td><td>${v(L.nf)}</td><td>${v(L.cr)}</td><td>${v(L.dec)}</td>`;
+            } else {
+                cellsL = `<td class="name">${esc(L.name)}</td><td>${v(L.cc)}</td><td>${v(L.cf)}</td>${hasRattL ? `<td>${v(L.ratt)}</td>` : ''}<td>${v(L.nf)}</td><td>${v(L.cr)}</td><td>${v(L.dec)}</td>`;
+            }
+            if (isGrpR) {
+                const spanR = hasRattR ? 4 : 3;
+                cellsR = `<td class="name" colspan="${spanR}">${esc(R.name)}</td><td>${v(R.nf)}</td><td>${v(R.cr)}</td><td>${v(R.dec)}</td>`;
+            } else {
+                cellsR = `<td class="name">${esc(R.name)}</td><td>${v(R.cc)}</td><td>${v(R.cf)}</td>${hasRattR ? `<td>${v(R.ratt)}</td>` : ''}<td>${v(R.nf)}</td><td>${v(R.cr)}</td><td>${v(R.dec)}</td>`;
+            }
+            const isGrp = isGrpL || isGrpR;
+            return `<tr${isGrp ? ' class="atx-grp"' : ''}>${cellsL}${cellsR}</tr>`;
+        }).join('');
+
+        const footHtml = `<tr class="atx-foot">
+                <td class="name" colspan="${sideColsL - 1}">Moyenne du semestre / 20 : ${v(foot.moyL)}</td><td>${v(foot.decL)}</td>
+                <td class="name" colspan="${sideColsR - 1}">Moyenne du semestre / 20 : ${v(foot.moyR)}</td><td>${v(foot.decR)}</td>
+            </tr>
+            <tr class="atx-foot">
+                <td class="name" colspan="${sideColsL - 1}">Crédit /30 : ${v(foot.credL)}</td><td></td>
+                <td class="name" colspan="${sideColsR - 1}">Crédit /30 : ${v(foot.credR)}</td><td></td>
+            </tr>${jury ? `
+            <tr class="atx-jury">
+                <td colspan="${grandCols}">Décision du jury : ${esc(jury)}</td>
+            </tr>` : ''}`;
+
+        const tableHtml = `<table class="atx-tbl">${colGroup}${theadHtml}<tbody>${bodyHtml}${footHtml}</tbody></table>`;
+
+        return `<div data-details-root class="atx-wrap">${css}${headHtml}<div class="atx-body">${bannerFixed}${infoHtml}${tableHtml}<div class="atx-footer-note">UNEM ISCAE - Document officiel généré automatiquement  |  Développé par MDA</div></div></div>`;
+    }
+
+    function renderDetailsAsHtml(container, details, studentId) {
+
          details = removeOtherStudentsFromDetails(details, studentId);
          // [FIX ANNUEL] Cluster near-equal Y's first so two-semester rows
          // (S1 + S2) collapse into one row with all their cells aligned.
@@ -3801,7 +4130,26 @@
         // Wrap banner + grid as a SINGLE root child so html2canvas
         // (which snapshots container.firstElementChild) downloads the
         // FULL transcript, not just the banner.
+        // [ANNUAL DESIGN] For annual transcripts, render the clean structured
+        // "Relevé de Notes" table that matches the official reference layout.
+        // Fall back to the legacy positioned grid if structured parsing fails.
+        if (details && details._summary && details._summary.isAnnual) {
+            try {
+                const structuredHtml = buildAnnualTranscriptHtml(details, mergedRows, studentId, W, bannerHtml, details._summary);
+                if (structuredHtml) {
+                    container.innerHTML = structuredHtml;
+                    // The structured transcript is a fixed-width (1100px) two-semester
+                    // table. Let the on-screen container scroll horizontally on small
+                    // screens so columns stay readable; html2canvas still snapshots the
+                    // full-width .atx-wrap (firstElementChild) for a correct PDF.
+                    container.style.overflowX = 'auto';
+                    container.style.webkitOverflowScrolling = 'touch';
+                    return;
+                }
+            } catch (e) { console.warn('Annual structured render failed, using fallback grid', e); }
+        }
         container.innerHTML = `<div data-details-root style="display:inline-block;background:#fff;border-radius:12px;">${bannerHtml}${gridHtml}</div>`;
+
     }
 
     // Cluster cell x-positions into real columns and compute row/column
@@ -4404,7 +4752,7 @@
                 const txt  = tc.items.map(it => it.str).join(' ').replace(/\s+/g, ' ');
 
                 // ── 1. Extract decision (may or may not have changed) ────────────
-                const m = txt.match(/D[\u00E9\u00E8e]cision\s+du\s+jury\s*:?\s*(Admis(?:\s*\(e\))?(?:\s+avec\s+dette)?|Ajourn[\u00E9\u00E8e](?:\s*\(e\))?|Valid[\u00E9\u00E8e](?:\s*\(e\))?)/i);
+                const m = txt.match(/D[\u00E9\u00E8e]cision\s+du\s+jury\s*:?\s*(Admis(?:\s*\(e\))?(?:\s+avec\s+dette)?|Ajourn[\u00E9\u00E8e](?:\s*\(e\))?|Valid[\u00E9\u00E8e](?:\s*\(e\))?|Exclu(?:\s*\(e\))?)/i);
                 const fullDecision = m ? m[1].trim().replace(/\s+/g, ' ') : null;
                 const decisionChanged = fullDecision && fullDecision !== s.decision;
                 if (decisionChanged) {
@@ -4419,8 +4767,10 @@
                         decSpan.innerText = fullDecision;
                         // Re-apply visual class (avec dette → keep success styling).
                         const ok = isValidDecision(fullDecision);
-                        decSpan.classList.toggle('decision-valid', ok);
-                        decSpan.classList.toggle('decision-ratt', !ok);
+                        const exclu = isExcluDecision(fullDecision);
+                        decSpan.classList.toggle('decision-valid', ok && !exclu);
+                        decSpan.classList.toggle('decision-ratt', !ok && !exclu);
+                        decSpan.classList.toggle('decision-exclu', exclu);
                     });
                 }
 
