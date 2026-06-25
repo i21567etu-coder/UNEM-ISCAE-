@@ -2777,11 +2777,6 @@
 
     // إظهار تنبيه دورة الإستدراك ابتداءً من 20 يونيو إلى 30 سبتمبر (فترة ما قبل دورة الإستدراك)
     function shouldShowRattrapageNotice() {
-        const now = new Date();
-        const month = now.getMonth(); // 0-based: يونيو = 5، سبتمبر = 8
-        const day = now.getDate();
-        if (month === 5 && day >= 20) return true;   // June 20+
-        if (month >= 6 && month <= 8) return true;   // July, August, September
         return false;
     }
 
