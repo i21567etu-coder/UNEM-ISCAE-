@@ -981,6 +981,80 @@
         .nni-submit-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(14, 165, 233, 0.36); }
         .nni-submit-btn:disabled { background: #94a3b8; cursor: wait; transform: none; box-shadow: none; }
         .nni-error-msg { display: none; color: #dc2626; font-weight: 700; font-size: 0.9rem; margin-top: 10px; }
+
+        /* ── Professional Academic Year Picker (Admin) ── */
+        .year-picker {
+            display: flex;
+            align-items: stretch;
+            gap: 8px;
+            width: 100%;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border: 1.5px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 6px;
+            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            box-sizing: border-box;
+        }
+        .year-picker:hover { border-color: var(--primary); box-shadow: 0 4px 12px rgba(0, 92, 41, 0.12); }
+        .year-picker.disabled { opacity: 0.45; pointer-events: none; filter: grayscale(1); }
+        .year-picker .yp-btn {
+            flex: 0 0 44px;
+            height: 44px;
+            border-radius: 10px;
+            border: none;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: #fff;
+            font-size: 1.5rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            transition: transform 0.12s ease, box-shadow 0.15s ease;
+            user-select: none;
+            font-family: 'Inter', sans-serif;
+        }
+        .year-picker .yp-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 14px rgba(0, 92, 41, 0.25); }
+        .year-picker .yp-btn:active { transform: scale(0.94); }
+        .year-picker .yp-btn.yp-minus {
+            background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+        }
+        .year-picker .yp-display {
+            flex: 1;
+            min-width: 0;
+            text-align: center;
+            font-family: 'Inter', 'Cairo', sans-serif;
+            font-weight: 800;
+            font-size: 1.08rem;
+            color: var(--primary);
+            background: transparent;
+            border: none;
+            outline: none;
+            letter-spacing: 0.6px;
+            direction: ltr;
+            padding: 0 4px;
+            box-shadow: none !important;
+        }
+        .year-picker .yp-display:focus { outline: none; }
+        .yp-all-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 8px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #475569;
+            cursor: pointer;
+            user-select: none;
+        }
+        .yp-all-toggle input { accent-color: var(--primary); width: 16px; height: 16px; margin: 0; }
+        .danger-zone-card {
+            border: 2px dashed #b91c1c !important;
+            background: linear-gradient(135deg, #fff5f5 0%, #fee2e2 100%) !important;
+            margin-top: 18px;
+        }
     </style>
 </head>
 <body>
@@ -1020,7 +1094,14 @@
 
         <div id="admin-upload-step" style="display:none;">
             <h2>📤 رفع النتائج (دمج وترتيب تلقائي)</h2>
-            <div class="form-group"><label>السنة الجامعية:</label><input type="text" id="up-year" placeholder="مثال: 2024-2025" pattern="\d{4}-\d{4}" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; font-weight:700; font-size:0.95rem;"></div>
+            <div class="form-group">
+                <label>السنة الجامعية:</label>
+                <div class="year-picker" data-yp="up-year">
+                    <button type="button" class="yp-btn yp-minus" onclick="adjustYear('up-year',-1)" aria-label="السنة السابقة">−</button>
+                    <input type="text" id="up-year" class="yp-display" readonly pattern="\d{4}-\d{4}">
+                    <button type="button" class="yp-btn yp-plus" onclick="adjustYear('up-year',1)" aria-label="السنة التالية">+</button>
+                </div>
+            </div>
             <div class="form-group">
                 <label>التخصص:</label>
                 <select id="up-major">
@@ -1054,7 +1135,14 @@
             <hr style="border: 2px dashed #cbd5e1; margin: 25px 0;">
 
             <h2 style="color:#7c3aed;">📅 رفع النتائج السنوية (Résultat Annuel)</h2>
-            <div class="form-group"><label>السنة الجامعية:</label><input type="text" id="up-annual-year" placeholder="مثال: 2024-2025" pattern="\d{4}-\d{4}" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; font-weight:700; font-size:0.95rem;"></div>
+            <div class="form-group">
+                <label>السنة الجامعية:</label>
+                <div class="year-picker" data-yp="up-annual-year">
+                    <button type="button" class="yp-btn yp-minus" onclick="adjustYear('up-annual-year',-1)" aria-label="السنة السابقة">−</button>
+                    <input type="text" id="up-annual-year" class="yp-display" readonly pattern="\d{4}-\d{4}">
+                    <button type="button" class="yp-btn yp-plus" onclick="adjustYear('up-annual-year',1)" aria-label="السنة التالية">+</button>
+                </div>
+            </div>
             <div class="form-group">
                 <label>التخصص:</label>
                 <select id="up-annual-major">
@@ -1113,6 +1201,7 @@
                 .pc-upload { background:linear-gradient(135deg,#0ea5e9 0%,#0369a1 100%); }
                 .pc-stats  { background:linear-gradient(135deg,#0284c7 0%,#075985 100%); }
                 .pc-delete { background:linear-gradient(135deg,#dc2626 0%,#7f1d1d 100%); }
+                .pc-display { background:linear-gradient(135deg,#7c3aed 0%,#4c1d95 100%); }
 
                 .admin-sheet { display:none; position:fixed; inset:0; z-index:9998; background:var(--bg-gradient, #f7fcf9); overflow-y:auto; -webkit-overflow-scrolling:touch; animation:sheetIn .25s ease; }
                 @keyframes sheetIn { from { opacity:0; transform:translateY(12px);} to { opacity:1; transform:none;} }
@@ -1151,6 +1240,13 @@
                     <div class="pc-desc">حذف نتائج فصل (S1…S6 أو Annuel) لكل التخصصات والمستويات دفعة واحدة.</div>
                     <span class="pc-cta">فتح الصفحة ←</span>
                 </button>
+
+                <button type="button" class="pro-card pc-display" onclick="openAdminSheet('sheet-display-settings'); populateDisplaySettingsForm();">
+                    <span class="pc-icon">⚙️</span>
+                    <div class="pc-title">إعدادات العرض</div>
+                    <div class="pc-desc">تحكم بعرض النتائج: سنوي / فصلي / كلاهما، سنة واحدة أو كل السنوات، وأي نتيجة تظهر أولاً عند البحث.</div>
+                    <span class="pc-cta">فتح الصفحة ←</span>
+                </button>
             </div>
 
             <!-- ===================== FULL-PAGE SHEET: BULK UPLOAD ===================== -->
@@ -1166,7 +1262,14 @@
                             ارفع عشرات ملفات PDF دفعة واحدة (S1, S2, S3, S4, S5, S6, Annuel) لكل التخصصات.
                             سيتم تصنيف كل ملف تلقائياً (التخصص + المستوى + الفصل) مع إمكانية تعديل التصنيف قبل البدء.
                         </p>
-                        <div class="form-group"><label>السنة الجامعية (افتراضية إن لم تُكتشف من اسم الملف):</label><select id="up-bulk-year"></select></div>
+                        <div class="form-group">
+                            <label>السنة الجامعية (افتراضية إن لم تُكتشف من اسم الملف):</label>
+                            <div class="year-picker" data-yp="up-bulk-year">
+                                <button type="button" class="yp-btn yp-minus" onclick="adjustYear('up-bulk-year',-1)" aria-label="السنة السابقة">−</button>
+                                <input type="text" id="up-bulk-year" class="yp-display" readonly>
+                                <button type="button" class="yp-btn yp-plus" onclick="adjustYear('up-bulk-year',1)" aria-label="السنة التالية">+</button>
+                            </div>
+                        </div>
 
                         <div class="file-input-wrapper">
                             <label>📄 اختر كل ملفات PDF التي تريد رفعها معاً:</label>
@@ -1247,16 +1350,17 @@
                 </div>
                 <div class="as-body">
                     <div class="as-card" style="border:1px solid #fecaca;">
-                        <h3 style="margin:0 0 12px 0; color:#b91c1c; font-size:1.05rem;">🧹 حذف فصل كامل (جميع التخصصات)</h3>
+                        <h3 style="margin:0 0 12px 0; color:#b91c1c; font-size:1.05rem;">🧹 حذف فصل / سنوي (جميع التخصصات)</h3>
                         <div style="background:linear-gradient(135deg,#fef2f2,#fee2e2); border:1px solid #fecaca; border-radius:14px; padding:16px; margin-bottom:18px;">
                             <p style="font-size:0.92rem; color:#7f1d1d; margin:0; line-height:1.75; font-weight:600;">
-                                ⚠️ تنبيه: اختر فصلاً (مثلاً S2 أو S4 أو Annuel) ليتم حذف نتائجه <b>نهائياً</b>
-                                لكل التخصصات والمستويات والسنوات دفعة واحدة — مع كل ملفاته على Cloudinary و Supabase Storage.
+                                ⚠️ تنبيه: اختر فصلاً (S1…S6 أو Annuel أو الكل) وسنة جامعية (أو كل السنوات) ليتم حذف النتائج <b>نهائياً</b>
+                                لكل التخصصات والمستويات — مع كل ملفاتها على Cloudinary و Supabase Storage.
                                 هذه العملية لا يمكن التراجع عنها.
                             </p>
                         </div>
-                        <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
-                            <select id="bulk-sem-select" style="flex:1; min-width:180px; padding:12px; border-radius:10px; border:1px solid #cbd5e1; font-weight:700; font-size:0.95rem;">
+                        <div class="form-group">
+                            <label>🎯 الفصل المستهدف:</label>
+                            <select id="bulk-sem-select" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; font-weight:700; font-size:0.95rem;">
                                 <option value="S1">S1</option>
                                 <option value="S2">S2</option>
                                 <option value="S3">S3</option>
@@ -1264,9 +1368,22 @@
                                 <option value="S5">S5</option>
                                 <option value="S6">S6</option>
                                 <option value="ANNUEL">Annuel (السنوي)</option>
+                                <option value="__ALL__">🌐 كل الفصول (فصلي + سنوي)</option>
                             </select>
-                            <button class="admin-btn" style="background:#b91c1c; color:#fff;" onclick="deleteEntireSemester()">🧹 حذف الفصل بالكامل</button>
                         </div>
+                        <div class="form-group">
+                            <label>📅 السنة الجامعية:</label>
+                            <div class="year-picker" data-yp="bulk-del-year">
+                                <button type="button" class="yp-btn yp-minus" onclick="adjustYear('bulk-del-year',-1)" aria-label="السنة السابقة">−</button>
+                                <input type="text" id="bulk-del-year" class="yp-display" readonly>
+                                <button type="button" class="yp-btn yp-plus" onclick="adjustYear('bulk-del-year',1)" aria-label="السنة التالية">+</button>
+                            </div>
+                            <label class="yp-all-toggle">
+                                <input type="checkbox" id="bulk-del-all-years" onchange="toggleYearPicker('bulk-del-year', this.checked)">
+                                <span>🌐 كل السنوات (تجاهل السنة المختارة)</span>
+                            </label>
+                        </div>
+                        <button class="admin-btn" style="background:#b91c1c; color:#fff; width:100%; margin-top:6px;" onclick="deleteEntireSemester()">🧹 تنفيذ الحذف</button>
                         <div id="bulk-delete-status" style="margin-top:14px; font-size:0.9rem; text-align:center; color:#475569; white-space:pre-line;"></div>
                     </div>
 
@@ -1276,9 +1393,88 @@
                             احذف نتائج أي فصل مباشرة من هنا. سيتم إزالتها من قاعدة البيانات
                             والتخزين ولن تظهر بعد الآن في الموقع.
                         </p>
+                        <div class="form-group">
+                            <label>📅 تصفية حسب السنة الجامعية:</label>
+                            <div class="year-picker" data-yp="del-list-year">
+                                <button type="button" class="yp-btn yp-minus" onclick="adjustYear('del-list-year',-1); if(!document.getElementById('del-list-all-years').checked) loadDeletableResults();" aria-label="السنة السابقة">−</button>
+                                <input type="text" id="del-list-year" class="yp-display" readonly>
+                                <button type="button" class="yp-btn yp-plus" onclick="adjustYear('del-list-year',1); if(!document.getElementById('del-list-all-years').checked) loadDeletableResults();" aria-label="السنة التالية">+</button>
+                            </div>
+                            <label class="yp-all-toggle">
+                                <input type="checkbox" id="del-list-all-years" checked onchange="toggleYearPicker('del-list-year', this.checked); loadDeletableResults();">
+                                <span>🌐 كل السنوات</span>
+                            </label>
+                        </div>
                         <button class="admin-btn" style="background:#dc2626; color:#fff;" onclick="loadDeletableResults()">📂 عرض جميع النتائج المرفوعة</button>
                         <div id="delete-status" style="margin-top:10px; font-size:0.85rem; text-align:center; color:#475569;"></div>
                         <div id="delete-container" style="margin-top:14px; max-height:420px; overflow-y:auto;"></div>
+                    </div>
+
+                    <div class="as-card danger-zone-card">
+                        <h3 style="margin:0 0 10px 0; color:#7f1d1d; font-size:1.1rem;">💣 حذف كل النتائج نهائياً (Nuclear)</h3>
+                        <p style="font-size:0.88rem; color:#7f1d1d; margin:0 0 14px 0; line-height:1.7; font-weight:600;">
+                            ⚠️ خيار خطير: يمسح <b>كل النتائج</b> من قاعدة البيانات (كل الفصول، كل السنوات، كل التخصصات، كل المستويات)
+                            بالإضافة إلى جميع الملفات على Cloudinary و Supabase Storage.
+                            <br>سيُطلب منك إدخال <b>Cloudinary API Secret</b> في كل مرة للتأكيد — لن يُحفظ ولن يُقبل التنفيذ بدونه.
+                        </p>
+                        <button class="admin-btn" style="background:linear-gradient(135deg,#7f1d1d,#450a0a); color:#fff; width:100%;" onclick="deleteAllResults()">💣 حذف الكل نهائياً — يطلب API</button>
+                        <div id="delete-all-status" style="margin-top:14px; font-size:0.9rem; text-align:center; color:#7f1d1d; white-space:pre-line; font-weight:700;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===================== FULL-PAGE SHEET: DISPLAY SETTINGS ===================== -->
+            <div id="sheet-display-settings" class="admin-sheet">
+                <div class="as-header" style="background:linear-gradient(135deg,#7c3aed,#4c1d95);">
+                    <button type="button" class="as-back" onclick="closeAdminSheet('sheet-display-settings')">→ رجوع</button>
+                    <div class="as-title">⚙️ إعدادات العرض</div>
+                    <span style="width:78px;"></span>
+                </div>
+                <div class="as-body">
+                    <div class="as-card">
+                        <p style="font-size:0.9rem; color:#475569; margin:0 0 18px 0; line-height:1.7;">
+                            تحكّم يدوياً بطريقة عرض النتائج للزوار، بدل الاعتماد على الاكتشاف التلقائي فقط.
+                            اختر <b>"تلقائي"</b> في أي حقل لإبقاء السلوك الافتراضي للموقع كما كان.
+                        </p>
+
+                        <div class="form-group">
+                            <label>📄 نوع النتيجة المعروضة (Résultat Annuelle / Semestre):</label>
+                            <select id="ds-display-mode" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; font-weight:700; font-size:0.95rem;">
+                                <option value="auto">تلقائي (حسب آخر رفع — كالسابق)</option>
+                                <option value="annual">سنوي فقط (Annuelle)</option>
+                                <option value="semester">فصلي فقط (Semestre)</option>
+                                <option value="both">كلاهما معاً (Annuelle + Semestre)</option>
+                            </select>
+                            <small style="display:block; color:#666; font-size:0.82rem; margin-top:6px;">يتحكم بأزرار "الأوائل" الظاهرة للزوار وبنوع النتائج التي تُعرض عند البحث برقم التسجيل.</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label>📅 نطاق السنوات (سنة واحدة أو كل السنوات):</label>
+                            <select id="ds-year-scope" onchange="toggleSingleYearField()" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; font-weight:700; font-size:0.95rem;">
+                                <option value="auto">تلقائي (سنة واحدة من يناير إلى غشت، كل السنوات من شتمبر إلى دجمبر — كالسابق)</option>
+                                <option value="single">سنة واحدة محددة يدوياً</option>
+                                <option value="multi">كل السنوات دائماً</option>
+                            </select>
+                        </div>
+
+                        <div id="ds-single-year-wrap" class="form-group" style="display:none;">
+                            <label>السنة الجامعية المعروضة:</label>
+                            <input type="text" id="ds-single-year" placeholder="مثال: 2024-2025" pattern="\d{4}-\d{4}" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; font-weight:700; font-size:0.95rem;">
+                        </div>
+
+                        <div class="form-group">
+                            <label>🔝 أي نتيجة تظهر أولاً عند البحث برقم التسجيل:</label>
+                            <select id="ds-search-priority" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; font-weight:700; font-size:0.95rem;">
+                                <option value="auto">تلقائي (السنوي أولاً — كالسابق)</option>
+                                <option value="annual_first">السنوي (Annuelle) أولاً</option>
+                                <option value="semester_first">الفصلي (Semestre) أولاً</option>
+                                <option value="newest_first">الأحدث رفعاً أولاً (بغض النظر عن النوع)</option>
+                            </select>
+                            <small style="display:block; color:#666; font-size:0.82rem; margin-top:6px;">عندما يكون لدى الطالب أكثر من نتيجة (مثلاً سنوي وفصلي لنفس المستوى)، هذا الإعداد يحدد أيهما يظهر في أعلى القائمة.</small>
+                        </div>
+
+                        <button class="admin-btn" style="margin-top:10px; background:#7c3aed; color:white;" onclick="saveSiteDisplaySettings()">💾 حفظ وتطبيق الإعدادات</button>
+                        <div id="display-settings-status" style="margin-top:15px; font-weight:bold; font-size:0.9rem; text-align:center;"></div>
                     </div>
                 </div>
             </div>
@@ -1300,7 +1496,7 @@
                 // Close any open sheet with Escape
                 document.addEventListener('keydown', function(e){
                     if (e.key === 'Escape') {
-                        ['sheet-bulk-upload','sheet-stats','sheet-bulk-delete'].forEach(function(id){
+                        ['sheet-bulk-upload','sheet-stats','sheet-bulk-delete','sheet-display-settings'].forEach(function(id){
                             var el = document.getElementById(id);
                             if (el && el.style.display === 'block') closeAdminSheet(id);
                         });
@@ -1383,7 +1579,7 @@
         <h3 style="color:var(--primary); margin-top:0;">استعلام سريع عن النتائج</h3>
         <p style="color:#666; font-size:0.9rem; margin-bottom:20px;">أدخل رقم التسجيل الخاص بك للبحث في جميع الفصول المتاحة.</p>
         <form id="searchForm">
-            <div class="form-group"><input type="text" id="matricule" placeholder="رقم التسجيل (مثال: I19567)" style="text-transform: uppercase; text-align: center; direction: ltr; font-size:1.2rem; padding:15px; font-weight:bold;"></div>
+            <div class="form-group"><input type="text" id="matricule" placeholder="رقم التسجيل (مثال: I21567)" style="text-transform: uppercase; text-align: center; direction: ltr; font-size:1.2rem; padding:15px; font-weight:bold;"></div>
             <div class="btn-group"><button type="button" class="btn-search" onclick="searchAllSemesters()">🔍 إبحث عن نتائجي</button></div>
             <div id="top20-btn-group" class="btn-group" style="margin-top: 10px; display: none;">
                 <button type="button" id="top20-sem-btn" class="btn-top20" onclick="openTop20Modal()" style="display:none;">🏆 الأوائل (par semestre)</button>
@@ -1414,8 +1610,8 @@
 </div>
 
 <script>
-    const SUPABASE_URL = 'https://gocplsdcrprqudunuqkv.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdvY3Bsc2RjcnBycXVkdW51cWt2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3MjUwNDEsImV4cCI6MjA5NjMwMTA0MX0.YxgyHYRO-bZZc3t643CUkcUvYFbUYn2KsfVY-K0EzPg';
+    const SUPABASE_URL = 'https://daqcwhcmoqnpxtnpwqil.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhcWN3aGNtb3FucHh0bnB3cWlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxMzY1MTMsImV4cCI6MjA5NzcxMjUxM30.xqdrGPLB_KoJ69JPvY7DhP_bTmVBaW63r2kYt_viMvo';
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     /* ============================================================
@@ -1477,8 +1673,8 @@
        All uploaded URLs are stored in the Supabase DB exactly as
        before — only the storage backend changes.
        ============================================================ */
-    const CLOUDINARY_CLOUD_NAME    = 'ddrs2qk8e';
-    const CLOUDINARY_API_KEY       = '241845611843322';
+    const CLOUDINARY_CLOUD_NAME    = 'djulcna72';
+    const CLOUDINARY_API_KEY       = '779631166899569';
     const CLOUDINARY_UPLOAD_PRESET = 'student_results';
     const CLOUDINARY_FOLDER        = 'iscae_results';
 
@@ -1500,29 +1696,6 @@
      const SUPABASE_BUCKET     = 'isc_results';
      const SUPABASE_FOLDER     = 'iscae_results';
     const CLOUDINARY_MAX_SIZE = 10 * 1024 * 1024; // 10 MB
-
-    /**
-     * Compress a PDF blob using pdf-lib to reduce file size before upload.
-     * Re-saves the PDF which removes redundant/unreferenced data.
-     * Returns a new (smaller) Blob, or the original if compression fails.
-     */
-    async function compressPdfBlob(blob) {
-        try {
-            const { PDFDocument } = PDFLib;
-            const arrayBuffer = await blob.arrayBuffer();
-            const pdfDoc = await PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
-            // Re-save with object compression ON (default) to strip unused objects
-            const compressed = await pdfDoc.save({ useObjectStreams: true, addDefaultPage: false });
-            const newBlob = new Blob([compressed], { type: 'application/pdf' });
-            const saving = blob.size - newBlob.size;
-            console.log(`[compressPdf] ${(blob.size/1024/1024).toFixed(2)}MB → ${(newBlob.size/1024/1024).toFixed(2)}MB (saved ${(saving/1024).toFixed(0)}KB)`);
-            // Only use the compressed version if it's actually smaller
-            return newBlob.size < blob.size ? newBlob : blob;
-        } catch (e) {
-            console.warn('[compressPdf] failed, using original:', e.message || e);
-            return blob;
-        }
-    }
 
     /**
      * Upload a Blob/File to Supabase Storage (public bucket) and
@@ -1551,6 +1724,26 @@
         if (!data || !data.publicUrl) throw new Error('Supabase Storage returned no public URL');
         console.log('[SupabaseStorage] uploaded ->', data.publicUrl);
         return data.publicUrl;
+    }
+
+    /**
+     * Compress a PDF blob using pdf-lib to reduce file size before upload.
+     * Re-saves the PDF which removes redundant/unreferenced data.
+     * Returns a new (smaller) Blob, or the original if compression fails.
+     */
+    async function compressPdfBlob(blob) {
+        try {
+            const { PDFDocument } = PDFLib;
+            const arrayBuffer = await blob.arrayBuffer();
+            const pdfDoc = await PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
+            const compressed = await pdfDoc.save({ useObjectStreams: true, addDefaultPage: false });
+            const newBlob = new Blob([compressed], { type: 'application/pdf' });
+            console.log(`[compressPdf] ${(blob.size/1024/1024).toFixed(2)}MB → ${(newBlob.size/1024/1024).toFixed(2)}MB`);
+            return newBlob.size < blob.size ? newBlob : blob;
+        } catch (e) {
+            console.warn('[compressPdf] failed, using original:', e.message || e);
+            return blob;
+        }
     }
 
     /**
@@ -1583,8 +1776,7 @@
     /**
      * Splits a large PDF blob into chunks < 9 MB and uploads each chunk
      * to Cloudinary individually. Saves a manifest JSON (list of part URLs)
-     * to Cloudinary and returns its URL — the caller stores this exactly
-     * like any other details_url / ranking_url.
+     * to Cloudinary and returns its URL.
      */
     async function uploadLargePdfInChunks(blob, publicId) {
         const { PDFDocument } = PDFLib;
@@ -1607,7 +1799,6 @@
                 chunkDoc.addPage(copiedPage);
                 const testBytes = await chunkDoc.save();
                 if (testBytes.length > CHUNK_LIMIT && chunkDoc.getPageCount() > 1) {
-                    // Exceeds limit — remove last page and stop growing this chunk
                     chunkDoc.removePage(chunkDoc.getPageCount() - 1);
                     break;
                 }
@@ -1620,11 +1811,18 @@
             console.log(`[ChunkUpload] part ${chunkUrls.length + 1}: pages ${pageStart + 1}–${pageEnd}, size ${(chunkBlob.size/1024/1024).toFixed(2)} MB`);
 
             const url = await _uploadSingleToCloudinary(chunkBlob, chunkId, 'raw', 'pdf');
-            chunkUrls.push(url);
+            // Store page ranges in the manifest. This lets the public viewer
+            // download ONLY the chunk containing the student's page instead of
+            // treating the JSON manifest as a PDF or pulling earlier chunks.
+            chunkUrls.push({
+                url,
+                startPage: pageStart,          // 0-based, inclusive
+                endPage:   pageEnd - 1,        // 0-based, inclusive
+                pageCount: pageEnd - pageStart
+            });
             pageStart = pageEnd;
         }
 
-        // Store part URLs in a manifest JSON uploaded to Cloudinary
         const manifest     = { type: 'pdf_chunks', totalPages, parts: chunkUrls };
         const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
         const manifestUrl  = await _uploadSingleToCloudinary(manifestBlob, publicId + '_manifest', 'raw', 'json');
@@ -1635,7 +1833,6 @@
     /**
      * Upload a Blob/File. Routes large PDFs to chunk-based Cloudinary upload,
      * other oversized files fall back to Supabase Storage only as a last resort.
-     * The return value (a URL string) has the same shape in all cases.
      * @param {Blob}   blob         File data.
      * @param {string} publicId     Stable id (no extension); used for upsert.
      * @param {'image'|'raw'|'auto'} resourceType
@@ -1649,28 +1846,21 @@
             return uploadLargePdfInChunks(blob, publicId);
         }
 
-        // ── Other large files: compress if PDF then fall back to Supabase Storage ──
+        // ── Other large files: fall back to Supabase Storage as last resort ──
         if (blob && typeof blob.size === 'number' && blob.size > CLOUDINARY_MAX_SIZE) {
             console.log('[Upload] non-PDF file > 10MB — falling back to Supabase Storage', { size: blob.size });
             const blobToUpload = (ext === 'pdf' || (blob.type || '').includes('pdf'))
-                ? await compressPdfBlob(blob)
-                : blob;
+                ? await compressPdfBlob(blob) : blob;
             return uploadToSupabaseStorage(blobToUpload, publicId, ext);
         }
 
         // ── Normal upload (file ≤ 10 MB) ─────────────────────────────────────
         const fd = new FormData();
-        // Give the blob a filename with the right extension so Cloudinary keeps
-        // the extension on the returned secure_url (critical for raw uploads,
-        // otherwise we can't tell JSON from PDF on the read side).
         const fname = (publicId || 'file') + (ext ? ('.' + ext.replace(/^\./, '')) : '');
         fd.append('file', blob, fname);
         fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
         fd.append('folder', CLOUDINARY_FOLDER);
         if (publicId) {
-            // Include the extension in the public_id for raw resources so the
-            // delivery URL ends with .json / .pdf and downstream fetch logic
-            // can branch on the file type reliably.
             const pid = (resourceType === 'raw' && ext) ? (publicId + '.' + ext.replace(/^\./, '')) : publicId;
             fd.append('public_id', pid);
         }
@@ -1680,13 +1870,10 @@
         if (!res.ok) {
             let msg = 'Cloudinary upload failed';
             try { const j = await res.json(); if (j && j.error && j.error.message) msg = j.error.message; } catch(_) {}
-            // Last-resort fallback: if Cloudinary rejected the file due to
-            // size limits, compress then try Supabase Storage so the upload still succeeds.
             if (/file size|too large|maximum|limit/i.test(msg)) {
                 console.warn('[Cloudinary] size-related rejection, compressing and falling back to Supabase Storage:', msg);
                 const blobToUpload = (ext === 'pdf' || (blob.type || '').includes('pdf'))
-                    ? await compressPdfBlob(blob)
-                    : blob;
+                    ? await compressPdfBlob(blob) : blob;
                 return uploadToSupabaseStorage(blobToUpload, publicId, ext);
             }
             console.error('[Cloudinary] upload failed', msg);
@@ -1696,29 +1883,6 @@
         if (!data.secure_url) throw new Error('Cloudinary returned no URL');
         console.log('[Cloudinary] uploaded ->', data.secure_url);
         return data.secure_url;
-    }
-
-    /**
-     * Returns true if the URL points to Supabase Storage (not Cloudinary).
-     * Used to skip Cloudinary-specific transforms on Supabase URLs.
-     */
-    function isSupabaseStorageUrl(url) {
-        return typeof url === 'string' && url.includes('supabase.co/storage');
-    }
-
-    /**
-     * For Supabase Storage URLs: append ?download=false so the browser
-     * uses the CDN-cached copy instead of always re-downloading.
-     * This converts "Egress" hits into "Cached Egress" which are free on
-     * Supabase's free plan and only counted against the 5 GB cached limit.
-     * Note: the CDN cache is populated on first fetch and then served from
-     * edge nodes on subsequent requests — this drastically cuts egress.
-     */
-    function supabaseDelivery(url) {
-        if (!isSupabaseStorageUrl(url)) return url;
-        // Avoid double-appending
-        if (url.includes('?')) return url;
-        return url + '?download=false';
     }
 
     /**
@@ -1742,6 +1906,165 @@
     let rankingDataCache = {};
     let pdfDocCache = {};
 
+    // ─────────────────────────────────────────────────────────────
+    // Robust PDF loading helpers used by the detailed transcript view.
+    // Root cause fixed here:
+    // 1) Some students reached this path without structured `details` data,
+    //    so their browser had to fetch/render the PDF on click.
+    // 2) Large PDFs may be stored as a JSON manifest of PDF chunks.
+    // 3) Some networks/CDNs reject Range requests or hang without failing.
+    // These helpers add: manifest detection, per-page chunk selection,
+    // explicit timeouts, Range fallback, full-download fallback and cache reset.
+    // ─────────────────────────────────────────────────────────────
+    const DETAILS_PDF_TIMEOUT_MS = 35000;
+    const DETAILS_FETCH_TIMEOUT_MS = 45000;
+
+    function sleepMs(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    async function withTimeout(promise, timeoutMs, message) {
+        let timer;
+        try {
+            return await Promise.race([
+                promise,
+                new Promise((_, reject) => {
+                    timer = setTimeout(() => reject(new Error(message || 'Operation timed out')), timeoutMs);
+                })
+            ]);
+        } finally {
+            if (timer) clearTimeout(timer);
+        }
+    }
+
+    async function fetchWithTimeout(url, options = {}, timeoutMs = DETAILS_FETCH_TIMEOUT_MS) {
+        const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        const timer = ctrl ? setTimeout(() => { try { ctrl.abort(); } catch (_) {} }, timeoutMs) : null;
+        try {
+            const opts = { ...options };
+            if (ctrl) opts.signal = ctrl.signal;
+            const res = await fetch(url, opts);
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            return res;
+        } finally {
+            if (timer) clearTimeout(timer);
+        }
+    }
+
+    async function loadPdfJsWithTimeout(source, timeoutMs = DETAILS_PDF_TIMEOUT_MS) {
+        const task = pdfjsLib.getDocument(source);
+        let timer;
+        try {
+            return await Promise.race([
+                task.promise,
+                new Promise((_, reject) => {
+                    timer = setTimeout(() => {
+                        try { task.destroy(); } catch (_) {}
+                        reject(new Error('PDF loading timed out'));
+                    }, timeoutMs);
+                })
+            ]);
+        } finally {
+            if (timer) clearTimeout(timer);
+        }
+    }
+
+    async function loadDirectPdfDocument(url, cacheKey, preferRange) {
+        const key = cacheKey || url;
+        if (pdfDocCache[key]) return pdfDocCache[key];
+
+        let pdfDocjs = null;
+        if (preferRange) {
+            try {
+                pdfDocjs = await loadPdfJsWithTimeout({
+                    url,
+                    rangeChunkSize:   65536,
+                    disableAutoFetch: false,
+                    disableStream:    false
+                }, 18000);
+            } catch (rangeErr) {
+                console.warn('Range/stream PDF load failed, retrying as full download:', rangeErr);
+            }
+        }
+
+        if (!pdfDocjs) {
+            const resp = await fetchWithTimeout(url, { cache: 'reload' }, DETAILS_FETCH_TIMEOUT_MS);
+            const bytes = await resp.arrayBuffer();
+            pdfDocjs = await loadPdfJsWithTimeout({ data: new Uint8Array(bytes) }, DETAILS_PDF_TIMEOUT_MS);
+        }
+
+        pdfDocCache[key] = pdfDocjs;
+        return pdfDocjs;
+    }
+
+    async function tryFetchPdfChunkManifest(url) {
+        if (!url || typeof url !== 'string') return null;
+        // Only URLs that look like a manifest are fetched as text. This avoids
+        // accidentally downloading a real PDF as a string.
+        if (!(/_manifest/i.test(url) || /\.json(?:[?#]|$)/i.test(url))) return null;
+        try {
+            const resp = await fetchWithTimeout(url, { cache: 'reload' }, 20000);
+            const text = await resp.text();
+            const data = JSON.parse(text);
+            if (data && data.type === 'pdf_chunks' && Array.isArray(data.parts)) return data;
+        } catch (e) {
+            console.warn('PDF chunk manifest read failed:', e);
+        }
+        return null;
+    }
+
+    function normalizeManifestPart(part, index) {
+        if (typeof part === 'string') return { url: part, index };
+        if (part && typeof part === 'object') return { ...part, index, url: part.url || part.secure_url };
+        return { url: '', index };
+    }
+
+    async function loadPdfForStudentPage(pdfUrl, pageIndex) {
+        const isNewFormat = Number.isInteger(pageIndex) && pageIndex >= 0;
+
+        if (isNewFormat) {
+            const manifest = await tryFetchPdfChunkManifest(pdfUrl);
+            if (manifest) {
+                const parts = manifest.parts.map(normalizeManifestPart).filter(p => p.url);
+                const rangedParts = parts.filter(p =>
+                    Number.isInteger(p.startPage) && Number.isInteger(p.endPage)
+                );
+
+                if (rangedParts.length) {
+                    const part = rangedParts.find(p => pageIndex >= p.startPage && pageIndex <= p.endPage);
+                    if (part) {
+                        const localPageIndex = pageIndex - part.startPage;
+                        const pdf = await loadDirectPdfDocument(part.url, `${pdfUrl}#part-${part.index}`, true);
+                        return { pdf, pageNumber: localPageIndex + 1, sourceUrl: part.url };
+                    }
+                }
+
+                // Backward compatibility for old manifests that stored only URL
+                // strings. We walk chunks until the global page index falls inside
+                // one of them. This is slower than ranged manifests but still works.
+                let remainingPageIndex = pageIndex;
+                for (const part of parts) {
+                    const pdf = await loadDirectPdfDocument(part.url, `${pdfUrl}#part-${part.index}`, false);
+                    if (remainingPageIndex < pdf.numPages) {
+                        return { pdf, pageNumber: remainingPageIndex + 1, sourceUrl: part.url };
+                    }
+                    remainingPageIndex -= pdf.numPages;
+                }
+
+                throw new Error('Student page was not found inside PDF chunks');
+            }
+        }
+
+        const pdf = await loadDirectPdfDocument(pdfUrl, pdfUrl, isNewFormat);
+        return { pdf, pageNumber: isNewFormat ? pageIndex + 1 : null, sourceUrl: pdfUrl };
+    }
+
+    function clearPdfCacheForUrl(url) {
+        try {
+            Object.keys(pdfDocCache || {}).forEach(k => {
+                if (k === url || String(k).startsWith(String(url) + '#')) delete pdfDocCache[k];
+            });
+        } catch (_) { pdfDocCache = {}; }
+    }
+
     const popSound = new Audio('https://actions.google.com/sounds/v1/cartoon/pop.ogg');
     const cheerSound = new Audio('https://actions.google.com/sounds/v1/crowds/crowd_cheer.ogg');
     popSound.volume = 0.8; cheerSound.volume = 0.5;
@@ -1750,7 +2073,18 @@
        PDF SPLITTER — One student per page, precise slicing
        Same algorithm used in the standalone splitter.
        ============================================================ */
-    const SPLIT_SCALE = 1.5;
+    // Detect low-memory mobile devices (phones/tablets). Heavy PDF processing
+    // (per-student canvas + JPEG embedding) used to crash mobile Safari/Chrome
+    // because the original DPR-1.5 render produced canvases far too large.
+    // We drop scale + JPEG quality on mobile to keep peak memory under control.
+    const IS_MOBILE_DEVICE = (function(){
+        try {
+            if (navigator.userAgentData && navigator.userAgentData.mobile) return true;
+        } catch(_) {}
+        return /Android|iPhone|iPad|iPod|Mobile|Opera Mini|IEMobile|webOS|BlackBerry/i.test(navigator.userAgent || '');
+    })();
+    const SPLIT_SCALE        = IS_MOBILE_DEVICE ? 1.10 : 1.5;
+    const SPLIT_JPEG_QUALITY = IS_MOBILE_DEVICE ? 0.70 : 0.82;
     const STUDENT_ID_RE = /^I\d{4,7}$/;
 
     function normalizeStudentId(value) {
@@ -1881,7 +2215,14 @@
                 // Stop above the NEXT STUDENT'S REAL RECORD START, not only the ID row.
                 // In annual PDFs the next name/header can appear before the matricule.
                 const nextRowTop = getStudentRecordStartTop(pages[endPage].items, next, headerBottom[endPage]);
-                endY    = Math.max(0, nextRowTop - 6);
+                // [FIX: last-row clipping] A 6px margin was too tight — on compact
+                // (non-annual / semester) transcripts the current student's last
+                // subject row can sit within a few pixels of the next student's
+                // header block and was being silently dropped. Keep more of the
+                // current student's content; removeOtherStudentsFromDetails()
+                // already strips any next-student header/ID text that leaks in
+                // as a result, so this cannot bleed data between students.
+                endY    = Math.max(0, nextRowTop - 1);
             } else {
                 endPage = pages.length - 1;
                 endY    = pages[endPage].canvas.height;
@@ -1937,7 +2278,10 @@
                 // [EDIT 3] Strict containment: the item must lie FULLY inside [yMin, yMax].
                 // Using <= yMax (not <) and requiring yBottom <= yMax ensures no item
                 // that even touches the boundary of the next student leaks into this slice.
-                if (it.yTop >= yMin && it.yBottom <= yMax) {
+                // [FIX: last-row clipping] A tiny +3px tolerance on yMax absorbs
+                // font-rounding/descender jitter so the current student's very last
+                // row (often flush against the boundary) is not dropped in full.
+                if (it.yTop >= yMin && it.yBottom <= yMax + 3) {
                     // [EDIT 3] Additional guard: if this item looks like a student ID
                     // different from our target student, stop collecting immediately.
                     // This prevents the next student's registration number from leaking.
@@ -1993,6 +2337,9 @@
         const { PDFDocument } = PDFLib;
         const newPdf = await PDFDocument.create();
         const pageMap   = {};
+        // canvasMap is no longer accumulated — per-student thumbnails are
+        // disabled and keeping every canvas in memory blew up mobile browsers
+        // on big annual PDFs. We still return an empty map for compatibility.
         const canvasMap = {};
         const detailsMap = {};   // studentId → { w, rows:[...] } extracted text data
 
@@ -2000,21 +2347,39 @@
         const PAGE_H = 841.89;
         const MARGIN = 28;
 
+        // Helper: canvas → JPEG Uint8Array via toBlob (no giant dataURL string).
+        const canvasToJpegBytes = (canvas, quality) => new Promise((resolve, reject) => {
+            try {
+                canvas.toBlob(async (blob) => {
+                    if (!blob) { reject(new Error('canvas.toBlob returned null')); return; }
+                    try {
+                        const ab = await blob.arrayBuffer();
+                        resolve(new Uint8Array(ab));
+                    } catch (e) { reject(e); }
+                }, 'image/jpeg', quality);
+            } catch (e) { reject(e); }
+        });
+
         for (let s = 0; s < segments.length; s++) {
             if (onStatus) onStatus(`جاري إنشاء صفحة الطالب ${s + 1} من ${segments.length}...`);
             const seg = segments[s];
-            const combined = buildStudentCanvas(pages, headerBottom, seg);
+            let combined = buildStudentCanvas(pages, headerBottom, seg);
             if (!combined) continue;
 
-            canvasMap[seg.id]  = combined;
             try { detailsMap[seg.id] = extractStudentLines(pages, headerBottom, seg); }
             catch (e) { /* fallback to image rendering */ }
 
-            const dataUrl = combined.toDataURL('image/jpeg', 0.82);
-            const base64 = dataUrl.split(',')[1];
-            const bin = atob(base64);
-            const bytes = new Uint8Array(bin.length);
-            for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+            let bytes;
+            try {
+                bytes = await canvasToJpegBytes(combined, SPLIT_JPEG_QUALITY);
+            } catch (_) {
+                // Fallback for very old browsers that don't expose toBlob reliably.
+                const dataUrl = combined.toDataURL('image/jpeg', SPLIT_JPEG_QUALITY);
+                const base64 = dataUrl.split(',')[1];
+                const bin = atob(base64);
+                bytes = new Uint8Array(bin.length);
+                for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+            }
 
             const jpg = await newPdf.embedJpg(bytes);
             const page = newPdf.addPage([PAGE_W, PAGE_H]);
@@ -2033,6 +2398,25 @@
 
             page.drawImage(jpg, { x, y, width: imgW, height: imgH });
             pageMap[seg.id] = newPdf.getPageCount() - 1;
+
+            // Aggressively release the per-student canvas + JPEG bytes so the
+            // browser can reclaim memory between students on mobile.
+            try { combined.width = 0; combined.height = 0; } catch(_) {}
+            combined = null;
+            bytes = null;
+
+            // Once a source page is no longer referenced by any later segment,
+            // shrink its rendered canvas to 0×0 to release its pixel buffer.
+            // pages stay in the array (their .items text data is still used by
+            // extractStudentLines for later segments).
+            const nextSeg = segments[s + 1];
+            const keepFromPage = nextSeg ? nextSeg.startPage : Infinity;
+            for (let p = 0; p < keepFromPage && p < pages.length; p++) {
+                const pg = pages[p];
+                if (pg && pg.canvas && pg.canvas.width > 0) {
+                    try { pg.canvas.width = 0; pg.canvas.height = 0; } catch(_) {}
+                }
+            }
 
             await new Promise(r => setTimeout(r, 0));
         }
@@ -2102,6 +2486,105 @@
     };
 
     // --------------------------------------------------------------
+    // ⚙️ Site display settings (admin-configurable — لوحة "إعدادات العرض")
+    // --------------------------------------------------------------
+    // Lets the admin manually control, from the admin panel, without
+    // touching any code:
+    //   • displayMode    : 'auto' (كالسابق — يُحدَّد تلقائياً من آخر رفع)
+    //                       | 'annual' (Annuelle فقط) | 'semester' (Semestre فقط)
+    //                       | 'both' (تعرض الاثنين معاً)
+    //   • yearScope      : 'auto' (كالسابق — تقييد تلقائي حسب الشهر)
+    //                       | 'single' (سنة واحدة محددة يدوياً) | 'multi' (كل السنوات)
+    //   • singleYear     : السنة المستخدمة عند yearScope === 'single'
+    //   • searchPriority : 'auto' (كالسابق — Annuelle يظهر أولاً)
+    //                       | 'annual_first' | 'semester_first' | 'newest_first'
+    // القيم الافتراضية ('auto' في كل مكان) تُبقي سلوك الموقع كما كان تماماً
+    // إذا لم يقم المشرف بضبط أي إعداد، أو إذا كان جدول site_settings غير موجود.
+    let siteDisplaySettings = {
+        displayMode: 'auto',
+        yearScope: 'auto',
+        singleYear: '',
+        searchPriority: 'auto'
+    };
+
+    async function loadSiteDisplaySettings() {
+        try {
+            const { data, error } = await _supabase
+                .from('site_settings')
+                .select('*')
+                .eq('id', 1)
+                .maybeSingle();
+            if (!error && data) {
+                siteDisplaySettings.displayMode    = data.display_mode    || 'auto';
+                siteDisplaySettings.yearScope      = data.year_scope      || 'auto';
+                siteDisplaySettings.singleYear     = data.single_year     || '';
+                siteDisplaySettings.searchPriority = data.search_priority || 'auto';
+            }
+        } catch (e) {
+            console.warn('[site_settings] تعذر تحميل الإعدادات (قد يكون الجدول غير موجود بعد):', e);
+        }
+    }
+
+    async function saveSiteDisplaySettings() {
+        const statusEl = document.getElementById('display-settings-status');
+        try {
+            const displayMode    = document.getElementById('ds-display-mode').value;
+            const yearScope      = document.getElementById('ds-year-scope').value;
+            const singleYear     = (document.getElementById('ds-single-year').value || '').trim();
+            const searchPriority = document.getElementById('ds-search-priority').value;
+
+            if (yearScope === 'single' && singleYear && !/^\d{4}-\d{4}$/.test(singleYear)) {
+                alert('⚠️ يرجى كتابة السنة بصيغة صحيحة مثل 2024-2025');
+                return;
+            }
+
+            if (statusEl) statusEl.innerHTML = '⏳ جاري الحفظ...';
+            const { error } = await _supabase.from('site_settings').upsert({
+                id: 1,
+                display_mode: displayMode,
+                year_scope: yearScope,
+                single_year: yearScope === 'single' ? (singleYear || null) : null,
+                search_priority: searchPriority,
+                updated_at: new Date().toISOString()
+            });
+            if (error) throw error;
+
+            siteDisplaySettings.displayMode    = displayMode;
+            siteDisplaySettings.yearScope      = yearScope;
+            siteDisplaySettings.singleYear     = yearScope === 'single' ? singleYear : '';
+            siteDisplaySettings.searchPriority = searchPriority;
+
+            // Re-apply immediately so the admin sees the effect without reloading.
+            globalFilesCache = null;
+            await determineDisplayMode();
+
+            if (statusEl) statusEl.innerHTML = '<span style="color:green">✅ تم حفظ الإعدادات وتطبيقها بنجاح</span>';
+        } catch (e) {
+            console.error(e);
+            if (statusEl) statusEl.innerHTML = '<span style="color:red">⚠️ تعذر الحفظ. تأكد من وجود جدول site_settings في Supabase (راجع ملاحظات المشروع).</span>';
+        }
+    }
+
+    function toggleSingleYearField() {
+        const scopeEl = document.getElementById('ds-year-scope');
+        const wrap = document.getElementById('ds-single-year-wrap');
+        if (!scopeEl || !wrap) return;
+        wrap.style.display = (scopeEl.value === 'single') ? 'block' : 'none';
+    }
+
+    function populateDisplaySettingsForm() {
+        const modeEl  = document.getElementById('ds-display-mode');
+        const scopeEl = document.getElementById('ds-year-scope');
+        const yearEl  = document.getElementById('ds-single-year');
+        const prioEl  = document.getElementById('ds-search-priority');
+        if (modeEl)  modeEl.value  = siteDisplaySettings.displayMode;
+        if (scopeEl) scopeEl.value = siteDisplaySettings.yearScope;
+        if (yearEl)  yearEl.value  = siteDisplaySettings.singleYear || '';
+        if (prioEl)  prioEl.value  = siteDisplaySettings.searchPriority;
+        toggleSingleYearField();
+    }
+
+    // --------------------------------------------------------------
     // Public search restriction (à partir du mois de janvier)
     // --------------------------------------------------------------
     // Les résultats restent disponibles jusqu'au mois de janvier.
@@ -2109,7 +2592,12 @@
     // est limitée à la SEULE année académique en cours : seuls les
     // résultats de cette année-là sont retournés à l'utilisateur.
     // Entre septembre et décembre, toutes les années restent accessibles.
+    // [إعدادات المشرف] إن ضبط المشرف yearScope يدوياً، هذا الإعداد يتجاوز
+    // السلوك التلقائي أعلاه بالكامل (سنة واحدة محددة، أو كل السنوات دوماً).
     function getCurrentAcademicYear() {
+        if (siteDisplaySettings.yearScope === 'single' && siteDisplaySettings.singleYear) {
+            return siteDisplaySettings.singleYear;
+        }
         const now = new Date();
         const year = now.getFullYear();
         const month = now.getMonth(); // 0-based
@@ -2118,6 +2606,8 @@
     }
 
     function shouldRestrictToCurrentAcademicYear() {
+        if (siteDisplaySettings.yearScope === 'multi') return false;
+        if (siteDisplaySettings.yearScope === 'single') return true;
         const now = new Date();
         const month = now.getMonth(); // 0-based : janvier = 0, décembre = 11
         // Janvier (0) jusqu'à août (7) : restriction active.
@@ -2140,6 +2630,14 @@
     let currentDisplayMode = 'none';
 
     async function determineDisplayMode() {
+        // [إعدادات المشرف] وضع يدوي يتجاوز الاكتشاف التلقائي بالكامل.
+        if (siteDisplaySettings.displayMode === 'annual' ||
+            siteDisplaySettings.displayMode === 'semester' ||
+            siteDisplaySettings.displayMode === 'both') {
+            currentDisplayMode = siteDisplaySettings.displayMode;
+            applyDisplayMode();
+            return;
+        }
         try {
             const { data, error } = await _supabase
                 .from('results_metadata')
@@ -2173,6 +2671,10 @@
             semBtn.style.display = '';
             annBtn.style.display = 'none';
             wrapper.style.display = 'flex';
+        } else if (currentDisplayMode === 'both') {
+            semBtn.style.display = '';
+            annBtn.style.display = '';
+            wrapper.style.display = 'flex';
         } else {
             semBtn.style.display = 'none';
             annBtn.style.display = 'none';
@@ -2192,18 +2694,60 @@
         const publicOptsHTML =
             `<option value="${currentAcYear}">${currentAcYear}</option>`;
 
-        // Admin upload forms (semester + annual): year is now a free-text input
-        // (manually editable by the admin). Pre-fill with the current academic year.
-        const upYearEl = document.getElementById('up-year');
-        if (upYearEl) { if (upYearEl.tagName === 'SELECT') upYearEl.innerHTML = adminOptsHTML; else if (!upYearEl.value) upYearEl.value = currentAcYear; }
-        const upAnnualYearEl = document.getElementById('up-annual-year');
-        if (upAnnualYearEl) { if (upAnnualYearEl.tagName === 'SELECT') upAnnualYearEl.innerHTML = adminOptsHTML; else if (!upAnnualYearEl.value) upAnnualYearEl.value = currentAcYear; }
-        const bulkYearSel = document.getElementById('up-bulk-year');
-        if (bulkYearSel) bulkYearSel.innerHTML = adminOptsHTML;
+        // Admin year pickers: all use the +/− widget defaulting to current year
+        ['up-year','up-annual-year','up-bulk-year','bulk-del-year','del-list-year'].forEach(function(id){
+            const el = document.getElementById(id);
+            if (el && !el.value) el.value = currentAcYear;
+        });
 
         // Public Top 20 forms (semester + annual): only the current academic year.
         document.getElementById('t20-year').innerHTML        = publicOptsHTML;
         document.getElementById('t20-annual-year').innerHTML = publicOptsHTML;
+    }
+
+    /**
+     * Adjust the academic year in a year-picker input by ±1.
+     * Value format: "YYYY-YYYY" (e.g. 2025-2026 → +1 → 2026-2027, −1 → 2024-2025).
+     * Bounds: min 1980-1981, max currentYear+10.
+     */
+    function adjustYear(inputId, delta) {
+        const el = document.getElementById(inputId);
+        if (!el) return;
+        const now = new Date();
+        const curStart = now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1;
+        let val = (el.value || '').trim();
+        let m = val.match(/^(\d{4})-(\d{4})$/);
+        let start;
+        if (m) {
+            start = parseInt(m[1], 10) + delta;
+        } else {
+            start = curStart + delta;
+        }
+        if (start < 1980) start = 1980;
+        if (start > curStart + 10) start = curStart + 10;
+        el.value = `${start}-${start + 1}`;
+        // Notify listeners
+        try { el.dispatchEvent(new Event('change', { bubbles: true })); } catch (_) {}
+    }
+
+    /** Enable / disable a year picker widget (used with "all years" checkboxes). */
+    function toggleYearPicker(inputId, disable) {
+        const el = document.getElementById(inputId);
+        if (!el) return;
+        const wrap = el.closest('.year-picker');
+        if (wrap) wrap.classList.toggle('disabled', !!disable);
+    }
+
+    /** Build <option> HTML for a select spanning [currentYear-6 … currentYear+3], selecting `sel`. */
+    function getYearRangeOptionsHTML(sel) {
+        const now = new Date();
+        const curStart = now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1;
+        const parts = [];
+        for (let s = curStart + 3; s >= curStart - 6; s--) {
+            const v = `${s}-${s + 1}`;
+            parts.push(`<option value="${v}"${v === sel ? ' selected' : ''}>${v}</option>`);
+        }
+        return parts.join('');
     }
 
     function updateUploadSemesters() { populateSemesters('up-level', 'up-semester'); }
@@ -2220,7 +2764,7 @@
     }
     
     populateAcademicYears(); updateUploadSemesters(); updateT20Semesters();
-    determineDisplayMode();
+    loadSiteDisplaySettings().then(determineDisplayMode);
 
     let tapCount = 0;
     document.getElementById('main-header').addEventListener('click', async () => {
@@ -2404,6 +2948,10 @@
                 const splitResult = await splitPdfByStudent(finalPdfBytes, (msg) => {
                     statusDiv.innerHTML = '⏳ ' + msg;
                 });
+                // Free the original merged buffer — splitResult.pdfBytes
+                // replaces it as the upload payload. Critical on mobile to
+                // avoid holding two full PDFs in memory at once.
+                finalPdfBytes = null;
                 // Inject the page index into every student record.
                 studentsArray.forEach(s => {
                     if (Object.prototype.hasOwnProperty.call(splitResult.pageMap, s.id)) {
@@ -2507,6 +3055,22 @@
 
     async function fetchRankingData(url) {
         if (rankingDataCache[url]) return rankingDataCache[url];
+        // ── localStorage cache (survives page reload, avoids re-downloading JSON) ──
+        // Key is a short hash of the URL so it fits in localStorage limits.
+        // We store the parsed array as JSON; max TTL = 6 hours to stay fresh.
+        const LS_TTL = 6 * 60 * 60 * 1000; // 6 hours in ms
+        const lsKey = 'rdcache_' + btoa(url).replace(/[^a-z0-9]/gi,'').slice(-40);
+        try {
+            const cached = localStorage.getItem(lsKey);
+            if (cached) {
+                const { ts, data } = JSON.parse(cached);
+                if (Date.now() - ts < LS_TTL && Array.isArray(data) && data.length > 0) {
+                    rankingDataCache[url] = data;
+                    return data;
+                }
+                localStorage.removeItem(lsKey); // expired
+            }
+        } catch (_) { /* localStorage unavailable or quota exceeded — proceed */ }
         try {
             // Inline guard: ensure sanitizeStudentName exists even when this
             // file is loaded before the helper declaration (hoisting-safe).
@@ -2530,7 +3094,10 @@
                 try {
                     const data = JSON.parse(text);
                     const cleaned = Array.isArray(data) ? data.map(sanitizeStudentName) : data;
-                    rankingDataCache[url] = cleaned; return cleaned;
+                    rankingDataCache[url] = cleaned;
+                    // Persist to localStorage so next search within 6h costs zero egress
+                    try { localStorage.setItem(lsKey, JSON.stringify({ ts: Date.now(), data: cleaned })); } catch(_) {}
+                    return cleaned;
                 } catch (parseErr) {
                     console.warn('[fetchRankingData] JSON parse failed, falling back to PDF', parseErr);
                     // fall through to PDF parsing below
@@ -2577,12 +3144,17 @@
                     if (seenIds.has(s.id)) return false;
                     seenIds.add(s.id); return true;
                 }).map(sanitizeStudentName);
-                rankingDataCache[url] = students; return students;
+                rankingDataCache[url] = students;
+                // Persist to localStorage (PDF fallback path)
+                try { localStorage.setItem(lsKey, JSON.stringify({ ts: Date.now(), data: students })); } catch(_) {}
+                return students;
             }
         } catch(e) { console.error(e); return null; }
     }
 
     async function searchStudentInPDF(file, targetId) {
+        // Fallback: fetch ranking JSON from Cloudinary only when DB search is unavailable.
+        // This path is rarely hit (only for very old uploads missing from student_results).
         const students = await fetchRankingData(file.ranking_url);
         if (!students) return null;
         const student = students.find(s => s.id === targetId);
@@ -2595,70 +3167,149 @@
         resetView();
         const loader = document.getElementById('loader'); loader.style.display = 'block';
         try {
-            let files;
-            if (globalFilesCache) { files = globalFilesCache; }
+            const cleanInput = matricule.replace(/\s+/g, '');
+
+            // ══════════════════════════════════════════════════════════════════
+            //  DB-FIRST SEARCH — zero Cloudinary / Supabase Storage egress
+            //  Query student_results table directly (Postgres DB, no file I/O).
+            //  Falls back to the old JSON-fetch path only for records that were
+            //  uploaded before the student_results table existed.
+            // ══════════════════════════════════════════════════════════════════
+
+            // 1) Lightweight metadata fetch (DB rows, no files)
+            let metaFiles;
+            if (globalFilesCache) { metaFiles = globalFilesCache; }
             else {
-                const { data, error } = await _supabase.from('results_metadata').select('*').order('created_at', { ascending: false });
-                if (error) throw error;
-                // Defensive de-duplication: after appeals (التظلمات) the admin
-                // re-uploads the same (year, major, level, semester) tuple and
-                // we ALWAYS want only the most recent record to be displayed.
-                // Records are ordered desc by created_at, so the first
-                // occurrence of every tuple is the freshest one.
+                const { data: metaData, error: metaErr } = await _supabase
+                    .from('results_metadata')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+                if (metaErr) throw metaErr;
+                // De-duplicate: keep only freshest record per (year|major|level|semester)
                 const seen = new Set();
                 const deduped = [];
-                for (const f of data) {
+                for (const f of metaData) {
                     const key = `${f.academic_year}|${f.major}|${f.level}|${f.semester}`;
                     if (seen.has(key)) continue;
                     seen.add(key);
                     deduped.push(f);
                 }
                 globalFilesCache = deduped;
-                files = deduped;
+                metaFiles = deduped;
             }
 
-            // À partir du mois de janvier, ne renvoyer que les résultats
-            // de l'année académique en cours (les autres restent en base
-            // mais ne sont plus exposés à la recherche publique).
+            // 2) Apply year / mode filters to metadata
+            let filteredMeta = metaFiles;
             if (shouldRestrictToCurrentAcademicYear()) {
-                const currentAcYear = getCurrentAcademicYear();
-                files = files.filter(f => f.academic_year === currentAcYear);
+                filteredMeta = filteredMeta.filter(f => f.academic_year === getCurrentAcademicYear());
             }
-
-            // Filtrage selon le mode d'affichage actif :
-            //   • mode 'annual'   → on ne garde que les fichiers ANNUEL
-            //   • mode 'semester' → on ne garde que les fichiers semestriels
-            //   • mode 'none'     → aucun filtrage (sécurité, ne devrait pas arriver
-            //                       car la recherche n'est utile qu'après une publication)
             if (currentDisplayMode === 'annual') {
-                files = files.filter(f => f.semester === 'ANNUEL');
+                filteredMeta = filteredMeta.filter(f => f.semester === 'ANNUEL');
             } else if (currentDisplayMode === 'semester') {
-                files = files.filter(f => f.semester !== 'ANNUEL');
+                filteredMeta = filteredMeta.filter(f => f.semester !== 'ANNUEL');
             }
 
-            const cleanInput = matricule.replace(/\s+/g, '');
-            const searchPromises = files.map(file => searchStudentInPDF(file, cleanInput));
-            const rawResults = await Promise.all(searchPromises);
-            let foundResults = rawResults.filter(res => res !== null);
+            // 3) Build a lookup map: "year|major|level|semester" → metadata row
+            const metaMap = new Map();
+            for (const f of filteredMeta) {
+                metaMap.set(`${f.academic_year}|${f.major}|${f.level}|${f.semester}`, f);
+            }
 
-            // Trier du plus récent au plus ancien d'après la date de publication
-            // (`created_at`) afin de pouvoir ne garder que LE résultat le plus
-            // récent. En cas d'égalité (ou champ manquant), on retombe sur
-            // l'ordre métier historique : année ↓, ANNUEL en premier, puis
-            // S6 → S1.
-            foundResults.sort((a, b) => {
-                // Priorité: trier par semestre du plus élevé (S6/S5) au plus bas (S1).
-                // ANNUEL reste en tête. À semestre égal: année ↓ puis date de publication ↓.
-                const aIsAnnual = a.file.semester === 'ANNUEL';
-                const bIsAnnual = b.file.semester === 'ANNUEL';
-                if (aIsAnnual && !bIsAnnual) return -1;
-                if (bIsAnnual && !aIsAnnual) return 1;
-                if (!aIsAnnual && !bIsAnnual && a.file.semester !== b.file.semester) {
-                    return a.file.semester > b.file.semester ? -1 : 1;
+            // 4) Query student_results (pure DB — zero file egress)
+            let dbQuery = _supabase
+                .from('student_results')
+                .select('matricule, name, moyenne, decision, academic_year, major, level, semester')
+                .eq('matricule', cleanInput);
+            if (shouldRestrictToCurrentAcademicYear()) {
+                dbQuery = dbQuery.eq('academic_year', getCurrentAcademicYear());
+            }
+            if (currentDisplayMode === 'annual') {
+                dbQuery = dbQuery.eq('semester', 'ANNUEL');
+            } else if (currentDisplayMode === 'semester') {
+                dbQuery = dbQuery.neq('semester', 'ANNUEL');
+            }
+            const { data: dbRows, error: dbErr } = await dbQuery;
+
+            let foundResults = [];
+
+            if (!dbErr && dbRows && dbRows.length > 0) {
+                // ── Fast path: build results from DB rows + metadata URLs ─────
+                for (const row of dbRows) {
+                    const key = `${row.academic_year}|${row.major}|${row.level}|${row.semester}`;
+                    const fileMeta = metaMap.get(key);
+                    if (!fileMeta) continue; // metadata missing → skip
+
+                    const avg = typeof row.moyenne === 'number'
+                        ? String(parseFloat(row.moyenne.toFixed(2)))
+                        : String(row.moyenne || '');
+
+                    // ROOT FIX: even in the DB-first search path, load the small
+                    // ranking JSON once so every result carries pageIndex/details.
+                    // Without this, fresh visitors had only DB summary fields, so
+                    // the details button had to download/analyse the full PDF; on
+                    // slow phones or large/manifest files it stayed on "جاري تحميل".
+                    let rank = 0, pageIndex = undefined, details = undefined, nni = '', thumbUrl = '', totalCredits = null;
+                    let rankingStudents = null;
+                    if (fileMeta.ranking_url) {
+                        try { rankingStudents = await fetchRankingData(fileMeta.ranking_url); }
+                        catch (e) { console.warn('[search] ranking enrichment failed:', e); }
+                    }
+                    if (Array.isArray(rankingStudents)) {
+                        const s = rankingStudents.find(st => st.id === cleanInput);
+                        if (s) {
+                            rank         = s.rank         ?? 0;
+                            pageIndex    = s.pageIndex;
+                            details      = s.details;
+                            nni          = s.nni          || '';
+                            thumbUrl     = s.thumbUrl     || '';
+                            totalCredits = (typeof s.totalCredits === 'number' && isFinite(s.totalCredits)) ? s.totalCredits : null;
+                        }
+                    }
+
+                    foundResults.push({
+                        file: fileMeta,
+                        student: { id: row.matricule, name: row.name, avg, avgNum: parseFloat(avg) || 0,
+                                   decision: row.decision || '', rank, pageIndex, details, nni, thumbUrl, totalCredits }
+                    });
                 }
-                if (a.file.academic_year !== b.file.academic_year) return a.file.academic_year > b.file.academic_year ? -1 : 1;
-                const aTime = a.file.created_at || '';
-                const bTime = b.file.created_at || '';
+            } else {
+                // ── Fallback path: old record not in student_results → fetch JSON ─
+                // This triggers Cloudinary egress but only for legacy uploads.
+                console.warn('[search] student_results miss — falling back to JSON fetch:', cleanInput);
+                const searchPromises = filteredMeta.map(file => searchStudentInPDF(file, cleanInput));
+                const rawResults = await Promise.all(searchPromises);
+                foundResults = rawResults.filter(res => res !== null);
+            }
+
+            // 5) Sort: higher level first (L3>L2>L1), then ANNUEL/semester desc, then year desc
+            // [إعدادات المشرف] searchPriority يتحكم بأي نتيجة تظهر أعلى القائمة:
+            //   'auto' / 'annual_first' (الافتراضي، كالسابق تماماً) → السنوي أولاً
+            //   'semester_first'                                    → الفصلي أولاً
+            //   'newest_first'                                      → الأحدث رفعاً أولاً (بغض النظر عن النوع)
+            const _levelNum = (lvl) => { const m = String(lvl||'').match(/(\d)/); return m ? parseInt(m[1],10) : 0; };
+            const _semNum   = (sem) => { if (!sem || sem==='ANNUEL') return 999; const m = String(sem).match(/(\d)/); return m ? parseInt(m[1],10) : 0; };
+            const _priority = siteDisplaySettings.searchPriority || 'auto';
+            foundResults.sort((a, b) => {
+                const aL = _levelNum(a.file.level), bL = _levelNum(b.file.level);
+                if (aL !== bL) return bL - aL;
+
+                if (_priority === 'newest_first') {
+                    const aTime = a.file.created_at || '', bTime = b.file.created_at || '';
+                    if (aTime !== bTime) return aTime > bTime ? -1 : 1;
+                } else if (_priority === 'semester_first') {
+                    const aAnn = a.file.semester === 'ANNUEL', bAnn = b.file.semester === 'ANNUEL';
+                    if (aAnn !== bAnn) return aAnn ? 1 : -1;
+                    const aS = _semNum(a.file.semester), bS = _semNum(b.file.semester);
+                    if (aS !== bS) return bS - aS;
+                } else {
+                    // 'auto' or 'annual_first' — identical to the original default behavior.
+                    const aS = _semNum(a.file.semester), bS = _semNum(b.file.semester);
+                    if (aS !== bS) return bS - aS;
+                }
+
+                if (a.file.academic_year !== b.file.academic_year)
+                    return a.file.academic_year > b.file.academic_year ? -1 : 1;
+                const aTime = a.file.created_at || '', bTime = b.file.created_at || '';
                 if (aTime !== bTime) return aTime > bTime ? -1 : 1;
                 return 0;
             });
@@ -2671,9 +3322,15 @@
             loader.style.display = 'none';
             if (foundResults.length > 0) {
                 displayResults(foundResults);
-                // Preload the PDF in the background so the details button is instant
-                setTimeout(() => preloadPdfDocuments(foundResults), 300);
-                setTimeout(() => refreshAnnualDecisionsFromDetails(foundResults), 600);
+                // NOTE: preloadPdfDocuments() disabled — it downloads full PDFs in the
+                // background on every search and was the primary cause of Supabase
+                // Cached Egress quota exhaustion (797%). PDFs are now fetched on-demand
+                // only when the user explicitly clicks "عرض كشف النقاط التفصيلي".
+                // refreshAnnualDecisionsFromDetails also fetches PDFs; disabled for the
+                // same reason. Decision accuracy is maintained via the DB-first search
+                // which reads the decision field directly from student_results.
+                // setTimeout(() => preloadPdfDocuments(foundResults), 300);   // DISABLED: egress
+                // setTimeout(() => refreshAnnualDecisionsFromDetails(foundResults), 600); // DISABLED: egress
                 const latestResult = foundResults[0].student;
                 const latestIsValid = isValidDecision(latestResult.decision);
                 const latestAvg = parseFloat(latestResult.avg) || 0;
@@ -2776,6 +3433,7 @@
     }
 
     // إظهار تنبيه دورة الإستدراك ابتداءً من 20 يونيو إلى 30 سبتمبر (فترة ما قبل دورة الإستدراك)
+    // [تعطيل] بناءً على طلب المشرف، تم إيقاف هذا التنبيه نهائياً — لا يظهر بعد الآن.
     function shouldShowRattrapageNotice() {
         return false;
     }
@@ -2915,7 +3573,7 @@
 
             // --- Decision -----------------------------------------------------
             // Accept: "Admis(e)", "Admis(e) avec dette", "Ajourné(e)", "Validé(e)", "Exclu(e)"
-            const decMatch = segment.match(/D[ée]cision\s+du\s+jury\s*:?\s*(Admis(?:\s*\(e\))?(?:\s+avec\s+dette)?|Ajourn[ée](?:\s*\(e\))?|Validé(?:\(e\))?|Exclu(?:\s*\(e\))?)/i);
+            const decMatch = segment.match(/D[ée]cision\s+du\s+jury\s*:?\s*(Admis(?:\s*\(e\))?(?:\s+avec\s+dette)?|Ajourn[ée](?:\s*\(e\))?|Non\s+Valid[ée](?:\s*\(e\))?|Valid[ée](?:\s*\(e\))?|Exclu(?:\s*\(e\))?)/i);
             let decision = decMatch ? decMatch[1].trim().replace(/\s+/g, ' ') : 'Inconnu';
 
             // --- NNI (Numéro National d'Identification) -----------------------
@@ -3005,6 +3663,8 @@
                 const splitResult = await splitPdfByStudent(finalPdfBytes, (msg) => {
                     statusDiv.innerHTML = '⏳ ' + msg;
                 });
+                // Free the original merged buffer to keep mobile memory low.
+                finalPdfBytes = null;
                 studentsArray.forEach(s => {
                     if (Object.prototype.hasOwnProperty.call(splitResult.pageMap, s.id)) {
                         s.pageIndex = splitResult.pageMap[s.id];
@@ -3112,9 +3772,22 @@
 
         // ----- Level (L1/L2/L3) -----
         // Accept L1, L 1, NIVEAU 1, NIV1, LEVEL 1, LICENCE 1, "1ERE ANNEE", "1A".
-        let lm = spaced.match(/\b(?:L|NIV|NIVEAU|LEVEL|LIC|LICENCE)\s*([1-3])\b/);
+        // Special case: "L32BA" = L3 (level) + 2BA (major), "L22BA" = L2, "L12BA" = L1.
+        // Always take the first digit immediately after the L/NIVEAU/LICENCE keyword.
+        let lm = spaced.match(/\b(?:NIV|NIVEAU|LEVEL|LIC|LICENCE)\s*([1-3])\b/);
+        // Standalone "L1", "L 1", "L2", "L3" token
+        if (!lm) lm = spaced.match(/\bL\s*([1-3])\b/);
         if (!lm) lm = spaced.match(/\b([1-3])\s*(?:ERE|EME|E)?\s*(?:ANNEE|AN|A)\b/);
-        if (!lm) lm = compact.match(/(?:NIVEAU|LICENCE|LEVEL|NIV|LIC|L)([1-3])(?!\d)/);
+        if (!lm) {
+            // Glued forms: L12BA, L22BA, L32BA, L1S2, L2S3, L3FCFP, etc.
+            const glued = compact.match(/(?:NIVEAU|LICENCE|LEVEL|NIV|LIC)([1-3])/);
+            if (glued) { lm = glued; }
+            else {
+                // Match first "L" followed by 1/2/3 — digit after it can be anything
+                const gluedL = compact.match(/L([1-3])/);
+                if (gluedL) lm = gluedL;
+            }
+        }
         if (lm) detect.level = 'L' + lm[1];
 
         // ----- Major -----
@@ -3188,8 +3861,7 @@
             const majorOpts = BULK_MAJORS.slice().sort().map(m => `<option value="${m}">${m}</option>`).join('');
             const levelOpts = BULK_LEVELS.map(l => `<option value="${l}">${l}</option>`).join('');
             const semOpts   = [...BULK_SEMS, 'ANNUEL'].map(s => `<option value="${s}">${s}</option>`).join('');
-            const yearOpts  = Array.from(document.getElementById('up-bulk-year').options)
-                                   .map(o => `<option value="${o.value}">${o.value}</option>`).join('');
+            const yearOpts  = getYearRangeOptionsHTML(d.year || defYr);
 
             tr.innerHTML = `
                 <td style="padding:6px; text-align:center;">${idx+1}</td>
@@ -3483,17 +4155,15 @@
     // ---------------------------------------------------------------
     async function preloadPdfDocuments(results) {
         for (const res of results) {
-            const rawUrl = res.file && res.file.details_url;
-            if (!rawUrl || pdfDocCache[rawUrl]) continue;
-            // Use CDN-friendly URL for Supabase Storage files to benefit from edge caching
-            const url = isSupabaseStorageUrl(rawUrl) ? supabaseDelivery(rawUrl) : rawUrl;
+            const url = res.file && res.file.details_url;
+            if (!url || pdfDocCache[url]) continue;
             const hasPageIndex = Number.isInteger(res.student && res.student.pageIndex)
                                  && res.student.pageIndex >= 0;
             try {
                 if (hasPageIndex) {
                     // Range-request mode: pdf.js fetches only the trailer/xref
                     // initially — the actual page bytes are downloaded on demand.
-                    pdfDocCache[rawUrl] = await pdfjsLib.getDocument({
+                    pdfDocCache[url] = await pdfjsLib.getDocument({
                         url:              url,
                         rangeChunkSize:   65536,   // 64 KB chunks
                         disableAutoFetch: true,    // don't pre-fetch all pages
@@ -3502,7 +4172,7 @@
                 } else {
                     // Legacy mode: download full file in the background.
                     const bytes = await fetch(url).then(r => r.arrayBuffer());
-                    pdfDocCache[rawUrl] = await pdfjsLib.getDocument({ data: new Uint8Array(bytes) }).promise;
+                    pdfDocCache[url] = await pdfjsLib.getDocument({ data: new Uint8Array(bytes) }).promise;
                 }
             } catch (e) { /* silent — user will see error on explicit click if needed */ }
         }
@@ -3755,12 +4425,15 @@
         function sideModuleRows(side) {
             const list = [];
             rows.slice().sort((a, b) => (a.y || 0) - (b.y || 0)).forEach(r => {
-                const t = (r.cells || []).map(c => c.s).join(' ');
-                if (META_RE.test(t) || FOOT_RE.test(t)) return;
+                // Filter meta/footer text on THIS SIDE ONLY: a footer label
+                // like "Crédit /30" printed on the S6 half must not delete
+                // the S5 module that shares the same Y line (and vice versa).
                 const cells = (r.cells || [])
                     .filter(c => side === 'L' ? (c.x || 0) < mid : (c.x || 0) >= mid)
                     .sort((a, b) => (a.x || 0) - (b.x || 0));
                 if (!cells.length) return;
+                const t = cells.map(c => c.s).join(' ');
+                if (META_RE.test(t) || FOOT_RE.test(t)) return;
                 if (!cells.some(c => isNum(c.s))) return; // skip name-only / empty lines
                 list.push(cells);
             });
@@ -3899,28 +4572,194 @@
         }
         if (!tableRows.length) return null;
 
+        // Calculate a safe semester moyenne from UE/group rows. This is used
+        // only as a correction fallback when the footer parser accidentally
+        // reads the denominator "20" instead of the real S5/S6 moyenne.
+        const toNum = (x) => {
+            const n = parseFloat(String(x || '').replace(',', '.'));
+            return isFinite(n) ? n : NaN;
+        };
+        // Compute the semester moyenne two independent ways and pick the one
+        // whose credit total is closest to 30 (a full semester):
+        //   (A) Leaf module rows  – rows with individual grades (cc/cf/ratt)
+        //       + note finale + credit.  Weighted average by module credits.
+        //   (B) Group / UE rows   – aggregate rows carrying only the group's
+        //       average and total credit.  Weighted average by UE credits.
+        // Mathematically both yield the same value when the transcript is
+        // consistent, but leaf rows are the safest source for S5/S6 where the
+        // PDF sometimes omits a group aggregate or lists an extra memoir /
+        // PFE row that would bias a naive sum.
+        const calcSemesterMoyenne = (mods, cents, lbls) => {
+            let wLeaf = 0, cLeaf = 0;
+            let wGroup = 0, cGroup = 0;
+            (mods || []).forEach(cells => {
+                const p = fixGroupAvg(parseSide(cells, cents, lbls));
+                const avg = toNum(p.nf), cr = toNum(p.cr);
+                if (!p.name) return;
+                if (!isFinite(avg) || !isFinite(cr)) return;
+                if (avg < 0 || avg > 20 || cr <= 0 || cr > 30) return;
+                const hasIndiv = (p.cc !== '' || p.cf !== '' || p.ratt !== '');
+                if (hasIndiv) { wLeaf  += avg * cr; cLeaf  += cr; }
+                else          { wGroup += avg * cr; cGroup += cr; }
+            });
+            const inRange = (c) => c >= 15 && c <= 32;
+            const mLeaf  = inRange(cLeaf)  ? (wLeaf  / cLeaf)  : NaN;
+            const mGroup = inRange(cGroup) ? (wGroup / cGroup) : NaN;
+            const dLeaf  = isFinite(mLeaf)  ? Math.abs(cLeaf  - 30) : Infinity;
+            const dGroup = isFinite(mGroup) ? Math.abs(cGroup - 30) : Infinity;
+            const best = (dLeaf <= dGroup) ? mLeaf : mGroup;
+            return isFinite(best) ? best.toFixed(2) : '';
+        };
+        const calcMoyL = calcSemesterMoyenne(modL, cL, lblL);
+        const calcMoyR = calcSemesterMoyenne(modR, cR, lblR);
 
         // ── Footer: per-semester moyenne / credit / decision ───────────────
         const foot = { moyL: '', decL: '', moyR: '', decR: '', credL: '', credR: '' };
-        rows.forEach(r => {
-            const cells = r.cells || [];
-            const t = cells.map(c => c.s).join(' ');
-            if (/Moyenne du semestre/i.test(t)) {
-                cells.forEach(c => {
-                    const left = (c.x || 0) < mid;
-                    if (isNum(c.s)) { if (left) foot.moyL = foot.moyL || c.s; else foot.moyR = foot.moyR || c.s; }
-                    else if (/Non|Valid/i.test(c.s)) {
-                        if (left) foot.decL = (foot.decL + ' ' + c.s).trim();
-                        else foot.decR = (foot.decR + ' ' + c.s).trim();
-                    }
+
+        // Footer rows contain labels such as "Moyenne du semestre / 20" and
+        // "Crédit /30".  The old parser took the FIRST numeric token on each
+        // side, so it sometimes displayed the denominator itself (20 or 30) as
+        // the student's S5/S6 moyenne/credit.  Here we parse each side as text
+        // and take the value AFTER the colon; fallback is the last real value,
+        // explicitly excluding the denominator token.
+        const normalizeFootNumber = (s) => String(s || '').trim().replace(',', '.');
+        const firstMatchValue = (text, patterns) => {
+            for (const re of patterns) {
+                const m = String(text || '').match(re);
+                if (m && m[1]) return normalizeFootNumber(m[1]);
+            }
+            return '';
+        };
+        const fallbackLastNumber = (sideCells, denominator) => {
+            const nums = (sideCells || [])
+                .filter(c => isNum(c.s))
+                .map(c => normalizeFootNumber(c.s))
+                .filter(v => {
+                    const n = parseFloat(v);
+                    return !(isFinite(n) && Math.abs(n - denominator) < 0.001);
                 });
+            return nums.length ? nums[nums.length - 1] : '';
+        };
+        const parseFooterSide = (sideCells, kind) => {
+            const text = (sideCells || []).map(c => String(c.s || '')).join(' ').replace(/\s+/g, ' ');
+            if (kind === 'moy') {
+                return firstMatchValue(text, [
+                    /Moyenne\s+du\s+semestre\s*(?:\/\s*20)?\s*:?\s*(\d{1,2}(?:[.,]\d{1,2})?)/i,
+                    /semestre\s*(?:\/\s*20)?\s*:?\s*(\d{1,2}(?:[.,]\d{1,2})?)/i
+                ]) || fallbackLastNumber(sideCells, 20);
+            }
+            return firstMatchValue(text, [
+                /Cr[ée]dit\s*(?:\/\s*30)?\s*:?\s*(\d{1,3}(?:[.,]\d{1,2})?)/i,
+                /cr[ée]dits?\s*:?\s*(\d{1,3}(?:[.,]\d{1,2})?)/i
+            ]) || fallbackLastNumber(sideCells, 30);
+        };
+
+        rows.forEach(r => {
+            const cells = (r.cells || []).slice().sort((a, b) => (a.x || 0) - (b.x || 0));
+            const t = cells.map(c => c.s).join(' ');
+            const leftCells = cells.filter(c => (c.x || 0) < mid);
+            const rightCells = cells.filter(c => (c.x || 0) >= mid);
+
+            if (/Moyenne du semestre/i.test(t)) {
+                // Only parse a side's moyenne if THAT side's text actually
+                // contains the "Moyenne du semestre" label. Otherwise the
+                // fallback would grab an unrelated module credit as the
+                // semester average.
+                const leftTxt  = leftCells.map(c => String(c.s || '')).join(' ');
+                const rightTxt = rightCells.map(c => String(c.s || '')).join(' ');
+                const leftIsMoy  = /Moyenne\s+du\s+semestre/i.test(leftTxt);
+                const rightIsMoy = /Moyenne\s+du\s+semestre/i.test(rightTxt);
+                const ml = leftIsMoy  ? parseFooterSide(leftCells, 'moy')  : '';
+                const mr = rightIsMoy ? parseFooterSide(rightCells, 'moy') : '';
+                if (ml) foot.moyL = foot.moyL || ml;
+                if (mr) foot.moyR = foot.moyR || mr;
+                // Extract the semester decision from the ORIGINAL positioned PDF
+                // cells beside the exact "Moyenne du semestre" row.  We search
+                // the decision column near that row instead of trusting any
+                // earlier module decision that may be merged into the same text
+                // stream (the common false case is reading "Validé" while the
+                // footer actually says "Non Validé").
+                const pickDecisionToken = (txt) => {
+                    const re = /(Non\s*Valid[ée](?:\s*\(e\))?|Valid[ée](?:\s*\(e\))?|Ajourn[ée](?:\s*\(e\))?|Admis(?:\s*\(e\))?(?:\s+avec\s+dette)?|Rattrapage|Exclu(?:\s*\(e\))?)/gi;
+                    let m, last = null;
+                    while ((m = re.exec(String(txt || ''))) !== null) last = m[1];
+                    return last ? last.replace(/\s+/g, ' ').trim() : '';
+                };
+                const extractDecisionFromCells = (sideCells) => pickDecisionToken(
+                    (sideCells || [])
+                        .filter(c => !isNum(c.s))
+                        .map(c => String(c.s || ''))
+                        .join(' ')
+                );
+                const extractDecisionNearFooter = (side, y, sideCells) => {
+                    const cents = side === 'L' ? cL : cR;
+                    const creditC = cents && cents.length ? cents[cents.length - 1] : (side === 'L' ? mid * 0.86 : rawW * 0.92);
+                    const minX = creditC + rawW * 0.004;
+                    const maxX = side === 'L' ? (mid - rawW * 0.004) : (rawW + 1);
+                    const candidates = [];
+                    rows.forEach(rr => {
+                        const dy = Math.abs((rr.y || 0) - (y || 0));
+                        if (dy > 18) return;
+                        (rr.cells || []).forEach(c => {
+                            const x = c.x || 0;
+                            if (x <= minX || x >= maxX || isNum(c.s)) return;
+                            const d = pickDecisionToken(c.s);
+                            if (d) candidates.push({ d, dy, x });
+                        });
+                    });
+                    if (!candidates.length) return extractDecisionFromCells(sideCells);
+                    candidates.sort((a, b) => a.dy - b.dy || a.x - b.x);
+                    const closestDy = candidates[0].dy;
+                    const closest = candidates.filter(c => c.dy <= closestDy + 2);
+                    const nonValid = closest.find(c => /^Non\s*Valid/i.test(c.d));
+                    return (nonValid ? nonValid.d : closest[closest.length - 1].d).replace(/\s+/g, ' ').trim();
+                };
+                const setDecision = (key, val) => {
+                    if (!val) return;
+                    if (!foot[key] || /^Non\s*Valid/i.test(val)) foot[key] = val;
+                };
+                setDecision('decL', extractDecisionNearFooter('L', r.y, leftCells));
+                setDecision('decR', extractDecisionNearFooter('R', r.y, rightCells));
             }
             if (/Cr[ée]dit\s*\/?\s*30/i.test(t)) {
-                cells.forEach(c => {
-                    if (isNum(c.s)) { if ((c.x || 0) < mid) foot.credL = foot.credL || c.s; else foot.credR = foot.credR || c.s; }
-                });
+                const leftTxt  = leftCells.map(c => String(c.s || '')).join(' ');
+                const rightTxt = rightCells.map(c => String(c.s || '')).join(' ');
+                const leftIsCred  = /Cr[ée]dit\s*\/?\s*30/i.test(leftTxt);
+                const rightIsCred = /Cr[ée]dit\s*\/?\s*30/i.test(rightTxt);
+                const cl = leftIsCred  ? parseFooterSide(leftCells, 'cred')  : '';
+                const cr = rightIsCred ? parseFooterSide(rightCells, 'cred') : '';
+                if (cl) foot.credL = foot.credL || cl;
+                if (cr) foot.credR = foot.credR || cr;
             }
         });
+        const looksLikeDenominator20 = (x) => {
+            const n = toNum(x);
+            return isFinite(n) && Math.abs(n - 20) < 0.001;
+        };
+        // Mismatch guard: if the footer-parsed moyenne differs from the
+        // credit-weighted average of the UE/group rows by more than 0.5,
+        // the footer value is almost certainly a mis-picked cell (e.g. a
+        // credit column like "2.0" instead of the real S5 moyenne). In that
+        // case trust the calculated value, which is mathematically exact.
+        const mismatchTooLarge = (footVal, calcVal) => {
+            const a = toNum(footVal), b = toNum(calcVal);
+            return isFinite(a) && isFinite(b) && Math.abs(a - b) > 0.5;
+        };
+        // Resolution priority for the displayed moyenne:
+        //   1. calcMoy* when available (weighted average from module rows –
+        //      always the mathematically exact value).
+        //   2. footer value from the PDF, unless it looks like the printed
+        //      denominator "20" or is out of range.
+        const isSaneMoy = (v) => {
+            const n = toNum(v);
+            return isFinite(n) && n >= 0 && n <= 20 && !looksLikeDenominator20(v);
+        };
+        if (calcMoyL) foot.moyL = calcMoyL;
+        else if (!isSaneMoy(foot.moyL)) foot.moyL = '';
+        if (calcMoyR) foot.moyR = calcMoyR;
+        else if (!isSaneMoy(foot.moyR)) foot.moyR = '';
+        // Silence unused-warning: mismatchTooLarge kept for backwards compat.
+        void mismatchTooLarge;
         const jury = (sum && sum.decision) ? sum.decision
             : ((allText.match(/D[ée]cision du jury\s*:?\s*([^\n]+)/i) || [])[1] || '').trim();
 
@@ -3949,6 +4788,8 @@
 .atx-tbl tr.atx-jury td{background:#fff;font-weight:700;font-size:12.5px;padding:10px;}
 .atx-tbl tr.atx-grp td{background:#e6f7ee;border-top:1.5px solid #a7f3d0;}
 .atx-tbl tr.atx-grp td.name{font-weight:800;color:#005C29;font-style:italic;text-align:left;}
+.atx-tbl td.atx-empty{background:repeating-linear-gradient(135deg,#f8fafc 0 8px,#eef2f7 8px 16px);color:transparent;border:1px dashed #cbd5e1;padding:0;height:100%;}
+.atx-tbl tbody tr:nth-child(even) td.atx-empty{background:repeating-linear-gradient(135deg,#f8fafc 0 8px,#eef2f7 8px 16px);}
 .atx-footer-note{text-align:center;color:#94a3b8;font-size:11px;padding:12px 8px 4px;}
 </style>`;
 
@@ -3977,13 +4818,22 @@
             ? `<th>Contrôle continu</th><th>Contrôle final</th><th>Note Rattrapage</th><th>Note finale</th><th>Crédit</th>`
             : `<th>Contrôle continu</th><th>Contrôle final</th><th>Note finale</th><th>Crédit</th>`;
 
+        // Determine correct semester names based on level (L1→S1/S2, L2→S3/S4, L3→S5/S6)
+        const _lvl = (sum && sum.level) ? String(sum.level).toUpperCase().trim() : 'L1';
+        const _semNames = {
+            'L1': ['Premier Semestre (S1)',   'Deuxième Semestre (S2)'],
+            'L2': ['Troisième Semestre (S3)', 'Quatrième Semestre (S4)'],
+            'L3': ['Cinquième Semestre (S5)', 'Sixième Semestre (S6)']
+        };
+        const [_semLabelL, _semLabelR] = _semNames[_lvl] || _semNames['L1'];
+
         const theadHtml = `<thead>
             <tr>
                 <th rowspan="2">Libellé de la Matière</th>
-                <th class="sem" colspan="${numColsL}">Premier Semestre</th>
+                <th class="sem" colspan="${numColsL}">${_semLabelL}</th>
                 <th rowspan="2">Décisions</th>
                 <th rowspan="2">Libellé de la Matière</th>
-                <th class="sem" colspan="${numColsR}">Deuxième Semestre</th>
+                <th class="sem" colspan="${numColsR}">${_semLabelR}</th>
                 <th rowspan="2">Décisions</th>
             </tr>
             <tr>
@@ -3992,21 +4842,30 @@
             </tr>
         </thead>`;
 
-        const bodyHtml = tableRows.map(tr => {
+        const isSideEmpty = (S) => !((S.name && String(S.name).trim()) || (S.cc && String(S.cc).trim()) || (S.cf && String(S.cf).trim()) || (S.ratt && String(S.ratt).trim()) || (S.nf && String(S.nf).trim()) || (S.cr && String(S.cr).trim()) || (S.dec && String(S.dec).trim()));
+        const bodyHtml = tableRows
+            .filter(tr => !(isSideEmpty(tr.L) && isSideEmpty(tr.R)))
+            .map(tr => {
             const L = tr.L, R = tr.R;
+            const emptyL = isSideEmpty(L);
+            const emptyR = isSideEmpty(R);
             // A "group/section" row has no individual grades (cc and cf both empty)
             // but carries a group average (nf) — e.g. "Enseignement de la Spécialité I"
-            const isGrpL = L.cc === '' && L.cf === '' && L.nf !== '';
-            const isGrpR = R.cc === '' && R.cf === '' && R.nf !== '';
+            const isGrpL = !emptyL && L.cc === '' && L.cf === '' && L.nf !== '';
+            const isGrpR = !emptyR && R.cc === '' && R.cf === '' && R.nf !== '';
             let cellsL, cellsR;
-            if (isGrpL) {
+            if (emptyL) {
+                cellsL = `<td class="atx-empty" colspan="${sideColsL}"></td>`;
+            } else if (isGrpL) {
                 // name spans: name + cc + cf [+ ratt] columns, then nf, cr, dec
                 const spanL = hasRattL ? 4 : 3;
                 cellsL = `<td class="name" colspan="${spanL}">${esc(L.name)}</td><td>${v(L.nf)}</td><td>${v(L.cr)}</td><td>${v(L.dec)}</td>`;
             } else {
                 cellsL = `<td class="name">${esc(L.name)}</td><td>${v(L.cc)}</td><td>${v(L.cf)}</td>${hasRattL ? `<td>${v(L.ratt)}</td>` : ''}<td>${v(L.nf)}</td><td>${v(L.cr)}</td><td>${v(L.dec)}</td>`;
             }
-            if (isGrpR) {
+            if (emptyR) {
+                cellsR = `<td class="atx-empty" colspan="${sideColsR}"></td>`;
+            } else if (isGrpR) {
                 const spanR = hasRattR ? 4 : 3;
                 cellsR = `<td class="name" colspan="${spanR}">${esc(R.name)}</td><td>${v(R.nf)}</td><td>${v(R.cr)}</td><td>${v(R.dec)}</td>`;
             } else {
@@ -4074,7 +4933,8 @@
         });
         mergedRows = mergedRows.map(r => ({ ...r, y: yMap.get(r.y || 0) ?? (r.y || 0) }));
         const SCALE = 1.05;  /* slightly > 1 keeps text crisp and cells non-overlapping */
-        const W = (details.w || 1200) * SCALE;
+        const SCALE_X = 1.55;  /* wider than SCALE on purpose: gives the Semestre grid roomier columns/spacing (long names like "Comptabilité des sociétés d'assurances" get real breathing room) as part of the table's own natural size, independent of the on-screen zoom control — vertical layout (SCALE) is untouched */
+        const W = (details.w || 1200) * SCALE_X;
         // Trim total height to the actual content extent (plus small padding),
         // instead of the PDF page height which is often mostly empty.
         const maxY = mergedRows.reduce((m, r) => Math.max(m, r.y || 0), 0);
@@ -4107,16 +4967,16 @@
                     const safe = String(c.s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                     return `<span style="white-space:nowrap;font-family:'Cairo',Arial,sans-serif;font-size:${FONT_SIZE};color:#0f172a;line-height:1.35;">${safe}</span>`;
                 }).join('');
-                html += `<div style="position:absolute;left:0;top:${y.toFixed(1)}px;width:${W.toFixed(1)}px;height:${rowH.toFixed(1)}px;display:flex;justify-content:space-between;align-items:center;border:1px solid ${lineColor};box-sizing:border-box;padding:1px 6px;">${cellsHtml}</div>`;
+                html += `<div style="position:absolute;left:0;top:${y.toFixed(1)}px;width:${W.toFixed(1)}px;height:${rowH.toFixed(1)}px;display:flex;justify-content:space-between;align-items:center;border:1px solid ${lineColor};box-sizing:border-box;padding:1px 10px;">${cellsHtml}</div>`;
             } else {
                 // Default: render each cell as an absolutely-positioned box
                 for (let i = 0; i < cells.length; i++) {
                     const c = cells[i];
-                    const x = (c.x || 0) * SCALE;
-                    const nextX = i < cells.length - 1 ? (cells[i + 1].x || 0) * SCALE : W;
+                    const x = (c.x || 0) * SCALE_X;
+                    const nextX = i < cells.length - 1 ? (cells[i + 1].x || 0) * SCALE_X : W;
                     const cellW = Math.max(8, nextX - x);
                     const safe = String(c.s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                    html += `<div style="position:absolute;left:${x.toFixed(1)}px;top:${y.toFixed(1)}px;width:${cellW.toFixed(1)}px;height:${rowH.toFixed(1)}px;border:1px solid ${lineColor};box-sizing:border-box;padding:2px 4px;font-family:'Cairo',Arial,sans-serif;font-size:${FONT_SIZE};color:#0f172a;line-height:1.35;white-space:nowrap;overflow:hidden;">${safe}</div>`;
+                    html += `<div style="position:absolute;left:${x.toFixed(1)}px;top:${y.toFixed(1)}px;width:${cellW.toFixed(1)}px;height:${rowH.toFixed(1)}px;border:1px solid ${lineColor};box-sizing:border-box;padding:2px 8px;font-family:'Cairo',Arial,sans-serif;font-size:${FONT_SIZE};color:#0f172a;line-height:1.35;white-space:nowrap;overflow:hidden;">${safe}</div>`;
                 }
             }
         }); // end mergedRows.forEach
@@ -4128,7 +4988,7 @@
             const sum = details._summary;
             const decStr = String(sum.decision || '');
             const hasDette = /avec\s+dette/i.test(decStr);
-            const okDecision = /(admis|valid)/i.test(decStr);
+            const okDecision = isValidDecision(decStr);
             // 3 visual states: clean pass (green), pass with dette (amber), fail (red)
             const decisionColor = hasDette ? '#92400e' : (okDecision ? '#047857' : '#b91c1c');
             const decisionBg    = hasDette ? '#fef3c7' : (okDecision ? '#d1fae5' : '#fee2e2');
@@ -4138,8 +4998,10 @@
             const ctx = [sum.academicYear, sum.major, sum.level ? `${sum.level} - Annuel` : 'Annuel']
                 .filter(Boolean).join(' | ');
             const safeCtx = String(ctx).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            const creditPairByLevel = { L1: 'S1 + S2', L2: 'S3 + S4', L3: 'S5 + S6' };
+            const creditPairLabel = creditPairByLevel[String(sum.level || '').toUpperCase().trim()] || 'S1 + S2';
 
-            // ── Total Crédits (S1 + S2) ─────────────────────────────────────────
+            // ── Total Crédits (current level pair) ──────────────────────────────
             // Primary source: value parsed from PDF text at upload time and stored
             // in _summary.totalCredits. Fallback: scan positioned detail rows.
             let totalCredits = null;
@@ -4243,7 +5105,7 @@
             } catch (e) { /* silent */ }
             const creditsHtml = (totalCredits !== null) ? `
                         <div style="background:rgba(255,255,255,0.15);padding:8px 14px;border-radius:10px;font-size:15px;font-weight:700;">
-                            Total Crédits (S1 + S2) :
+                            Total Crédits (${creditPairLabel}) :
                             <span style="font-size:18px;font-weight:900;margin-left:6px;">${totalCredits}</span>
                         </div>` : '';
 
@@ -4463,8 +5325,21 @@
         // Avoid duplicating the button on re-renders.
         if (container.querySelector('.download-details-pdf-btn')) return;
 
+        // Detect whether this card is Annuelle or Semestre (the "عرض كشف
+        // النقاط التفصيلي" button sits right before the container in the
+        // DOM and carries data-annual="1"/"0") so each type can have its
+        // own default zoom without affecting the other.
+        let _isAnnualCard = false;
+        try {
+            const _btn = container.previousElementSibling;
+            if (_btn && _btn.classList && _btn.classList.contains('view-details-btn')) {
+                _isAnnualCard = _btn.dataset.annual === '1';
+            }
+        } catch (_) {}
+        const DEFAULT_ZOOM = _isAnnualCard ? 0.31 : 0.31;
+
         // ── Zoom state ──────────────────────────────────────────────────────
-        let zoomLevel = 0.35;
+        let zoomLevel = DEFAULT_ZOOM;
         const ZOOM_STEP = 0.15;
         const ZOOM_MIN  = 0.15;
         const ZOOM_MAX  = 2.5;
@@ -4639,7 +5514,7 @@
             applyZoom(); updateZoomUI();
         };
         btnReset.onclick = () => {
-            zoomLevel = 0.35;
+            zoomLevel = DEFAULT_ZOOM;
             applyZoom(); updateZoomUI();
         };
 
@@ -4695,28 +5570,34 @@
         const cardId = container.id.replace(/^details-container-/, '');
         const detailsData = window.__detailsDataMap && window.__detailsDataMap[cardId];
         if (detailsData && detailsData.rows && detailsData.rows.length) {
-            renderDetailsAsHtml(container, detailsData, studentId);
-            // Snapshot the rendered HTML grid via html2canvas for a clean, organized PDF
-            // that mirrors exactly what the user sees on screen.
-            appendDownloadPdfButton(container, async () => {
-                const target = container.firstElementChild || container;
-                try {
-                    return await html2canvas(target, {
-                        scale: 2.5, backgroundColor: '#ffffff', useCORS: true, logging: false,
-                        windowWidth: target.scrollWidth, windowHeight: target.scrollHeight,
-                    });
-                } catch (e) {
-                    console.warn('html2canvas failed, falling back to manual canvas', e);
-                    return renderDetailsToCanvas(detailsData, studentId);
+            try {
+                renderDetailsAsHtml(container, detailsData, studentId);
+                // Snapshot the rendered HTML grid via html2canvas for a clean, organized PDF
+                // that mirrors exactly what the user sees on screen.
+                appendDownloadPdfButton(container, async () => {
+                    const target = container.firstElementChild || container;
+                    try {
+                        return await html2canvas(target, {
+                            scale: 2.5, backgroundColor: '#ffffff', useCORS: true, logging: false,
+                            windowWidth: target.scrollWidth, windowHeight: target.scrollHeight,
+                        });
+                    } catch (e) {
+                        console.warn('html2canvas failed, falling back to manual canvas', e);
+                        return renderDetailsToCanvas(detailsData, studentId);
+                    }
+                }, studentId);
+                container.dataset.rendered = '1';
+                container.style.display    = 'block';
+                if (btnElement) {
+                    btnElement.disabled  = false;
+                    btnElement.innerText = '👁️ إخفاء كشف النقاط التفصيلي';
                 }
-            }, studentId);
-            container.dataset.rendered = '1';
-            container.style.display    = 'block';
-            if (btnElement) {
-                btnElement.disabled  = false;
-                btnElement.innerText = '👁️ إخفاء كشف النقاط التفصيلي';
+                return;
+            } catch (structuredErr) {
+                console.warn('Structured details render failed, falling back to PDF:', structuredErr);
+                try { delete window.__detailsDataMap[cardId]; } catch (_) {}
+                container.innerHTML = '';
             }
-            return;
         }
 
         // ── Fast path: pre-rendered JPEG image ──────────────────────────────
@@ -4739,43 +5620,33 @@
 
         // ── Slow paths: fetch & render PDF ──────────────────────────────────
         if (btnElement) { btnElement.disabled = true; btnElement.innerText = '⏳ جاري تحميل الكشف...'; }
-        try {
-            const isNewFormat = Number.isInteger(pageIndex) && pageIndex >= 0;
-            let pdfDocjs;
+        let lastOpenablePdfUrl = pdfUrl;
 
-            if (pdfDocCache[pdfUrl]) {
-                pdfDocjs = pdfDocCache[pdfUrl];
-            } else if (isNewFormat) {
-                pdfDocjs = await pdfjsLib.getDocument({
-                    url:              pdfUrl,
-                    rangeChunkSize:   65536,
-                    disableAutoFetch: true,
-                    disableStream:    false
-                }).promise;
-                pdfDocCache[pdfUrl] = pdfDocjs;
-            } else {
-                const bytes = await fetch(pdfUrl).then(res => res.arrayBuffer());
-                pdfDocjs = await pdfjsLib.getDocument({ data: new Uint8Array(bytes) }).promise;
-                pdfDocCache[pdfUrl] = pdfDocjs;
-            }
+        // Inner worker: one full attempt to fetch + render. Returns true on success.
+        const attemptRenderPdf = async () => {
+            const isNewFormat = Number.isInteger(pageIndex) && pageIndex >= 0;
+            const loaded = await loadPdfForStudentPage(pdfUrl, pageIndex);
+            lastOpenablePdfUrl = loaded.sourceUrl || pdfUrl;
+            const pdfDocjs = loaded.pdf;
 
             let renderedCanvas = null;
-            if (isNewFormat && pageIndex < pdfDocjs.numPages) {
+            const pageNumber = loaded.pageNumber;
+            const canUseDirectPage = isNewFormat && pageNumber && pageNumber >= 1 && pageNumber <= pdfDocjs.numPages;
+            if (canUseDirectPage) {
                 if (btnElement) btnElement.innerText = '⏳ جاري عرض الكشف...';
-                const page     = await pdfDocjs.getPage(pageIndex + 1);
+                const page     = await withTimeout(pdfDocjs.getPage(pageNumber), 15000, 'PDF page loading timed out');
                 const viewport = page.getViewport({ scale: 2.0 });
                 const canvas   = document.createElement('canvas');
                 canvas.width   = viewport.width;
                 canvas.height  = viewport.height;
-                // Render PDF page AND extract text in parallel for speed
-                const [, textContent] = await Promise.all([
-                    page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise,
-                    page.getTextContent()
-                ]);
+                // Render PDF page AND extract text in parallel for speed.
+                // getTextContent() is best-effort — never fail rendering on it.
+                const renderPromise = page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+                const textPromise   = page.getTextContent().catch(() => null);
+                await withTimeout(renderPromise, 25000, 'PDF page rendering timed out');
+                const textContent = await textPromise;
                 container.innerHTML = '';
                 // ── Annual credits banner (shown above the transcript canvas) ────
-                // Extract "Total des crédits obtenus" from the page text and
-                // display it even when structured details rows are not available.
                 const isAnnualSlowPath = btnElement && btnElement.dataset && btnElement.dataset.annual === '1';
                 if (isAnnualSlowPath && textContent) {
                     try {
@@ -4797,8 +5668,10 @@
                 container.appendChild(canvas);
                 renderedCanvas = canvas;
             } else {
-                await renderStudentSliceLegacy(pdfDocjs, studentId, container);
+                if (btnElement) btnElement.innerText = '⏳ جاري تجهيز الكشف...';
+                await withTimeout(renderStudentSliceLegacy(pdfDocjs, studentId, container), 45000, 'Legacy details rendering timed out');
                 renderedCanvas = container.querySelector('canvas');
+                if (!renderedCanvas) throw new Error('legacy slice produced no canvas');
             }
 
             if (renderedCanvas) {
@@ -4808,14 +5681,79 @@
             container.dataset.rendered = '1';
             container.style.display   = 'block';
             if (btnElement) btnElement.innerText = '👁️ إخفاء كشف النقاط التفصيلي';
-        } catch (error) {
-            console.error(error);
-            alert('حدث خطأ في عرض التفاصيل.');
+            return true;
+        };
+
+        // Fallback: show the JPEG thumbnail (if available) so user still sees something.
+        const renderThumbFallback = () => {
+            if (!thumbUrl) return false;
+            try {
+                const deliveryUrl = cloudinaryDelivery(thumbUrl, 'f_auto,q_auto,w_1400,c_limit');
+                const fullResUrl  = cloudinaryDelivery(thumbUrl, 'f_auto,q_auto');
+                container.innerHTML = `<img src="${deliveryUrl}"
+                    style="display:block;max-width:100%;width:auto;height:auto;border-radius:12px;box-shadow:0 10px 28px rgba(0,0,0,0.12);"
+                    loading="lazy" decoding="async" />`;
+                appendDownloadPdfButton(container, () => imgUrlToCanvas(fullResUrl), studentId);
+                container.dataset.rendered = '1';
+                container.style.display    = 'block';
+                if (btnElement) btnElement.innerText = '👁️ إخفاء كشف النقاط التفصيلي';
+                return true;
+            } catch (e) { console.warn('thumb fallback failed', e); return false; }
+        };
+
+        // Final fallback: inline error UI with retry + open-PDF-in-new-tab.
+        const showInlineError = (lastError) => {
+            const safeUrl = (lastOpenablePdfUrl || pdfUrl || '').replace(/"/g, '&quot;');
+            container.innerHTML = `
+                <div style="background:#fff7f7;border:1px solid #fecaca;border-radius:12px;padding:18px 16px;font-family:Cairo,Arial,sans-serif;text-align:center;color:#7f1d1d;">
+                    <div style="font-weight:800;font-size:15px;margin-bottom:6px;">تعذر عرض كشف النقاط التفصيلي</div>
+                    <div style="font-size:13px;color:#9b2c2c;margin-bottom:12px;">قد يكون الاتصال بطيئاً أو أن الخادم لم يستجب. يمكنك إعادة المحاولة أو فتح الكشف مباشرة.</div>
+                    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+                        <button type="button" class="details-retry-btn" style="background:linear-gradient(135deg,#005C29,#047a36);color:#fff;border:none;padding:9px 18px;border-radius:10px;font-weight:700;cursor:pointer;font-family:inherit;font-size:13px;">🔄 إعادة المحاولة</button>
+                        <a href="${safeUrl}" target="_blank" rel="noopener" style="background:#fff;color:#005C29;border:1px solid #005C29;padding:9px 18px;border-radius:10px;font-weight:700;text-decoration:none;font-family:inherit;font-size:13px;display:inline-flex;align-items:center;">📄 فتح ملف PDF</a>
+                    </div>
+                </div>`;
+            container.style.display = 'block';
+            container.dataset.rendered = '0';
+            const retryBtn = container.querySelector('.details-retry-btn');
+            if (retryBtn) retryBtn.onclick = () => {
+                container.innerHTML = '';
+                container.dataset.rendered = '0';
+                renderDetailsInContainer(studentId, pdfUrl, btnElement, container, pageIndex, thumbUrl);
+            };
             if (btnElement) btnElement.innerText = '👁️ عرض كشف النقاط التفصيلي';
+            if (lastError) console.error('Details render failed:', lastError);
+        };
+
+        // Try → retry once with cache cleared → thumb fallback → inline error.
+        let lastError = null;
+        try {
+            try {
+                await attemptRenderPdf();
+            } catch (err1) {
+                console.warn('First details render attempt failed, retrying...', err1);
+                lastError = err1;
+                clearPdfCacheForUrl(pdfUrl);
+                container.innerHTML = '';
+                try {
+                    // Small delay to let transient network conditions recover.
+                    await sleepMs(400);
+                    await attemptRenderPdf();
+                } catch (err2) {
+                    lastError = err2;
+                    console.error('Second details render attempt failed', err2);
+                    clearPdfCacheForUrl(pdfUrl);
+                    container.innerHTML = '';
+                    if (!renderThumbFallback()) {
+                        showInlineError(err2);
+                    }
+                }
+            }
         } finally {
             if (btnElement) btnElement.disabled = false;
         }
     }
+
 
     // ---------------------------------------------------------------
     // Called by the "تحقق وعرض الكشف" button inside the NNI form.
@@ -4968,31 +5906,7 @@
             return;
         }
 
-        // Annual result WITH a stored NNI → show verification form first
-        if (isAnnual && storedNni) {
-            container.dataset.nniPending = '1';
-            container.dataset.thumbUrl   = thumbUrl;  // passed to verifyNniAndShow via dataset
-            container.innerHTML = `
-                <div class="nni-verify-box">
-                    <div class="nni-verify-icon">🪪</div>
-                    <p class="nni-verify-title">تحقق من الهوية / Vérification d'identité</p>
-                    <p class="nni-verify-sub">أدخل رقمك الوطني (NNI) للوصول إلى كشف النقاط التفصيلي<br><span style="font-size:0.82rem;opacity:0.8;">Entrez votre NNI pour accéder au relevé de notes détaillé</span></p>
-                    <input class="nni-input" id="nni-field-${cardId}" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="15" placeholder="NNI" autocomplete="off" />
-                    <p class="nni-error-msg" id="nni-err-${cardId}">❌ الرقم الوطني غير صحيح — NNI incorrect</p>
-                    <button class="nni-submit-btn" id="nni-btn-${cardId}" onclick="verifyNniAndShow('${studentId}', '${pdfUrl}', '${cardId}', ${Number.isInteger(pageIndex) ? pageIndex : 'null'}, '${storedNni}')">✅ تحقق وعرض الكشف</button>
-                </div>`;
-            container.style.display = 'block';
-            const nniField = document.getElementById(`nni-field-${cardId}`);
-            if (nniField) {
-                nniField.focus();
-                nniField.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') document.getElementById(`nni-btn-${cardId}`).click();
-                });
-            }
-            return;
-        }
-
-        // Semester result or annual without NNI → render directly
+        // NNI verification disabled — render directly for both semester and annual results
         await renderDetailsInContainer(studentId, pdfUrl, btnElement, container, pageIndex, thumbUrl);
     }
 
@@ -5423,14 +6337,22 @@
         const container = document.getElementById('delete-container');
         status.textContent = '⏳ جاري تحميل القائمة...';
         container.innerHTML = '';
+        // Year filter (year picker + "all years" checkbox)
+        const allYearsChk = document.getElementById('del-list-all-years');
+        const yearInput   = document.getElementById('del-list-year');
+        const filterYear  = (allYearsChk && !allYearsChk.checked && yearInput) ? (yearInput.value || '').trim() : null;
         try {
-            const { data, error } = await _supabase
+            let q = _supabase
                 .from('results_metadata')
                 .select('*')
                 .order('created_at', { ascending: false });
+            if (filterYear) q = q.eq('academic_year', filterYear);
+            const { data, error } = await q;
             if (error) throw error;
             if (!data || data.length === 0) {
-                status.textContent = 'لا توجد نتائج مرفوعة.';
+                status.textContent = filterYear
+                    ? `لا توجد نتائج مرفوعة للسنة ${filterYear}.`
+                    : 'لا توجد نتائج مرفوعة.';
                 return;
             }
             // De-duplicate per (year|major|level|semester), keep newest
@@ -5456,7 +6378,9 @@
                     </button>
                 </div>`;
             }).join('');
-            status.textContent = `${list.length} مجموعة قابلة للحذف.`;
+            status.textContent = filterYear
+                ? `${list.length} مجموعة قابلة للحذف (السنة ${filterYear}).`
+                : `${list.length} مجموعة قابلة للحذف (كل السنوات).`;
         } catch (e) {
             console.error('[delete-list] failed:', e);
             status.textContent = '❌ فشل تحميل القائمة: ' + (e.message || e);
@@ -5483,7 +6407,7 @@
     function _getCloudinarySecret() {
         let s = localStorage.getItem('CLOUDINARY_API_SECRET');
         if (!s) {
-            s = prompt('🔐 أدخل Cloudinary API Secret (يحفظ محلياً في متصفحك فقط، لمرة واحدة)');
+            s = prompt('🔐 أدخل Cloudinary API Secret\n(يُطلب لمرة واحدة فقط — سيُحفظ في هذا المتصفح ولن يُطلب مجدداً)');
             if (s) { s = s.trim(); localStorage.setItem('CLOUDINARY_API_SECRET', s); }
         }
         return s || null;
@@ -5538,8 +6462,14 @@
         const endpoint = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/${resourceType}/destroy`;
         const res = await fetch(endpoint, { method: 'POST', body: fd });
         const j = await res.json().catch(() => ({}));
+        const msg = (j && j.error && j.error.message) ? String(j.error.message) : '';
+        // Detect bad credentials → wipe stored secret so the next attempt re-prompts.
+        if (res.status === 401 || /invalid signature|invalid api[_ ]?key|unknown api[_ ]?key/i.test(msg)) {
+            try { localStorage.removeItem('CLOUDINARY_API_SECRET'); } catch(_){}
+            throw new Error('AUTH: ' + (msg || ('HTTP ' + res.status)));
+        }
         if (!res.ok || (j && j.error)) {
-            throw new Error(j.error?.message || j.result || res.status);
+            throw new Error(msg || j.result || ('HTTP ' + res.status));
         }
         return j;
     }
@@ -5560,12 +6490,21 @@
         }
 
         let last = null;
+        let lastErr = null;
         for (const publicId of Array.from(new Set(candidates))) {
-            const result = await _cloudinaryDestroyPublicId(publicId, info.resource_type, secret);
-            last = result;
-            if (result && result.result === 'ok') return result;
+            try {
+                const result = await _cloudinaryDestroyPublicId(publicId, info.resource_type, secret);
+                last = result;
+                if (result && result.result === 'ok') return result;
+            } catch (e) {
+                lastErr = e;
+                // Auth errors should bubble up immediately so the user re-enters the secret.
+                if (e && String(e.message || '').startsWith('AUTH:')) throw e;
+            }
         }
-        return last || { result: 'not found' };
+        // No candidate succeeded — surface a clear failure instead of pretending success.
+        if (lastErr) throw lastErr;
+        throw new Error('Cloudinary destroy failed: ' + (last && last.result ? last.result : 'unknown') + ' (' + url + ')');
     }
 
     /**
@@ -5652,9 +6591,23 @@
                 const { error: stErr } = await _supabase.storage.from(SUPABASE_BUCKET).remove(storagePaths);
                 if (stErr) console.warn('[delete] supabase storage warning:', stErr);
             }
+            let cloudOk = 0, cloudFail = 0, cloudSkip = 0;
+            const cloudErrors = [];
             for (const u of cloudUrls) {
-                try { await _cloudinaryDestroy(u); }
-                catch (e) { console.warn('[delete] cloudinary warning:', e.message || e); }
+                try {
+                    const r = await _cloudinaryDestroy(u);
+                    if (r && r.skipped) cloudSkip++;
+                    else cloudOk++;
+                } catch (e) {
+                    cloudFail++;
+                    const m = e && e.message ? e.message : String(e);
+                    cloudErrors.push(m);
+                    console.warn('[delete] cloudinary warning:', m);
+                    if (m.startsWith('AUTH:')) {
+                        alert('❌ Cloudinary API Secret خاطئ — تم مسحه. أعد المحاولة وسيُطلب منك إدخاله مرة أخرى.');
+                        throw e;
+                    }
+                }
             }
 
             // 3) Delete per-student rows
@@ -5675,7 +6628,15 @@
             const card = btn.closest('div');
             if (card && card.parentNode) card.parentNode.removeChild(card);
             const status = document.getElementById('delete-status');
-            if (status) status.textContent = `✅ تم حذف ${label}`;
+            if (status) {
+                let txt = `✅ تم حذف ${label} — Cloudinary: ${cloudOk} نجح`;
+                if (cloudFail) txt += `، ${cloudFail} فشل`;
+                if (cloudSkip) txt += `، ${cloudSkip} تخطّى`;
+                status.textContent = txt;
+            }
+            if (cloudFail > 0) {
+                alert('⚠️ تم حذف البيانات من الموقع لكن فشل حذف ' + cloudFail + ' ملف من Cloudinary:\n\n' + cloudErrors.slice(0,5).join('\n'));
+            }
         } catch (e) {
             console.error('[delete] failed:', e);
             btn.disabled = false;
@@ -5692,18 +6653,27 @@
         const status = document.getElementById('bulk-delete-status');
         const semester = sel ? sel.value : null;
         if (!semester) return;
-        if (!confirm(`⚠️ سيتم حذف كل نتائج "${semester}" لكل التخصصات والمستويات والسنوات نهائياً.\n\nهل أنت متأكد؟`)) return;
-        if (!confirm(`تأكيد أخير: حذف كامل لفصل ${semester} — لا يمكن التراجع.`)) return;
+        const allYearsChk = document.getElementById('bulk-del-all-years');
+        const yearInput   = document.getElementById('bulk-del-year');
+        const filterYear  = (allYearsChk && !allYearsChk.checked && yearInput) ? (yearInput.value || '').trim() : null;
+        const allSem      = (semester === '__ALL__');
 
-        status.innerHTML = '⏳ جاري جلب جميع النتائج لهذا الفصل...';
+        const semLabel  = allSem ? 'كل الفصول (فصلي + سنوي)' : semester;
+        const yearLabel = filterYear ? `للسنة ${filterYear}` : 'لكل السنوات';
+        if (!confirm(`⚠️ سيتم حذف كل نتائج "${semLabel}" ${yearLabel} لكل التخصصات والمستويات نهائياً.\n\nهل أنت متأكد؟`)) return;
+        if (!confirm(`تأكيد أخير: حذف ${semLabel} ${yearLabel} — لا يمكن التراجع.`)) return;
+
+        status.innerHTML = '⏳ جاري جلب جميع النتائج المستهدفة...';
         try {
-            const { data: rows, error: selErr } = await _supabase
+            let q = _supabase
                 .from('results_metadata')
-                .select('*')
-                .eq('semester', semester);
+                .select('*');
+            if (!allSem)     q = q.eq('semester', semester);
+            if (filterYear)  q = q.eq('academic_year', filterYear);
+            const { data: rows, error: selErr } = await q;
             if (selErr) throw selErr;
             if (!rows || rows.length === 0) {
-                status.innerHTML = `لا توجد نتائج بفصل ${semester}.`;
+                status.innerHTML = `لا توجد نتائج مطابقة (${semLabel} ${yearLabel}).`;
                 return;
             }
 
@@ -5750,34 +6720,180 @@
                 } catch (e) { console.warn('[bulk-delete] storage exception:', e); }
             }
             let cloudOk = 0, cloudFail = 0;
+            const cloudErrors = [];
             for (const u of cloudUrls) {
                 try { await _cloudinaryDestroy(u); cloudOk++; }
-                catch (e) { cloudFail++; console.warn('[bulk-delete] cloudinary warning:', e.message || e); }
+                catch (e) {
+                    cloudFail++;
+                    const m = e && e.message ? e.message : String(e);
+                    cloudErrors.push(m);
+                    console.warn('[bulk-delete] cloudinary warning:', m);
+                    if (m.startsWith('AUTH:')) {
+                        alert('❌ Cloudinary API Secret خاطئ — تم مسحه. أعد المحاولة وسيُطلب منك إدخاله مرة أخرى.');
+                        throw e;
+                    }
+                }
+            }
+            if (cloudFail > 0) {
+                alert('⚠️ فشل حذف ' + cloudFail + ' ملف من Cloudinary:\n\n' + cloudErrors.slice(0,5).join('\n'));
             }
 
             // 2) Delete per-student rows for this semester (all majors/levels/years)
             try {
-                const { error: srErr } = await _supabase
+                let sq = _supabase
                     .from('student_results')
-                    .delete()
-                    .eq('semester', semester);
+                    .delete();
+                if (!allSem)    sq = sq.eq('semester', semester);
+                if (filterYear) sq = sq.eq('academic_year', filterYear);
+                if (allSem && !filterYear) {
+                    // Safety guard: full wipe requires the dedicated "delete all" flow.
+                    sq = sq.not('id', 'is', null);
+                }
+                const { error: srErr } = await sq;
                 if (srErr) console.warn('[bulk-delete] student_results warning:', srErr);
             } catch (e) { console.warn('[bulk-delete] student_results exception:', e); }
 
             // 3) Delete metadata rows
-            const { error: mdErr } = await _supabase
+            let mq = _supabase
                 .from('results_metadata')
-                .delete()
-                .eq('semester', semester);
+                .delete();
+            if (!allSem)    mq = mq.eq('semester', semester);
+            if (filterYear) mq = mq.eq('academic_year', filterYear);
+            if (allSem && !filterYear) mq = mq.not('id', 'is', null);
+            const { error: mdErr } = await mq;
             if (mdErr) throw mdErr;
 
-            status.innerHTML = `✅ تم حذف فصل ${semester} بالكامل (${tuples.size} مجموعة، ${rows.length} ملف، Cloudinary: ${cloudOk} نجح/${cloudFail} تخطّى).`;
+            status.innerHTML = `✅ تم حذف ${semLabel} ${yearLabel} بالكامل (${tuples.size} مجموعة، ${rows.length} ملف، Cloudinary: ${cloudOk} نجح/${cloudFail} تخطّى).`;
 
             // Refresh the per-class delete list if it's loaded
             try { await loadDeletableResults(); } catch(_) {}
         } catch (e) {
             console.error('[bulk-delete] failed:', e);
             status.innerHTML = '❌ فشل الحذف الكلي: ' + (e.message || e);
+        }
+    }
+
+    // ============================================================
+    //   NUCLEAR DELETE: wipe EVERYTHING (all years, all semesters,
+    //   all majors/levels) — requires Cloudinary API Secret typed
+    //   fresh EACH time (never persisted, never cached).
+    // ============================================================
+    async function deleteAllResults() {
+        const status = document.getElementById('delete-all-status');
+        if (status) status.textContent = '';
+
+        // 1) Prompt for Cloudinary API Secret each time (bypass cache).
+        const apiSecret = prompt('🔐 لتأكيد حذف كل النتائج، أدخل Cloudinary API Secret:\n(يُطلب في كل مرة ولن يُحفظ)');
+        if (!apiSecret || !apiSecret.trim()) {
+            if (status) status.textContent = '❌ تم إلغاء العملية — لم يُدخل API.';
+            return;
+        }
+        const secret = apiSecret.trim();
+
+        // 2) Double confirmation phrase
+        const phrase = prompt('اكتب بالضبط:  SUPPRIMER TOUT\nلتأكيد حذف كل النتائج نهائياً.');
+        if ((phrase || '').trim() !== 'SUPPRIMER TOUT') {
+            if (status) status.textContent = '❌ تم إلغاء العملية — لم يتم إدخال عبارة التأكيد بشكل صحيح.';
+            return;
+        }
+
+        // 3) Temporarily override the Cloudinary secret getter so destroy
+        //    uses the freshly-typed secret WITHOUT persisting it anywhere.
+        const originalGetter = window._getCloudinarySecret;
+        window._getCloudinarySecret = function () { return secret; };
+        const hadCached = localStorage.getItem('CLOUDINARY_API_SECRET');
+        try {
+            if (status) status.innerHTML = '⏳ جاري جلب كل النتائج...';
+            const { data: rows, error: selErr } = await _supabase
+                .from('results_metadata')
+                .select('*');
+            if (selErr) throw selErr;
+
+            if (!rows || rows.length === 0) {
+                // Nothing in metadata — still wipe orphan per-student rows just in case.
+                await _supabase.from('student_results').delete().not('id', 'is', null);
+                if (status) status.innerHTML = '✅ لا توجد نتائج مرفوعة. تم تنظيف قاعدة البيانات.';
+                return;
+            }
+
+            // Collect storage + Cloudinary URLs
+            const storagePaths = [];
+            const cloudUrls    = [];
+            for (const r of rows) {
+                for (const u of [r.details_url, r.ranking_url]) {
+                    if (!u) continue;
+                    const p = _supabaseStoragePathFromUrl(u);
+                    if (p) storagePaths.push(p);
+                    else if (typeof u === 'string' && u.includes('res.cloudinary.com')) cloudUrls.push(u);
+                }
+            }
+            if (status) status.innerHTML = `⏳ جلب صور الطلاب من ${rows.length} ملف ranking ...`;
+            for (const r of rows) {
+                if (!r.ranking_url) continue;
+                try {
+                    const thumbs = await _collectStudentThumbUrls(r.ranking_url);
+                    for (const u of thumbs) {
+                        const p = _supabaseStoragePathFromUrl(u);
+                        if (p) storagePaths.push(p);
+                        else if (u.includes('res.cloudinary.com')) cloudUrls.push(u);
+                    }
+                } catch (_) {}
+            }
+            const uniqStorage = Array.from(new Set(storagePaths));
+            const uniqCloud   = Array.from(new Set(cloudUrls));
+
+            if (status) status.innerHTML = `⏳ حذف ${uniqStorage.length} ملف من Supabase Storage + ${uniqCloud.length} من Cloudinary...`;
+            if (uniqStorage.length > 0) {
+                try {
+                    const { error: stErr } = await _supabase.storage.from(SUPABASE_BUCKET).remove(uniqStorage);
+                    if (stErr) console.warn('[delete-all] storage warning:', stErr);
+                } catch (e) { console.warn('[delete-all] storage exception:', e); }
+            }
+            let cloudOk = 0, cloudFail = 0;
+            const cloudErrors = [];
+            for (const u of uniqCloud) {
+                try { await _cloudinaryDestroy(u); cloudOk++; }
+                catch (e) {
+                    cloudFail++;
+                    const m = e && e.message ? e.message : String(e);
+                    cloudErrors.push(m);
+                    if (m.startsWith('AUTH:')) {
+                        // Wrong secret typed — abort BEFORE wiping DB, keep data intact.
+                        throw new Error('Cloudinary API Secret خاطئ — تم إلغاء العملية ولم يُحذف شيء من قاعدة البيانات.');
+                    }
+                }
+            }
+
+            // Wipe DB tables (full wipe)
+            if (status) status.innerHTML = '⏳ حذف كل صفوف قاعدة البيانات...';
+            try {
+                const { error: srErr } = await _supabase.from('student_results').delete().not('id', 'is', null);
+                if (srErr) console.warn('[delete-all] student_results warning:', srErr);
+            } catch (e) { console.warn('[delete-all] student_results exception:', e); }
+
+            const { error: mdErr } = await _supabase.from('results_metadata').delete().not('id', 'is', null);
+            if (mdErr) throw mdErr;
+
+            if (status) {
+                let txt = `✅ تم حذف كل النتائج نهائياً — ${rows.length} صف ميتاداتا، ${uniqStorage.length} ملف تخزين، Cloudinary: ${cloudOk} نجح`;
+                if (cloudFail) txt += `، ${cloudFail} فشل`;
+                status.innerHTML = txt;
+            }
+            if (cloudFail > 0) {
+                alert('⚠️ تم حذف كل بيانات الموقع لكن فشل حذف ' + cloudFail + ' ملف من Cloudinary:\n\n' + cloudErrors.slice(0,5).join('\n'));
+            }
+
+            try { await loadDeletableResults(); } catch(_) {}
+        } catch (e) {
+            console.error('[delete-all] failed:', e);
+            if (status) status.innerHTML = '❌ فشل الحذف: ' + (e.message || e);
+            alert('❌ فشل الحذف الكلي: ' + (e.message || e));
+        } finally {
+            // ALWAYS restore original getter + never persist the freshly-typed secret.
+            window._getCloudinarySecret = originalGetter;
+            if (!hadCached) {
+                try { localStorage.removeItem('CLOUDINARY_API_SECRET'); } catch (_) {}
+            }
         }
     }
 
