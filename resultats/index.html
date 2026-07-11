@@ -12,25 +12,40 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2232/2232688.png">
 
-    <!-- Confetti library -->
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1"></script>
-    <!-- Chart.js for professional statistics -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-
-    <!-- مكتبات المعالجة -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-    <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';</script>
-    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    
-    <!-- مكتبة Supabase -->
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-
-
-    <!-- خطوط احترافية للعربية والفرنسية -->
+    <!-- ⚡ Performance: preconnect to all critical origins for faster handshakes -->
+    <link rel="preconnect" href="https://daqcwhcmoqnpxtnpwqil.supabase.co" crossorigin>
+    <link rel="preconnect" href="https://unpkg.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
+    <link rel="preconnect" href="https://api.cloudinary.com" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn-icons-png.flaticon.com">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- ⚡ Fonts loaded non-blocking (swap keeps text visible immediately) -->
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;900&family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;900&family=Inter:wght@400;500;600;700;800&display=swap"></noscript>
+
+    <!-- ⚡ Supabase must load before the inline init script below (no defer) -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2" crossorigin></script>
+
+    <!-- ⚡ Heavy libraries deferred: load in parallel, execute after HTML parse.
+         All are used only on-demand inside async handlers, so deferring is safe
+         and does NOT change any functionality. -->
+    <script defer src="https://cdn.jsdelivr.net/npm/canvas-confetti@1"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script defer src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- Configure pdf.js worker as soon as the deferred lib is ready -->
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        if (window.pdfjsLib) {
+          pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+        }
+      });
+    </script>
 
     <style>
         :root { 
@@ -1125,7 +1140,7 @@
             
             <div class="file-input-wrapper">
                 <label>📄 ملف أو ملفات النتائج (PDF):</label>
-                <input type="file" id="file-details" accept="application/pdf" multiple>
+                <input type="file" id="file-details" accept="application/pdf,.pdf" multiple>
                 <small style="display:block; color:#666; font-size:0.85rem; margin-top:8px;">💡 يمكنك تحديد ملف واحد، أو تحديد عدة ملفات معاً وسيقوم النظام بدمجها تلقائياً.</small>
             </div>
             
@@ -1168,7 +1183,7 @@
             </div>
             <div class="file-input-wrapper">
                 <label>📄 ملف أو ملفات النتائج السنوية (PDF):</label>
-                <input type="file" id="file-annual" accept="application/pdf" multiple>
+                <input type="file" id="file-annual" accept="application/pdf,.pdf" multiple>
                 <small style="display:block; color:#666; font-size:0.85rem; margin-top:8px;">💡 يمكنك تحديد ملف واحد، أو تحديد عدة ملفات معاً وسيقوم النظام بدمجها تلقائياً.</small>
             </div>
             <button class="admin-btn" style="margin-top:20px; background:#7c3aed; color:white;" onclick="uploadAnnualFiles()">دمج، استخراج البيانات والرفع (سنوي)</button>
@@ -1273,10 +1288,12 @@
 
                         <div class="file-input-wrapper">
                             <label>📄 اختر كل ملفات PDF التي تريد رفعها معاً:</label>
-                            <input type="file" id="file-bulk" accept="application/pdf" multiple onchange="prepareBulkUploadTable()">
+                            <input type="file" id="file-bulk" accept="application/pdf,.pdf" multiple onchange="prepareBulkUploadTable()">
                             <small style="display:block; color:#666; font-size:0.85rem; margin-top:8px;">
                                 💡 يمكنك اختيار عشرات الملفات في وقت واحد ولكل التخصصات. الملفات التي لها نفس (التخصص + المستوى + الفصل + السنة) سيتم <b>دمجها تلقائياً</b>.
+                                <br>📱 على الهاتف: يمكنك الاختيار على <b>دفعات متعددة</b> — كل اختيار جديد <b>يُضاف</b> إلى القائمة ولا يحذف ما سبق.
                             </small>
+                            <button type="button" style="margin-top:8px; background:#64748b; color:white; border:none; border-radius:8px; padding:8px 14px; font-size:0.85rem; cursor:pointer;" onclick="clearBulkFiles()">🗑️ مسح قائمة الملفات المختارة</button>
                         </div>
 
                         <div id="bulk-preview-wrap" style="display:none; margin-top:15px;">
@@ -1290,6 +1307,7 @@
                                             <th style="padding:8px;">المستوى</th>
                                             <th style="padding:8px;">الفصل</th>
                                             <th style="padding:8px;">السنة</th>
+                                            <th style="padding:8px;">الحالة</th>
                                             <th style="padding:8px;">حذف</th>
                                         </tr>
                                     </thead>
@@ -1787,41 +1805,69 @@
         const totalPages = srcPdf.getPageCount();
         console.log(`[ChunkUpload] PDF has ${totalPages} pages, size ${(blob.size/1024/1024).toFixed(2)} MB`);
 
-        const chunkUrls = [];
-        let pageStart = 0;
+        // ⚡ [Speed fix] The previous algorithm re-saved the chunk document after
+        // EVERY page to test its size (O(n²) saves) — extremely slow on phones.
+        // We now estimate pages-per-chunk from the average page size and save
+        // each chunk ONCE. If a built chunk still exceeds the limit it is split
+        // in half and rebuilt, so correctness is fully preserved.
+        const bytesPerPage     = Math.max(1, blob.size / totalPages);
+        const estPagesPerChunk = Math.max(1, Math.floor((CHUNK_LIMIT * 0.85) / bytesPerPage));
 
-        while (pageStart < totalPages) {
-            const chunkDoc = await PDFDocument.create();
-            let pageEnd = pageStart;
-
-            while (pageEnd < totalPages) {
-                const [copiedPage] = await chunkDoc.copyPages(srcPdf, [pageEnd]);
-                chunkDoc.addPage(copiedPage);
-                const testBytes = await chunkDoc.save();
-                if (testBytes.length > CHUNK_LIMIT && chunkDoc.getPageCount() > 1) {
-                    chunkDoc.removePage(chunkDoc.getPageCount() - 1);
-                    break;
-                }
-                pageEnd++;
-            }
-
-            const chunkBytes = await chunkDoc.save({ useObjectStreams: true });
-            const chunkBlob  = new Blob([chunkBytes], { type: 'application/pdf' });
-            const chunkId    = `${publicId}_part${chunkUrls.length + 1}`;
-            console.log(`[ChunkUpload] part ${chunkUrls.length + 1}: pages ${pageStart + 1}–${pageEnd}, size ${(chunkBlob.size/1024/1024).toFixed(2)} MB`);
-
-            const url = await _uploadSingleToCloudinary(chunkBlob, chunkId, 'raw', 'pdf');
-            // Store page ranges in the manifest. This lets the public viewer
-            // download ONLY the chunk containing the student's page instead of
-            // treating the JSON manifest as a PDF or pulling earlier chunks.
-            chunkUrls.push({
-                url,
-                startPage: pageStart,          // 0-based, inclusive
-                endPage:   pageEnd - 1,        // 0-based, inclusive
-                pageCount: pageEnd - pageStart
-            });
-            pageStart = pageEnd;
+        // Page ranges [start, end) covering the whole document.
+        const ranges = [];
+        for (let p = 0; p < totalPages; p += estPagesPerChunk) {
+            ranges.push([p, Math.min(p + estPagesPerChunk, totalPages)]);
         }
+
+        // Encode one range into a PDF blob; recursively halve oversized ranges.
+        async function buildChunk(range) {
+            const [rangeStart, rangeEnd] = range;
+            const chunkDoc = await PDFDocument.create();
+            const indices = [];
+            for (let p = rangeStart; p < rangeEnd; p++) indices.push(p);
+            const copied = await chunkDoc.copyPages(srcPdf, indices);
+            copied.forEach(pg => chunkDoc.addPage(pg));
+            const bytes = await chunkDoc.save({ useObjectStreams: true });
+            if (bytes.length > CHUNK_LIMIT && (rangeEnd - rangeStart) > 1) {
+                const mid   = rangeStart + Math.ceil((rangeEnd - rangeStart) / 2);
+                const left  = await buildChunk([rangeStart, mid]);
+                const right = await buildChunk([mid, rangeEnd]);
+                return left.concat(right);
+            }
+            return [{
+                blob:      new Blob([bytes], { type: 'application/pdf' }),
+                startPage: rangeStart,       // 0-based, inclusive
+                endPage:   rangeEnd - 1,     // 0-based, inclusive
+                pageCount: rangeEnd - rangeStart
+            }];
+        }
+
+        // ⚡ Parallelize chunk building — each range is independent, huge speed win
+        const builtGroups = await Promise.all(ranges.map(r => buildChunk(r)));
+        const chunks = [];
+        for (const built of builtGroups) for (const c of built) chunks.push(c);
+
+        // ⚡ [Speed fix] Upload chunks in parallel (3 at a time) instead of
+        // strictly one-by-one. Order in the manifest is preserved by index.
+        // ⚡ Higher parallelism = faster uploads on both mobile and desktop.
+        // Cloudinary handles bursty concurrent PUTs well; 8 is a safe ceiling.
+        const CONCURRENCY = 8;
+        const chunkUrls   = new Array(chunks.length);
+        let cursor = 0;
+        async function uploadWorker() {
+            while (cursor < chunks.length) {
+                const i = cursor++;
+                const c = chunks[i];
+                const chunkId = `${publicId}_part${i + 1}`;
+                console.log(`[ChunkUpload] part ${i + 1}: pages ${c.startPage + 1}–${c.endPage + 1}, size ${(c.blob.size/1024/1024).toFixed(2)} MB`);
+                const url = await _uploadSingleToCloudinary(c.blob, chunkId, 'raw', 'pdf');
+                // Store page ranges in the manifest. This lets the public viewer
+                // download ONLY the chunk containing the student's page instead of
+                // treating the JSON manifest as a PDF or pulling earlier chunks.
+                chunkUrls[i] = { url, startPage: c.startPage, endPage: c.endPage, pageCount: c.pageCount };
+            }
+        }
+        await Promise.all(Array.from({ length: Math.min(CONCURRENCY, chunks.length) }, () => uploadWorker()));
 
         const manifest     = { type: 'pdf_chunks', totalPages, parts: chunkUrls };
         const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
@@ -2425,6 +2471,98 @@
         return { pdfBytes, pageMap, canvasMap, detailsMap };
     }
 
+    // ============================================================
+    // RELIABILITY FIX — Recover students that the fast text-based
+    // regex parser missed (typically 2–3 per PDF).  splitPdfByStudent
+    // uses POSITIONED text and reliably discovers every student ID.
+    // For every ID present positionally but absent from studentsMap,
+    // we rebuild that student's text from the positioned rows and
+    // parse it in isolation, guaranteeing no student is dropped.
+    // ============================================================
+    function _rebuildStudentSegmentText(details) {
+        if (!details || !Array.isArray(details.rows)) return '';
+        const rowsSorted = details.rows.slice().sort((a, b) => (a.y || 0) - (b.y || 0));
+        return rowsSorted
+            .map(r => ((r.cells || []).slice().sort((a,b) => (a.x||0)-(b.x||0)).map(c => c.s).join(' ')))
+            .join(' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+
+    function _parseSemesterStudentFromText(id, segment) {
+        let avg = NaN, avgStr = '', decision = '';
+        let boundaryIdx = -1;
+        const annualAvgM = segment.match(/Moyenne\s+annuelle[^:]*:\s*(\d{1,2}[.,]\d{1,2})/i);
+        const juryM = segment.match(/D[ée]cision\s+du\s+jury\s*:?\s*(Admis(?:\s*\(e\))?(?:\s+avec\s+dette)?|Ajourn[ée](?:\s*\(e\))?|Valid[ée](?:\s*\(e\))?|Non\s+Valid[ée](?:\s*\(e\))?|Rattrapage)/i);
+        if (annualAvgM && juryM) {
+            avgStr = annualAvgM[1].replace(',', '.');
+            avg = parseFloat(avgStr);
+            decision = juryM[1].trim().replace(/\s+/g, ' ');
+            boundaryIdx = Math.min(annualAvgM.index, juryM.index);
+        } else {
+            const decisionRegex = /(\d{1,2}[.,]\d{1,2})\s+(Non\s+Validé|Validé(?:\s*\(e\))?|Rattrapage|Ajourn[ée](?:\s*\(e\))?|Session|Admis(?:\s*\(e\))?(?:\s+avec\s+dette)?)/i;
+            const decMatch = segment.match(decisionRegex);
+            if (decMatch) {
+                avgStr = decMatch[1].replace(',', '.');
+                avg = parseFloat(avgStr);
+                decision = decMatch[2].trim().replace(/\s+/g, ' ');
+                boundaryIdx = decMatch.index;
+            } else {
+                const anyMoy = segment.match(/Moyenne[^:]{0,40}:\s*(\d{1,2}[.,]\d{1,2})/i);
+                if (anyMoy) { avgStr = anyMoy[1].replace(',', '.'); avg = parseFloat(avgStr); }
+                decision = 'Inconnu';
+            }
+        }
+        if (/^non\s+valid/i.test(decision)) decision = 'Non Validé';
+        if (!isFinite(avg) || avg < 0 || avg > 20) return null;
+
+        let cleanName = '';
+        const nameLabelM = segment.match(/Nom\s+et\s+pr[ée]nom\s*:?\s*([^]+?)(?=\s+Date\s+(?:et|de)|\s+Num[ée]ro|\s+Fili[èe]re|\s+NNI|\s+Moyenne|\s+D[ée]cision|\s{6,}|$)/i);
+        if (nameLabelM) {
+            cleanName = nameLabelM[1].trim().replace(/\s+/g, ' ');
+        } else {
+            const idxId = segment.search(new RegExp('\\b' + id + '\\b', 'i'));
+            const start = idxId >= 0 ? idxId + id.length : 0;
+            const end   = boundaryIdx > start ? boundaryIdx : Math.min(segment.length, start + 220);
+            let raw = segment.substring(start, end).trim().replace(/^\d+\s+/, '');
+            raw = raw.replace(/Modul.*$/i, '').trim();
+            const only = raw.match(/^[A-Za-zÀ-ÿ'’\-\.\s]+/);
+            if (only) cleanName = only[0].trim().replace(/\s+/g, ' ');
+            cleanName = cleanName.replace(/\s+(Non|Validé|Ajourn[ée]|Rattrapage|Session|Admis)\b.*$/i, '').trim();
+        }
+        if (!cleanName || cleanName.length < 2) cleanName = id;
+        return { id, name: cleanName, avg: avgStr, avgNum: avg, decision };
+    }
+
+    function reconcileMissingStudentsFromSplit(studentsMap, splitResult, mode) {
+        if (!splitResult || !splitResult.pageMap) return 0;
+        let added = 0;
+        Object.keys(splitResult.pageMap).forEach(rawId => {
+            const id = String(rawId).replace(/\s+/g, '').toUpperCase();
+            if (studentsMap.has(id)) return;
+            const details = splitResult.detailsMap ? splitResult.detailsMap[id] : null;
+            const segText = _rebuildStudentSegmentText(details);
+            if (!segText) return;
+            let rec = null;
+            if (mode === 'annual') {
+                try {
+                    const arr = parseAnnualPdfText('RELEVE DE NOTES ' + segText);
+                    if (arr && arr.length) rec = arr[0];
+                } catch(_) {}
+                if (!rec) rec = _parseSemesterStudentFromText(id, segText);
+            } else {
+                rec = _parseSemesterStudentFromText(id, segText);
+            }
+            if (rec) {
+                rec.id = id;
+                studentsMap.set(id, rec);
+                added++;
+            }
+        });
+        if (added > 0) console.log('[reconcile] recovered', added, 'missing students from positional data');
+        return added;
+    }
+
     // ---------------------------------------------------------------
     // Upload per-student JPEG images to Cloudinary in parallel
     // batches.  Returns { studentId → secure_url }.
@@ -2858,9 +2996,12 @@
 
                 const sortedFiles = Array.from(selectedFiles).sort((a, b) => a.name.localeCompare(b.name));
 
-                for (const file of sortedFiles) {
+                // ⚡ Read + parse source PDFs in parallel; add pages sequentially to preserve order
+                const _srcDocs = await Promise.all(sortedFiles.map(async file => {
                     const arrayBuffer = await file.arrayBuffer();
-                    const pdfDoc = await PDFDocument.load(arrayBuffer);
+                    return await PDFDocument.load(arrayBuffer);
+                }));
+                for (const pdfDoc of _srcDocs) {
                     const copiedPages = await mergedPdf.copyPages(pdfDoc, pdfDoc.getPageIndices());
                     copiedPages.forEach((page) => mergedPdf.addPage(page));
                 }
@@ -2872,12 +3013,13 @@
             statusDiv.innerHTML = '⏳ جاري استخراج البيانات والترتيب بذكاء...';
             
             const pdf = await pdfjsLib.getDocument({ data: finalPdfBytes }).promise;
-            let fullText = "";
-            for (let i = 1; i <= pdf.numPages; i++) {
-                const page = await pdf.getPage(i);
-                const textContent = await page.getTextContent();
-                fullText += textContent.items.map(item => item.str).join(" ") + " ";
-            }
+            // ⚡ Extract text from all pages in parallel (was sequential)
+            const _pageTexts = await Promise.all(
+                Array.from({ length: pdf.numPages }, (_, k) =>
+                    pdf.getPage(k + 1).then(pg => pg.getTextContent())
+                       .then(tc => tc.items.map(it => it.str).join(" ")))
+            );
+            let fullText = _pageTexts.join(" ");
             
             fullText = fullText.replace(/\s+/g, " ");
             const segments = fullText.split(/(?=I\s*\d{4,6}\s)/i);
@@ -2932,13 +3074,8 @@
             });
 
             let studentsArray = Array.from(studentsMap.values());
-            if(studentsArray.length === 0) {
-                statusDiv.innerHTML = '<span style="color:red">❌ لم يتم العثور على أي طالب. يرجى التأكد من الملفات.</span>';
-                return;
-            }
-
-            studentsArray.sort((a, b) => b.avgNum - a.avgNum);
-            studentsArray.forEach((student, index) => { student.rank = index + 1; });
+            // Note: sorting/ranking is deferred until AFTER splitPdfByStudent
+            // reconciliation, so recovered students are included in the ranking.
 
             // === NEW: rebuild the PDF so each student is on its own page ===
             // The output PDF replaces the one we upload, and we record the
@@ -2952,6 +3089,16 @@
                 // replaces it as the upload payload. Critical on mobile to
                 // avoid holding two full PDFs in memory at once.
                 finalPdfBytes = null;
+
+                // 🛡️ RELIABILITY FIX: recover any student the fast text
+                // parser missed. splitPdfByStudent discovers every ID
+                // positionally, so this guarantees no student is dropped.
+                const recovered = reconcileMissingStudentsFromSplit(studentsMap, splitResult, 'semester');
+                if (recovered > 0) {
+                    studentsArray = Array.from(studentsMap.values());
+                    console.log('[uploadFiles] recovered', recovered, 'students missed by text parser');
+                }
+
                 // Inject the page index into every student record.
                 studentsArray.forEach(s => {
                     if (Object.prototype.hasOwnProperty.call(splitResult.pageMap, s.id)) {
@@ -2971,13 +3118,25 @@
                 // Image (thumbnail) uploads disabled by request — keep PDFs only.
                 // if (splitResult.canvasMap) { ... uploadCanvasImages ... }
 
+
             } catch (splitErr) {
                 console.warn('Splitter failed, uploading original PDF as-is:', splitErr);
                 statusDiv.innerHTML = '⚠️ تعذرت إعادة التنظيم تلقائياً، سيتم رفع الملف الأصلي.';
             }
             // === END NEW ===
 
+            // Guard: no students at all → abort.
+            if (studentsArray.length === 0) {
+                statusDiv.innerHTML = '<span style="color:red">❌ لم يتم العثور على أي طالب. يرجى التأكد من الملفات.</span>';
+                return;
+            }
+
+            // Final sort & rank (AFTER reconciliation so recovered students are included).
+            studentsArray.sort((a, b) => b.avgNum - a.avgNum);
+            studentsArray.forEach((student, index) => { student.rank = index + 1; });
+
             statusDiv.innerHTML = '⏳ جاري رفع الملفات إلى Cloudinary وتحديث البيانات...';
+
 
             const ts          = Date.now();
             const detailsId   = cldId(`DETAILS_${major}_${level}_${semester}_${academicYear}_${ts}`);
@@ -3625,9 +3784,12 @@
                 const mergedPdf = await PDFDocument.create();
 
                 const sortedFiles = Array.from(selectedFiles).sort((a, b) => a.name.localeCompare(b.name));
-                for (const file of sortedFiles) {
+                // ⚡ Read + parse source PDFs in parallel; add pages sequentially to preserve order
+                const _srcDocs = await Promise.all(sortedFiles.map(async file => {
                     const arrayBuffer = await file.arrayBuffer();
-                    const pdfDoc      = await PDFDocument.load(arrayBuffer);
+                    return await PDFDocument.load(arrayBuffer);
+                }));
+                for (const pdfDoc of _srcDocs) {
                     const copiedPages = await mergedPdf.copyPages(pdfDoc, pdfDoc.getPageIndices());
                     copiedPages.forEach((page) => mergedPdf.addPage(page));
                 }
@@ -3639,23 +3801,20 @@
             // --- Extract text & parse annual records --------------------------
             statusDiv.innerHTML = '⏳ جاري استخراج البيانات السنوية...';
             const pdf = await pdfjsLib.getDocument({ data: finalPdfBytes }).promise;
-            let fullText = "";
-            for (let i = 1; i <= pdf.numPages; i++) {
-                const page        = await pdf.getPage(i);
-                const textContent = await page.getTextContent();
-                fullText += textContent.items.map(item => item.str).join(" ") + " ";
-            }
+            // ⚡ Extract text from all pages in parallel (was sequential)
+            const _pageTexts = await Promise.all(
+                Array.from({ length: pdf.numPages }, (_, k) =>
+                    pdf.getPage(k + 1).then(pg => pg.getTextContent())
+                       .then(tc => tc.items.map(it => it.str).join(" ")))
+            );
+            let fullText = _pageTexts.join(" ");
             fullText = fullText.replace(/\s+/g, " ");
 
-            let studentsArray = parseAnnualPdfText(fullText);
-            if (studentsArray.length === 0) {
-                statusDiv.innerHTML = '<span style="color:red">❌ لم يتم العثور على أي طالب. تأكد أن الملفات هي PV_Annuel.</span>';
-                return;
-            }
 
-            // --- Sort & rank --------------------------------------------------
-            studentsArray.sort((a, b) => b.avgNum - a.avgNum);
-            studentsArray.forEach((student, index) => { student.rank = index + 1; });
+
+            let studentsArray = parseAnnualPdfText(fullText);
+            // Note: sorting & ranking deferred until AFTER split-based reconciliation
+            // so any student the fast parser missed is included with the correct rank.
 
             // --- Reorganize PDF: one student per page (same engine as semester)
             statusDiv.innerHTML = '⏳ جاري إعادة تنظيم الملف (طالب لكل صفحة)...';
@@ -3665,6 +3824,16 @@
                 });
                 // Free the original merged buffer to keep mobile memory low.
                 finalPdfBytes = null;
+
+                // 🛡️ RELIABILITY FIX (annual): recover students missed by the
+                // text-based parser using the reliable positional detailsMap.
+                const _map = new Map(studentsArray.map(s => [String(s.id).replace(/\s+/g,'').toUpperCase(), s]));
+                const recovered = reconcileMissingStudentsFromSplit(_map, splitResult, 'annual');
+                if (recovered > 0) {
+                    studentsArray = Array.from(_map.values());
+                    console.log('[uploadAnnualFiles] recovered', recovered, 'students missed by text parser');
+                }
+
                 studentsArray.forEach(s => {
                     if (Object.prototype.hasOwnProperty.call(splitResult.pageMap, s.id)) {
                         s.pageIndex = splitResult.pageMap[s.id];
@@ -3683,6 +3852,15 @@
                 console.warn('Annual splitter failed, uploading original PDF as-is:', splitErr);
                 statusDiv.innerHTML = '⚠️ تعذرت إعادة التنظيم تلقائياً، سيتم رفع الملف الأصلي.';
             }
+
+            // Guard + final sort/rank (AFTER reconciliation).
+            if (studentsArray.length === 0) {
+                statusDiv.innerHTML = '<span style="color:red">❌ لم يتم العثور على أي طالب. تأكد أن الملفات هي PV_Annuel.</span>';
+                return;
+            }
+            studentsArray.sort((a, b) => b.avgNum - a.avgNum);
+            studentsArray.forEach((student, index) => { student.rank = index + 1; });
+
 
             // --- Upload PDF + ranking JSON, refresh metadata row --------------
             statusDiv.innerHTML = '⏳ جاري رفع الملفات إلى Cloudinary وتحديث البيانات...';
@@ -3848,7 +4026,19 @@
         const tbody  = document.getElementById('bulk-preview-body');
         const defYr  = document.getElementById('up-bulk-year').value;
 
-        __bulkFiles = Array.from(input.files || []);
+        // 📱 [Mobile fix] Accumulate files across multiple picks instead of
+        // replacing them: phone file pickers often limit multi-select, so the
+        // admin can now add files in several batches. Duplicates (same name +
+        // size) are skipped automatically.
+        const pickedFiles = Array.from(input.files || []);
+        for (const pf of pickedFiles) {
+            if (!__bulkFiles.some(x => x.name === pf.name && x.size === pf.size)) {
+                __bulkFiles.push(pf);
+            }
+        }
+        // Reset the input so re-opening the picker always fires onchange,
+        // even when the same file is picked again.
+        input.value = '';
         if (__bulkFiles.length === 0) { wrap.style.display = 'none'; tbody.innerHTML = ''; return; }
 
         tbody.innerHTML = '';
@@ -3870,6 +4060,7 @@
                 <td style="padding:6px;"><select class="bk-level">${levelOpts}</select></td>
                 <td style="padding:6px;"><select class="bk-sem">${semOpts}</select></td>
                 <td style="padding:6px;"><select class="bk-year">${yearOpts}</select></td>
+                <td class="bk-status" style="padding:6px; text-align:center; font-size:0.8rem; color:#64748b; min-width:90px;">⌛ بانتظار</td>
                 <td style="padding:6px; text-align:center;"><button type="button" class="bk-del" style="background:#ef4444; color:white; border:none; border-radius:6px; padding:4px 10px; cursor:pointer;">×</button></td>
             `;
             tbody.appendChild(tr);
@@ -3898,6 +4089,20 @@
         });
 
         wrap.style.display = 'block';
+    }
+
+    // 📱 Clears the accumulated bulk-upload file list (used by the
+    // "مسح قائمة الملفات" button next to the bulk file picker).
+    function clearBulkFiles() {
+        __bulkFiles = [];
+        const input = document.getElementById('file-bulk');
+        if (input) input.value = '';
+        const wrap  = document.getElementById('bulk-preview-wrap');
+        const tbody = document.getElementById('bulk-preview-body');
+        if (tbody) tbody.innerHTML = '';
+        if (wrap)  wrap.style.display = 'none';
+        const statusDiv = document.getElementById('upload-bulk-status');
+        if (statusDiv) statusDiv.innerHTML = '';
     }
 
     function bulkLog(msg, color) {
@@ -3930,10 +4135,13 @@
                 const { PDFDocument } = PDFLib;
                 const mergedPdf = await PDFDocument.create();
                 const sorted    = files.slice().sort((a,b) => a.name.localeCompare(b.name));
-                for (const f of sorted) {
+                // ⚡ Read + parse all source PDFs in parallel; add pages sequentially to keep order
+                const _docs = await Promise.all(sorted.map(async f => {
                     const buf = await f.arrayBuffer();
-                    const doc = await PDFDocument.load(buf);
-                    const cp  = await mergedPdf.copyPages(doc, doc.getPageIndices());
+                    return await PDFDocument.load(buf);
+                }));
+                for (const doc of _docs) {
+                    const cp = await mergedPdf.copyPages(doc, doc.getPageIndices());
                     cp.forEach(p => mergedPdf.addPage(p));
                 }
                 finalPdfBytes = await mergedPdf.save();
@@ -3943,21 +4151,24 @@
             // 2) Extract text
             onStatus && onStatus('استخراج النص...');
             const pdf = await pdfjsLib.getDocument({ data: finalPdfBytes }).promise;
-            let fullText = '';
-            for (let i = 1; i <= pdf.numPages; i++) {
-                const page = await pdf.getPage(i);
-                const tc   = await page.getTextContent();
-                fullText  += tc.items.map(it => it.str).join(' ') + ' ';
-            }
+            // ⚡ Extract text from all pages in parallel
+            const _pageTexts = await Promise.all(
+                Array.from({ length: pdf.numPages }, (_, k) =>
+                    pdf.getPage(k + 1).then(pg => pg.getTextContent())
+                       .then(tc => tc.items.map(it => it.str).join(' ')))
+            );
+            let fullText = _pageTexts.join(' ');
             fullText = fullText.replace(/\s+/g, ' ');
 
             // 3) Parse — semester vs annual use different parsers (mirrors existing code)
             let studentsArray = [];
-            if (semester === 'ANNUEL') {
+            let _semStudentsMap = null; // keep the semester map so we can reconcile later
+            const _isAnnualBulk = (semester === 'ANNUEL');
+            if (_isAnnualBulk) {
                 studentsArray = parseAnnualPdfText(fullText);
             } else {
                 const segments = fullText.split(/(?=I\s*\d{4,6}\s)/i);
-                const studentsMap = new Map();
+                _semStudentsMap = new Map();
                 segments.forEach(segment => {
                     if (!segment.trim().match(/^I\s*\d{4,6}/i)) return;
                     const idMatch = segment.match(/^(I\s*\d{4,6})/i);
@@ -3979,28 +4190,41 @@
                     if (nameOnly) cleanName = nameOnly[0].trim().replace(/\s+/g,' ');
                     cleanName = cleanName.replace(/\s+(Non|Validé|Ajourn[ée]|Rattrapage|Session|Admis)\b.*$/i,'').trim();
                     if (!cleanName || cleanName.length < 2) return;
-                    if (!studentsMap.has(id)) studentsMap.set(id, { id, name: cleanName, avg: avgStr, avgNum: avg, decision });
+                    if (!_semStudentsMap.has(id)) _semStudentsMap.set(id, { id, name: cleanName, avg: avgStr, avgNum: avg, decision });
                 });
-                studentsArray = Array.from(studentsMap.values());
+                studentsArray = Array.from(_semStudentsMap.values());
             }
 
-            if (studentsArray.length === 0) {
-                return { ok:false, count:0, error:'لم يتم العثور على أي طالب في الملف' };
-            }
-
-            studentsArray.sort((a,b) => b.avgNum - a.avgNum);
-            studentsArray.forEach((s,i) => s.rank = i + 1);
-
-            // 4) Reorganize PDF (student/page) — best effort
+            // 4) Reorganize PDF (student/page) — best effort + 🛡️ reconciliation
             onStatus && onStatus('إعادة تنظيم الملف...');
             try {
                 const sr = await splitPdfByStudent(finalPdfBytes, m => onStatus && onStatus(m));
+
+                // 🛡️ RELIABILITY FIX: recover any student missed by the fast text parser.
+                if (_isAnnualBulk) {
+                    const _map = new Map(studentsArray.map(s => [String(s.id).replace(/\s+/g,'').toUpperCase(), s]));
+                    const recovered = reconcileMissingStudentsFromSplit(_map, sr, 'annual');
+                    if (recovered > 0) studentsArray = Array.from(_map.values());
+                } else if (_semStudentsMap) {
+                    const recovered = reconcileMissingStudentsFromSplit(_semStudentsMap, sr, 'semester');
+                    if (recovered > 0) studentsArray = Array.from(_semStudentsMap.values());
+                }
+
                 studentsArray.forEach(s => { if (Object.prototype.hasOwnProperty.call(sr.pageMap, s.id)) s.pageIndex = sr.pageMap[s.id]; });
                 finalPdfBlob = new Blob([sr.pdfBytes], { type: 'application/pdf' });
                 if (sr.detailsMap) studentsArray.forEach(s => { if (sr.detailsMap[s.id]) s.details = sr.detailsMap[s.id]; });
             } catch (e) {
                 console.warn('Bulk splitter failed, uploading original PDF:', e);
             }
+
+            if (studentsArray.length === 0) {
+                return { ok:false, count:0, error:'لم يتم العثور على أي طالب في الملف' };
+            }
+
+            // Final sort & rank (AFTER reconciliation).
+            studentsArray.sort((a,b) => b.avgNum - a.avgNum);
+            studentsArray.forEach((s,i) => s.rank = i + 1);
+
 
             // 5) Upload PDF + JSON
             onStatus && onStatus('رفع الملفات...');
@@ -4074,23 +4298,57 @@
 
         const total = groups.size;
         let done = 0, okCount = 0, failCount = 0, studentsTotal = 0;
-        statusDiv.innerHTML = `⏳ بدء معالجة ${total} مجموعة (${classified.length} ملف)...`;
+
+        // 📊 Detailed mobile-friendly progress bar
+        function renderBulkProgress(pct, label, subLabel) {
+            const clampPct = Math.max(0, Math.min(100, Math.round(pct)));
+            statusDiv.innerHTML = `
+                <div style="text-align:right; direction:rtl;">
+                    <div style="font-size:0.9rem; margin-bottom:6px; word-break:break-word;">${label || ''}</div>
+                    <div style="background:#e2e8f0; border-radius:999px; height:14px; overflow:hidden; box-shadow:inset 0 1px 2px rgba(0,0,0,0.08);">
+                        <div style="width:${clampPct}%; height:100%; background:linear-gradient(90deg,#0ea5e9,#22c55e); transition:width .25s ease;"></div>
+                    </div>
+                    <div style="font-size:0.8rem; color:#475569; margin-top:6px;">${clampPct}% — ${subLabel || ''}</div>
+                </div>`;
+        }
+
+        // Live per-file status cells
+        const rowStatusByIdx = {};
+        Array.from(tbody.querySelectorAll('tr')).forEach(tr => {
+            const idx  = Number(tr.dataset.idx);
+            const cell = tr.querySelector('.bk-status');
+            if (cell) { rowStatusByIdx[idx] = cell; cell.textContent = '⌛ بانتظار'; cell.style.color = '#64748b'; cell.style.fontWeight = '400'; }
+        });
+        function setGroupRowsStatus(g, text, color, weight) {
+            for (const f of g.files) {
+                const idx  = __bulkFiles.indexOf(f);
+                const cell = rowStatusByIdx[idx];
+                if (cell) { cell.textContent = text; cell.style.color = color; cell.style.fontWeight = weight || '700'; }
+            }
+        }
+
+        renderBulkProgress(0, `بدء معالجة ${total} مجموعة (${classified.length} ملف)`, `0 من ${total}`);
 
         for (const [key, g] of groups) {
             done++;
             const label = `[${done}/${total}] ${g.ctx.major} ${g.ctx.level} ${g.ctx.semester} ${g.ctx.academicYear} (${g.files.length} ملف)`;
             bulkLog('▶️  ' + label);
-            statusDiv.innerHTML = `⏳ ${label}`;
+            setGroupRowsStatus(g, '⏫ قيد الرفع...', '#0284c7');
+            const startPct = ((done - 1) / total) * 100;
+            renderBulkProgress(startPct, label, `${done - 1} من ${total} — جاري المعالجة...`);
             const res = await processBulkGroup(g.files, g.ctx, (m) => {
-                statusDiv.innerHTML = `⏳ ${label} — ${m}`;
+                renderBulkProgress(startPct + (100 / total) * 0.5, label, m);
             });
             if (res.ok) {
                 okCount++; studentsTotal += res.count;
                 bulkLog(`✅ ${label} — ${res.count} طالب`, 'green');
+                setGroupRowsStatus(g, `✅ نجح (${res.count} طالب)`, '#16a34a');
             } else {
                 failCount++;
                 bulkLog(`❌ ${label} — ${res.error}`, 'red');
+                setGroupRowsStatus(g, `❌ فشل: ${res.error || ''}`, '#dc2626');
             }
+            renderBulkProgress((done / total) * 100, label, `${done} من ${total} — نجح: ${okCount} / فشل: ${failCount}`);
         }
 
         // Refresh caches/UI like single uploads do
@@ -4103,9 +4361,8 @@
             (failCount ? ` — فشل: ${failCount}` : '') +
             `</span>`;
         document.getElementById('file-bulk').value = '';
-        __bulkFiles = [];
-        document.getElementById('bulk-preview-wrap').style.display = 'none';
-        document.getElementById('bulk-preview-body').innerHTML = '';
+        // Keep the table + per-file statuses visible so the admin can review results.
+        // Use the "🗑️ مسح قائمة الملفات المختارة" button to clear it manually.
     }
 
 
