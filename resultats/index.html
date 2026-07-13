@@ -1108,88 +1108,10 @@
         </div>
 
         <div id="admin-upload-step" style="display:none;">
-            <h2>📤 رفع النتائج (دمج وترتيب تلقائي)</h2>
-            <div class="form-group">
-                <label>السنة الجامعية:</label>
-                <div class="year-picker" data-yp="up-year">
-                    <button type="button" class="yp-btn yp-minus" onclick="adjustYear('up-year',-1)" aria-label="السنة السابقة">−</button>
-                    <input type="text" id="up-year" class="yp-display" readonly pattern="\d{4}-\d{4}">
-                    <button type="button" class="yp-btn yp-plus" onclick="adjustYear('up-year',1)" aria-label="السنة التالية">+</button>
-                </div>
-            </div>
-            <div class="form-group">
-                <label>التخصص:</label>
-                <select id="up-major">
-                    <option value="BA">Banque Assurance (BA)</option>
-                    <option value="FC">Finance Comptabilité (FC)</option>
-                    <option value="GRH">Gestion des RH (GRH)</option>
-                    <option value="IG">Informatique de Gestion (IG)</option>
-                    <option value="TCM">Techniques Commerciales (TCM)</option>
-                    <option value="SAE">SAE</option>
-                    <option value="DI">DI</option>
-                    <option value="FCFP">FCFP</option>
-                    <option value="IGFP">IGFP</option>
-                    <option value="RT">RT</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>المستوى:</label>
-                <select id="up-level" onchange="updateUploadSemesters()"><option value="L1">Licence 1 (L1)</option><option value="L2">Licence 2 (L2)</option><option value="L3">Licence 3 (L3)</option></select>
-            </div>
-            <div class="form-group"><label>الفصل:</label><select id="up-semester"></select></div>
-            
-            <div class="file-input-wrapper">
-                <label>📄 ملف أو ملفات النتائج (PDF):</label>
-                <input type="file" id="file-details" accept="application/pdf,.pdf" multiple>
-                <small style="display:block; color:#666; font-size:0.85rem; margin-top:8px;">💡 يمكنك تحديد ملف واحد، أو تحديد عدة ملفات معاً وسيقوم النظام بدمجها تلقائياً.</small>
-            </div>
-            
-            <button class="admin-btn" style="margin-top:20px; background:var(--primary); color:white;" onclick="uploadFiles()">دمج، استخراج البيانات والرفع</button>
-            <div id="upload-status" style="margin-top:15px; font-weight:bold; font-size:0.9rem; text-align:center;"></div>
-
-            <hr style="border: 2px dashed #cbd5e1; margin: 25px 0;">
-
-            <h2 style="color:#7c3aed;">📅 رفع النتائج السنوية (Résultat Annuel)</h2>
-            <div class="form-group">
-                <label>السنة الجامعية:</label>
-                <div class="year-picker" data-yp="up-annual-year">
-                    <button type="button" class="yp-btn yp-minus" onclick="adjustYear('up-annual-year',-1)" aria-label="السنة السابقة">−</button>
-                    <input type="text" id="up-annual-year" class="yp-display" readonly pattern="\d{4}-\d{4}">
-                    <button type="button" class="yp-btn yp-plus" onclick="adjustYear('up-annual-year',1)" aria-label="السنة التالية">+</button>
-                </div>
-            </div>
-            <div class="form-group">
-                <label>التخصص:</label>
-                <select id="up-annual-major">
-                    <option value="BA">Banque Assurance (BA)</option>
-                    <option value="FC">Finance Comptabilité (FC)</option>
-                    <option value="GRH">Gestion des RH (GRH)</option>
-                    <option value="IG">Informatique de Gestion (IG)</option>
-                    <option value="TCM">Techniques Commerciales (TCM)</option>
-                    <option value="SAE">SAE</option>
-                    <option value="DI">DI</option>
-                    <option value="FCFP">FCFP</option>
-                    <option value="IGFP">IGFP</option>
-                    <option value="RT">RT</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>المستوى:</label>
-                <select id="up-annual-level">
-                    <option value="L1">Licence 1 (L1)</option>
-                    <option value="L2">Licence 2 (L2)</option>
-                    <option value="L3">Licence 3 (L3)</option>
-                </select>
-            </div>
-            <div class="file-input-wrapper">
-                <label>📄 ملف أو ملفات النتائج السنوية (PDF):</label>
-                <input type="file" id="file-annual" accept="application/pdf,.pdf" multiple>
-                <small style="display:block; color:#666; font-size:0.85rem; margin-top:8px;">💡 يمكنك تحديد ملف واحد، أو تحديد عدة ملفات معاً وسيقوم النظام بدمجها تلقائياً.</small>
-            </div>
-            <button class="admin-btn" style="margin-top:20px; background:#7c3aed; color:white;" onclick="uploadAnnualFiles()">دمج، استخراج البيانات والرفع (سنوي)</button>
-            <div id="upload-annual-status" style="margin-top:15px; font-weight:bold; font-size:0.9rem; text-align:center;"></div>
-
-            <hr style="border: 2px dashed #cbd5e1; margin: 25px 0;">
+            <h2>📤 لوحة تحكم المشرف</h2>
+            <!-- ملاحظة: نماذج الرفع الفصلي والسنوي انتقلت داخل "خانة الرفع"
+                 → بطاقة الرفع → الرفع الفردي، مع الحفاظ على نفس الحقول والمعرّفات
+                 والدوال (uploadFiles / uploadAnnualFiles) دون أي تغيير. -->
 
             <!-- ============================================================
                  ✨ PRO ACTIONS HUB — Three premium action cards that each open
@@ -1218,7 +1140,7 @@
                 .pc-delete { background:linear-gradient(135deg,#dc2626 0%,#7f1d1d 100%); }
                 .pc-display { background:linear-gradient(135deg,#7c3aed 0%,#4c1d95 100%); }
 
-                .admin-sheet { display:none; position:fixed; inset:0; z-index:9998; background:var(--bg-gradient, #f7fcf9); overflow-y:auto; -webkit-overflow-scrolling:touch; animation:sheetIn .25s ease; }
+                .admin-sheet { display:none; position:fixed; inset:0; z-index:9998; background:var(--bg-gradient, #f7fcf9); overflow-y:auto; -webkit-overflow-scrolling:touch; }
                 @keyframes sheetIn { from { opacity:0; transform:translateY(12px);} to { opacity:1; transform:none;} }
                 .admin-sheet .as-header { position:sticky; top:0; z-index:5; color:#fff; padding:14px 18px;
                     display:flex; align-items:center; justify-content:space-between; gap:10px;
@@ -1235,10 +1157,10 @@
             </style>
 
             <div class="pro-hub">
-                <button type="button" class="pro-card pc-upload" onclick="openAdminSheet('sheet-bulk-upload')">
-                    <span class="pc-icon">🚀</span>
-                    <div class="pc-title">رفع جماعي ذكي</div>
-                    <div class="pc-desc">رفع عدة ملفات PDF لفصول وتخصصات مختلفة دفعة واحدة مع التصنيف التلقائي.</div>
+                <button type="button" class="pro-card pc-upload" onclick="openAdminSheet('sheet-upload-hub')">
+                    <span class="pc-icon">📤</span>
+                    <div class="pc-title">الرفع</div>
+                    <div class="pc-desc">مركز الرفع: اختر بين الرفع الجماعي الذكي أو الرفع الفردي (فصلي / سنوي).</div>
                     <span class="pc-cta">فتح الصفحة ←</span>
                 </button>
 
@@ -1262,6 +1184,130 @@
                     <div class="pc-desc">تحكم بعرض النتائج: سنوي / فصلي / كلاهما، سنة واحدة أو كل السنوات، وأي نتيجة تظهر أولاً عند البحث.</div>
                     <span class="pc-cta">فتح الصفحة ←</span>
                 </button>
+            </div>
+
+            <!-- ===================== FULL-PAGE SHEET: UPLOAD HUB (جماعي / فردي) ===================== -->
+            <div id="sheet-upload-hub" class="admin-sheet">
+                <div class="as-header as-hdr-upload">
+                    <button type="button" class="as-back" onclick="closeAdminSheet('sheet-upload-hub')">→ رجوع</button>
+                    <div class="as-title">📤 الرفع — اختر الوضع</div>
+                    <div style="width:60px;"></div>
+                </div>
+                <div class="as-body">
+                    <div class="as-card" style="margin-bottom:16px;">
+                        <p style="margin:0; color:#334155; line-height:1.8;">
+                            اختر طريقة الرفع المناسبة: <b>الرفع الجماعي</b> لرفع عدة ملفات دفعة واحدة مع التصنيف التلقائي،
+                            أو <b>الرفع الفردي</b> لرفع نتائج فصل واحد أو نتائج سنوية بشكل يدوي دقيق.
+                        </p>
+                    </div>
+                    <div class="pro-hub">
+                        <button type="button" class="pro-card pc-upload" onclick="closeAdminSheet('sheet-upload-hub'); openAdminSheet('sheet-bulk-upload');">
+                            <span class="pc-icon">🚀</span>
+                            <div class="pc-title">الرفع الجماعي</div>
+                            <div class="pc-desc">رفع عدة ملفات PDF لفصول وتخصصات مختلفة دفعة واحدة مع التصنيف التلقائي.</div>
+                            <span class="pc-cta">فتح الصفحة ←</span>
+                        </button>
+                        <button type="button" class="pro-card pc-display" onclick="closeAdminSheet('sheet-upload-hub'); openAdminSheet('sheet-individual-upload');">
+                            <span class="pc-icon">📝</span>
+                            <div class="pc-title">الرفع الفردي</div>
+                            <div class="pc-desc">رفع نتائج فصل واحد (S1…S6) أو نتائج سنوية (Annuel) بشكل يدوي مع اختيار التخصص والمستوى.</div>
+                            <span class="pc-cta">فتح الصفحة ←</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===================== FULL-PAGE SHEET: INDIVIDUAL UPLOAD (فصلي + سنوي) ===================== -->
+            <div id="sheet-individual-upload" class="admin-sheet">
+                <div class="as-header as-hdr-upload">
+                    <button type="button" class="as-back" onclick="closeAdminSheet('sheet-individual-upload'); openAdminSheet('sheet-upload-hub');">→ رجوع</button>
+                    <div class="as-title">📝 الرفع الفردي — فصلي / سنوي</div>
+                    <div style="width:60px;"></div>
+                </div>
+                <div class="as-body">
+                    <div class="as-card">
+                        <h2 style="margin-top:0;">📤 رفع النتائج (دمج وترتيب تلقائي)</h2>
+                        <div class="form-group">
+                            <label>السنة الجامعية:</label>
+                            <div class="year-picker" data-yp="up-year">
+                                <button type="button" class="yp-btn yp-minus" onclick="adjustYear('up-year',-1)" aria-label="السنة السابقة">−</button>
+                                <input type="text" id="up-year" class="yp-display" readonly pattern="\d{4}-\d{4}">
+                                <button type="button" class="yp-btn yp-plus" onclick="adjustYear('up-year',1)" aria-label="السنة التالية">+</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>التخصص:</label>
+                            <select id="up-major">
+                                <option value="BA">Banque Assurance (BA)</option>
+                                <option value="FC">Finance Comptabilité (FC)</option>
+                                <option value="GRH">Gestion des RH (GRH)</option>
+                                <option value="IG">Informatique de Gestion (IG)</option>
+                                <option value="TCM">Techniques Commerciales (TCM)</option>
+                                <option value="SAE">SAE</option>
+                                <option value="DI">DI</option>
+                                <option value="FCFP">FCFP</option>
+                                <option value="IGFP">IGFP</option>
+                                <option value="RT">RT</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>المستوى:</label>
+                            <select id="up-level" onchange="updateUploadSemesters()"><option value="L1">Licence 1 (L1)</option><option value="L2">Licence 2 (L2)</option><option value="L3">Licence 3 (L3)</option></select>
+                        </div>
+                        <div class="form-group"><label>الفصل:</label><select id="up-semester"></select></div>
+
+                        <div class="file-input-wrapper">
+                            <label>📄 ملف أو ملفات النتائج (PDF):</label>
+                            <input type="file" id="file-details" accept="application/pdf,.pdf" multiple>
+                            <small style="display:block; color:#666; font-size:0.85rem; margin-top:8px;">💡 يمكنك تحديد ملف واحد، أو تحديد عدة ملفات معاً وسيقوم النظام بدمجها تلقائياً.</small>
+                        </div>
+
+                        <button class="admin-btn" style="margin-top:20px; background:var(--primary); color:white;" onclick="uploadFiles()">دمج، استخراج البيانات والرفع</button>
+                        <div id="upload-status" style="margin-top:15px; font-weight:bold; font-size:0.9rem; text-align:center;"></div>
+                    </div>
+
+                    <div class="as-card" style="margin-top:18px;">
+                        <h2 style="margin-top:0; color:#7c3aed;">📅 رفع النتائج السنوية (Résultat Annuel)</h2>
+                        <div class="form-group">
+                            <label>السنة الجامعية:</label>
+                            <div class="year-picker" data-yp="up-annual-year">
+                                <button type="button" class="yp-btn yp-minus" onclick="adjustYear('up-annual-year',-1)" aria-label="السنة السابقة">−</button>
+                                <input type="text" id="up-annual-year" class="yp-display" readonly pattern="\d{4}-\d{4}">
+                                <button type="button" class="yp-btn yp-plus" onclick="adjustYear('up-annual-year',1)" aria-label="السنة التالية">+</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>التخصص:</label>
+                            <select id="up-annual-major">
+                                <option value="BA">Banque Assurance (BA)</option>
+                                <option value="FC">Finance Comptabilité (FC)</option>
+                                <option value="GRH">Gestion des RH (GRH)</option>
+                                <option value="IG">Informatique de Gestion (IG)</option>
+                                <option value="TCM">Techniques Commerciales (TCM)</option>
+                                <option value="SAE">SAE</option>
+                                <option value="DI">DI</option>
+                                <option value="FCFP">FCFP</option>
+                                <option value="IGFP">IGFP</option>
+                                <option value="RT">RT</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>المستوى:</label>
+                            <select id="up-annual-level">
+                                <option value="L1">Licence 1 (L1)</option>
+                                <option value="L2">Licence 2 (L2)</option>
+                                <option value="L3">Licence 3 (L3)</option>
+                            </select>
+                        </div>
+                        <div class="file-input-wrapper">
+                            <label>📄 ملف أو ملفات النتائج السنوية (PDF):</label>
+                            <input type="file" id="file-annual" accept="application/pdf,.pdf" multiple>
+                            <small style="display:block; color:#666; font-size:0.85rem; margin-top:8px;">💡 يمكنك تحديد ملف واحد، أو تحديد عدة ملفات معاً وسيقوم النظام بدمجها تلقائياً.</small>
+                        </div>
+                        <button class="admin-btn" style="margin-top:20px; background:#7c3aed; color:white;" onclick="uploadAnnualFiles()">دمج، استخراج البيانات والرفع (سنوي)</button>
+                        <div id="upload-annual-status" style="margin-top:15px; font-weight:bold; font-size:0.9rem; text-align:center;"></div>
+                    </div>
+                </div>
             </div>
 
             <!-- ===================== FULL-PAGE SHEET: BULK UPLOAD ===================== -->
@@ -1514,7 +1560,7 @@
                 // Close any open sheet with Escape
                 document.addEventListener('keydown', function(e){
                     if (e.key === 'Escape') {
-                        ['sheet-bulk-upload','sheet-stats','sheet-bulk-delete','sheet-display-settings'].forEach(function(id){
+                        ['sheet-upload-hub','sheet-individual-upload','sheet-bulk-upload','sheet-stats','sheet-bulk-delete','sheet-display-settings'].forEach(function(id){
                             var el = document.getElementById(id);
                             if (el && el.style.display === 'block') closeAdminSheet(id);
                         });
@@ -1851,7 +1897,7 @@
         // strictly one-by-one. Order in the manifest is preserved by index.
         // ⚡ Higher parallelism = faster uploads on both mobile and desktop.
         // Cloudinary handles bursty concurrent PUTs well; 8 is a safe ceiling.
-        const CONCURRENCY = 8;
+        const CONCURRENCY = 16;
         const chunkUrls   = new Array(chunks.length);
         let cursor = 0;
         async function uploadWorker() {
@@ -2199,18 +2245,29 @@
 
     // Renders all pages of a PDF to canvases and collects positioned text items.
     async function renderPdfPagesWithText(pdf, onProgress) {
-        const pages = [];
-        for (let i = 1; i <= pdf.numPages; i++) {
-            if (onProgress) onProgress(i, pdf.numPages);
+        // ⚡ [Speed fix] Render pages in parallel with a concurrency cap so
+        // pdf.js can pipeline decoding + rasterization instead of stalling
+        // on strict per-page await. Huge win on multi-page PVs. Mobile uses
+        // a smaller pool to keep peak memory bounded.
+        const total = pdf.numPages;
+        const pages = new Array(total);
+        const CONCURRENCY = Math.max(4, Math.min(
+            IS_MOBILE_DEVICE ? 6 : 12,
+            (navigator.hardwareConcurrency || 4) * 2
+        ));
+        let cursor = 0;
+        let done = 0;
+        async function renderOne(i) {
             const page = await pdf.getPage(i);
             const viewport = page.getViewport({ scale: SPLIT_SCALE });
             const canvas = document.createElement('canvas');
             canvas.width  = viewport.width;
             canvas.height = viewport.height;
             const ctx = canvas.getContext('2d');
-            await page.render({ canvasContext: ctx, viewport }).promise;
-
-            const tc = await page.getTextContent();
+            const renderTask = page.render({ canvasContext: ctx, viewport }).promise;
+            const textTask   = page.getTextContent();
+            await renderTask;
+            const tc = await textTask;
             const items = tc.items
                 .filter(it => it.str && it.str.trim().length)
                 .map(it => {
@@ -2225,8 +2282,18 @@
                         str: it.str.trim()
                     };
                 });
-            pages.push({ canvas, viewport, items });
+            pages[i - 1] = { canvas, viewport, items };
+            done++;
+            if (onProgress) onProgress(done, total);
         }
+        async function worker() {
+            while (true) {
+                const i = ++cursor;
+                if (i > total) return;
+                await renderOne(i);
+            }
+        }
+        await Promise.all(Array.from({ length: Math.min(CONCURRENCY, total) }, worker));
         return pages;
     }
 
@@ -2406,56 +2473,63 @@
             } catch (e) { reject(e); }
         });
 
-        for (let s = 0; s < segments.length; s++) {
-            if (onStatus) onStatus(`جاري إنشاء صفحة الطالب ${s + 1} من ${segments.length}...`);
-            const seg = segments[s];
-            let combined = buildStudentCanvas(pages, headerBottom, seg);
-            if (!combined) continue;
+        // ⚡ [Speed fix] Build student canvases + encode JPEGs in parallel
+        // batches. `toBlob('image/jpeg')` runs off the main thread in modern
+        // browsers, so batching gives a large real-world speedup while
+        // keeping the sequential PDF-embed step (pdf-lib is not thread-safe).
+        const BATCH = Math.max(3, Math.min(
+            IS_MOBILE_DEVICE ? 5 : 10,
+            (navigator.hardwareConcurrency || 4) * 2
+        ));
 
-            try { detailsMap[seg.id] = extractStudentLines(pages, headerBottom, seg); }
-            catch (e) { /* fallback to image rendering */ }
+        for (let s0 = 0; s0 < segments.length; s0 += BATCH) {
+            const batch = segments.slice(s0, s0 + BATCH);
+            if (onStatus) onStatus(`جاري إنشاء صفحات الطلاب ${s0 + 1}-${Math.min(s0 + batch.length, segments.length)} من ${segments.length}...`);
 
-            let bytes;
-            try {
-                bytes = await canvasToJpegBytes(combined, SPLIT_JPEG_QUALITY);
-            } catch (_) {
-                // Fallback for very old browsers that don't expose toBlob reliably.
-                const dataUrl = combined.toDataURL('image/jpeg', SPLIT_JPEG_QUALITY);
-                const base64 = dataUrl.split(',')[1];
-                const bin = atob(base64);
-                bytes = new Uint8Array(bin.length);
-                for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+            const prepared = await Promise.all(batch.map(async (seg) => {
+                let combined = buildStudentCanvas(pages, headerBottom, seg);
+                if (!combined) return null;
+                let detail = null;
+                try { detail = extractStudentLines(pages, headerBottom, seg); }
+                catch (_) { /* fallback to image only */ }
+                let bytes;
+                try {
+                    bytes = await canvasToJpegBytes(combined, SPLIT_JPEG_QUALITY);
+                } catch (_) {
+                    const dataUrl = combined.toDataURL('image/jpeg', SPLIT_JPEG_QUALITY);
+                    const base64 = dataUrl.split(',')[1];
+                    const bin = atob(base64);
+                    bytes = new Uint8Array(bin.length);
+                    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+                }
+                const ratio = combined.height / combined.width;
+                try { combined.width = 0; combined.height = 0; } catch(_) {}
+                combined = null;
+                return { seg, bytes, detail, ratio };
+            }));
+
+            for (const item of prepared) {
+                if (!item) continue;
+                const { seg, bytes, detail, ratio } = item;
+                if (detail) detailsMap[seg.id] = detail;
+                const jpg  = await newPdf.embedJpg(bytes);
+                const page = newPdf.addPage([PAGE_W, PAGE_H]);
+                const availW = PAGE_W - 2 * MARGIN;
+                const availH = PAGE_H - 2 * MARGIN;
+                let imgW = availW;
+                let imgH = imgW * ratio;
+                if (imgH > availH) {
+                    imgH = availH;
+                    imgW = imgH / ratio;
+                }
+                const x = (PAGE_W - imgW) / 2;
+                const y = PAGE_H - MARGIN - imgH;
+                page.drawImage(jpg, { x, y, width: imgW, height: imgH });
+                pageMap[seg.id] = newPdf.getPageCount() - 1;
             }
 
-            const jpg = await newPdf.embedJpg(bytes);
-            const page = newPdf.addPage([PAGE_W, PAGE_H]);
-
-            const availW = PAGE_W - 2 * MARGIN;
-            const availH = PAGE_H - 2 * MARGIN;
-            const ratio = combined.height / combined.width;
-            let imgW = availW;
-            let imgH = imgW * ratio;
-            if (imgH > availH) {
-                imgH = availH;
-                imgW = imgH / ratio;
-            }
-            const x = (PAGE_W - imgW) / 2;
-            const y = PAGE_H - MARGIN - imgH;
-
-            page.drawImage(jpg, { x, y, width: imgW, height: imgH });
-            pageMap[seg.id] = newPdf.getPageCount() - 1;
-
-            // Aggressively release the per-student canvas + JPEG bytes so the
-            // browser can reclaim memory between students on mobile.
-            try { combined.width = 0; combined.height = 0; } catch(_) {}
-            combined = null;
-            bytes = null;
-
-            // Once a source page is no longer referenced by any later segment,
-            // shrink its rendered canvas to 0×0 to release its pixel buffer.
-            // pages stay in the array (their .items text data is still used by
-            // extractStudentLines for later segments).
-            const nextSeg = segments[s + 1];
+            // Free source-page canvases that no remaining segment still needs.
+            const nextSeg = segments[s0 + batch.length];
             const keepFromPage = nextSeg ? nextSeg.startPage : Infinity;
             for (let p = 0; p < keepFromPage && p < pages.length; p++) {
                 const pg = pages[p];
@@ -2463,7 +2537,6 @@
                     try { pg.canvas.width = 0; pg.canvas.height = 0; } catch(_) {}
                 }
             }
-
             await new Promise(r => setTimeout(r, 0));
         }
 
@@ -2574,7 +2647,7 @@
     async function uploadCanvasImages(canvasMap, prefix, onStatus) {
         const thumbMap = {};
         const entries  = Object.entries(canvasMap);
-        const BATCH    = 12; // Cloudinary handles concurrency well; keep modest
+        const BATCH    = 24; // Cloudinary handles concurrency well; higher parallelism for faster uploads
         let done = 0;
         for (let i = 0; i < entries.length; i += BATCH) {
             const batch = entries.slice(i, i + BATCH);
@@ -3656,9 +3729,23 @@
     }
 
     function showError(msg) { const errEl = document.getElementById('error-msg'); errEl.innerText = msg; errEl.style.display = 'block'; }
-    function openTop20Modal() { document.getElementById('top20-modal').style.display = 'flex'; }
+    // 🛡️ Ensure the public Top-20 modals reflect the academic year currently
+    // displayed by the site (which honors the admin's "displayed year" setting
+    // in سنة العرض / yearScope=single). Rebuild the <select> at open-time so
+    // any admin change propagates immediately without a reload.
+    function _syncTop20YearSelect(selectId) {
+        try {
+            const el = document.getElementById(selectId);
+            if (!el) return;
+            const y = getCurrentAcademicYear();
+            if (!y) return;
+            el.innerHTML = `<option value="${y}">${y}</option>`;
+            el.value = y;
+        } catch (_) {}
+    }
+    function openTop20Modal() { _syncTop20YearSelect('t20-year'); document.getElementById('top20-modal').style.display = 'flex'; }
     function closeTop20Modal() { document.getElementById('top20-modal').style.display = 'none'; }
-    function openAnnualTop20Modal() { document.getElementById('top20-annual-modal').style.display = 'flex'; }
+    function openAnnualTop20Modal() { _syncTop20YearSelect('t20-annual-year'); document.getElementById('top20-annual-modal').style.display = 'flex'; }
     function closeAnnualTop20Modal() { document.getElementById('top20-annual-modal').style.display = 'none'; }
 
     async function fetchAndShowTop20() {
@@ -4336,17 +4423,38 @@
             setGroupRowsStatus(g, '⏫ قيد الرفع...', '#0284c7');
             const startPct = ((done - 1) / total) * 100;
             renderBulkProgress(startPct, label, `${done - 1} من ${total} — جاري المعالجة...`);
-            const res = await processBulkGroup(g.files, g.ctx, (m) => {
-                renderBulkProgress(startPct + (100 / total) * 0.5, label, m);
-            });
-            if (res.ok) {
+            // 🛡️ Reliability: retry a failing group up to 2 extra times with a
+            // short back-off. This eliminates the "last file fails but works on
+            // retry" symptom caused by transient Cloudinary/Supabase hiccups
+            // (throttling, brief network blips) at the end of a big batch.
+            const MAX_ATTEMPTS = 3;
+            let res = null;
+            for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+                setGroupRowsStatus(
+                    g,
+                    attempt === 1 ? '⏫ قيد الرفع...' : `⏫ إعادة المحاولة ${attempt}/${MAX_ATTEMPTS}...`,
+                    '#0284c7'
+                );
+                res = await processBulkGroup(g.files, g.ctx, (m) => {
+                    const suffix = attempt > 1 ? ` (محاولة ${attempt}/${MAX_ATTEMPTS})` : '';
+                    renderBulkProgress(startPct + (100 / total) * 0.5, label, m + suffix);
+                });
+                if (res.ok) break;
+                bulkLog(`⚠️  ${label} — محاولة ${attempt} فشلت: ${res.error || ''} — إعادة المحاولة...`, '#b45309');
+                if (attempt < MAX_ATTEMPTS) {
+                    // Small back-off: 800ms, 1600ms — gives Cloudinary/Supabase
+                    // time to recover from transient rate limits.
+                    await new Promise(r => setTimeout(r, 800 * attempt));
+                }
+            }
+            if (res && res.ok) {
                 okCount++; studentsTotal += res.count;
                 bulkLog(`✅ ${label} — ${res.count} طالب`, 'green');
                 setGroupRowsStatus(g, `✅ نجح (${res.count} طالب)`, '#16a34a');
             } else {
                 failCount++;
-                bulkLog(`❌ ${label} — ${res.error}`, 'red');
-                setGroupRowsStatus(g, `❌ فشل: ${res.error || ''}`, '#dc2626');
+                bulkLog(`❌ ${label} — ${(res && res.error) || 'فشل غير معروف'}`, 'red');
+                setGroupRowsStatus(g, `❌ فشل: ${(res && res.error) || ''}`, '#dc2626');
             }
             renderBulkProgress((done / total) * 100, label, `${done} من ${total} — نجح: ${okCount} / فشل: ${failCount}`);
         }
