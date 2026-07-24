@@ -4970,7 +4970,7 @@
         const dateStr = new Date().toLocaleDateString('fr-FR');
 
         // ── Identify module (body) rows ────────────────────────────────────
-        const META_RE = /Nom et pr|Naissance|inscription|Fili[èe]re|\bNNI\b|\bINE\b|RELEVE|R[ée]publique|Minist|Institut|Libell[ée]|Contr[ôo]l|Semestre|Ann[ée]e Universitaire|Nouakchott|Rattrap|Continu|Finale/i;
+        const META_RE = /Nom et pr[ée]nom|\bNaissance\b|Num[ée]ro d['’ ]?inscription|\bFili[èe]re\s*:|\bNNI\b|\bINE\b|RELEVE\s+DE\s+NOTES|R[ée]publique|\bMinist[èé]re\b|\bInstitut\s+Sup|Libell[ée] de la Mati[èe]re|Contr[ôo]le\s+(?:Continu|Final)|\bSemestre\b|Ann[ée]e Universitaire|Nouakchott|Note\s+Rattrap|Note\s+Finale/i;
         const FOOT_RE = /Moyenne du semestre|Cr[ée]dit\s*\/?\s*30|Total des cr|Moyenne annuelle|D[ée]cision du jury|Pour le Directeur|Le Directeur|Directeur des/i;
 
         // Build an ordered list of per-side module rows directly from the RAW
@@ -5066,10 +5066,28 @@
             return { cents: cols.map(o => o.c), lbls: cols.map(o => o.key) };
         }
         const hCL = headerCols('L'), hCR = headerCols('R');
-        const cL = hCL ? hCL.cents : centers(modL);
-        const lblL = hCL ? hCL.lbls : colLabels(cL);
-        const cR = hCR ? hCR.cents : centers(modR);
-        const lblR = hCR ? hCR.lbls : colLabels(cR);
+        // Data-derived column centers (fallback / cross-check). When the header
+        // pass returns fewer centers than the module rows actually contain, one
+        // whole column of values would be dropped. That happens on L3 S5 (the
+        // Contrôle-final column) and L2 S4 (the Crédit column) for FC/FCFP/IG/
+        // IGFP transcripts. Use the data-derived centers whenever they detect
+        // more columns than the header.
+        const dcL = centers(modL), dLblL0 = colLabels(dcL);
+        const dcR = centers(modR), dLblR0 = colLabels(dcR);
+        const pickCols = (h, dCents, dLbls) => {
+            if (h && h.cents && h.cents.length >= (dCents || []).length) {
+                return { cents: h.cents, lbls: h.lbls };
+            }
+            if (dCents && dCents.length >= 2 && dCents.length <= 5) {
+                return { cents: dCents, lbls: dLbls };
+            }
+            if (h && h.cents) return { cents: h.cents, lbls: h.lbls };
+            return { cents: dCents || [], lbls: dLbls || [] };
+        };
+        const _pL = pickCols(hCL, dcL, dLblL0);
+        const _pR = pickCols(hCR, dcR, dLblR0);
+        const cL = _pL.cents, lblL = _pL.lbls;
+        const cR = _pR.cents, lblR = _pR.lbls;
 
         function parseSide(cells, cents, lbls) {
             const out = { name: '', cc: '', cf: '', ratt: '', nf: '', cr: '', dec: '' };
@@ -5078,20 +5096,41 @@
                 out.name = cells.filter(c => !isNum(c.s)).map(c => c.s).join(' ').trim();
                 return out;
             }
-            const firstC = cents[0], creditC = cents[cents.length - 1];
-            const nameParts = [], decParts = [];
+            const creditC = cents[cents.length - 1];
+            const nameParts = [], decParts = [], nums = [];
             cells.forEach(c => {
                 const x = c.x || 0;
                 if (isNum(c.s)) {
-                    let bi = 0, bd = Infinity;
-                    cents.forEach((cn, i) => { const d = Math.abs(cn - x); if (d < bd) { bd = d; bi = i; } });
-                    const key = lbls[bi];
-                    if (key && !out[key]) out[key] = c.s;
-                } else if (x > creditC + rawW * 0.005) {
+                    nums.push({ x, s: c.s });
+                } else if (x > creditC + rawW * 0.005 && /(?:^|\s)(?:Non\s*)?Valid[ée]|Ajourn[ée]|\bAdmis\b|Rattrapage|Exclu|^\s*P\s*$|^Non$/i.test(String(c.s || ''))) {
                     decParts.push(c.s);
                 } else {
                     nameParts.push(c.s);
                 }
+            });
+            // Greedy assignment: each numeric picks its closest still-free
+            // column. The previous first-wins mapping silently discarded any
+            // numeric that landed on an already-filled slot. That's why S4
+            // Crédit values (whose x sometimes drifts toward the Note-finale
+            // center on FC/FCFP L2) and S5 Contrôle-final values (whose x can
+            // sit closer to CC on FC/FCFP/IG/IGFP L3) disappeared from the
+            // detailed annual transcript.
+            const candidates = [];
+            nums.forEach((n, ni) => {
+                cents.forEach((cn, ci) => {
+                    candidates.push({ ni, ci, d: Math.abs(cn - n.x) });
+                });
+            });
+            candidates.sort((a, b) => a.d - b.d);
+            const numTaken = new Set(), colTaken = new Set();
+            candidates.forEach(cand => {
+                if (numTaken.has(cand.ni) || colTaken.has(cand.ci)) return;
+                const key = lbls[cand.ci];
+                if (!key) return;
+                if (out[key]) return;
+                out[key] = nums[cand.ni].s;
+                numTaken.add(cand.ni);
+                colTaken.add(cand.ci);
             });
             out.name = nameParts.join(' ').replace(/\s+/g, ' ').trim();
             out.dec = decParts.join(' ').replace(/\bP\b/g, '').replace(/\s+/g, ' ').trim();
