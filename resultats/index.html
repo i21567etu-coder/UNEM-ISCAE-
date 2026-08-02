@@ -29,6 +29,7 @@
 
     <!-- ⚡ Supabase must load before the inline init script below (no defer) -->
     <script src="https://unpkg.com/@supabase/supabase-js@2" crossorigin></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" crossorigin></script>
 
     <!-- ⚡ Heavy libraries deferred: load in parallel, execute after HTML parse.
          All are used only on-demand inside async handlers, so deferring is safe
@@ -1072,6 +1073,33 @@
             margin-top: 18px;
         }
     </style>
+<style>
+/* 🖥️ صفحات كاملة واضحة لـ "أعلى 20 معدلات" و "Classement des Étudiants sortants" */
+.modal-overlay.fullpage{
+    position:fixed; inset:0; width:100%; height:100%;
+    padding:0 !important; margin:0;
+    background:#ffffff !important;
+    z-index:99999;
+    overflow-y:auto; -webkit-overflow-scrolling:touch;
+    align-items:flex-start; justify-content:center;
+    backdrop-filter:none !important;
+}
+.modal-overlay.fullpage .modal-content{
+    width:100% !important; max-width:100% !important;
+    min-height:100%; max-height:none !important;
+    margin:0 !important; border:none !important;
+    border-radius:0 !important; box-shadow:none !important;
+    overflow:visible !important;
+}
+.modal-overlay.fullpage .modal-content > div:first-child{
+    border-radius:0 !important;
+    padding-top:calc(18px + env(safe-area-inset-top)) !important;
+}
+.modal-overlay.fullpage .modal-content > div:last-child{
+    padding-bottom:calc(28px + env(safe-area-inset-bottom)) !important;
+}
+body.fp-open{ overflow:hidden !important; }
+</style>
 </head>
 <body>
 
@@ -1140,6 +1168,7 @@
                 .pc-stats  { background:linear-gradient(135deg,#0284c7 0%,#075985 100%); }
                 .pc-delete { background:linear-gradient(135deg,#dc2626 0%,#7f1d1d 100%); }
                 .pc-display { background:linear-gradient(135deg,#7c3aed 0%,#4c1d95 100%); }
+                .pc-grad { background:linear-gradient(135deg,#4338ca 0%,#312e81 100%); }
 
                 .admin-sheet { display:none; position:fixed; inset:0; z-index:9998; background:var(--bg-gradient, #f7fcf9); overflow-y:auto; -webkit-overflow-scrolling:touch; }
                 @keyframes sheetIn { from { opacity:0; transform:translateY(12px);} to { opacity:1; transform:none;} }
@@ -1183,6 +1212,13 @@
                     <span class="pc-icon">⚙️</span>
                     <div class="pc-title">إعدادات العرض</div>
                     <div class="pc-desc">تحكم بعرض النتائج: سنوي / فصلي / كلاهما، سنة واحدة أو كل السنوات، وأي نتيجة تظهر أولاً عند البحث.</div>
+                    <span class="pc-cta">فتح الصفحة ←</span>
+                </button>
+
+                <button type="button" class="pro-card pc-grad" onclick="openAdminSheet('sheet-grad-rank'); populateGradRankForm();">
+                    <span class="pc-icon">🎓</span>
+                    <div class="pc-title">Classement des Étudiants sortants</div>
+                    <div class="pc-desc">رفع ملفات Excel لترتيب الطلاب المتخرجين، تحديد السنة الجامعية، وإظهار أو إخفاء الزر للزوار.</div>
                     <span class="pc-cta">فتح الصفحة ←</span>
                 </button>
             </div>
@@ -1546,6 +1582,58 @@
                 </div>
             </div>
 
+
+            <!-- ===================== FULL-PAGE SHEET: CLASSEMENT DES SORTANTS ===================== -->
+            <div id="sheet-grad-rank" class="admin-sheet">
+                <div class="as-header" style="background:linear-gradient(135deg,#4338ca,#312e81);">
+                    <button type="button" class="as-back" onclick="closeAdminSheet('sheet-grad-rank')">→ رجوع</button>
+                    <div class="as-title">🎓Classement des Étudiants sortants</div>
+                    <span style="width:78px;"></span>
+                </div>
+                <div class="as-body">
+                    <div class="as-card">
+                        <p style="font-size:0.9rem; color:#475569; margin:0 0 18px 0; line-height:1.7;">
+                            ارفع ملفات <b>Excel (.xls / .xlsx)</b> الخاصة بترتيب الطلاب المتخرجين (ملف لكل تخصص).
+                            يتم التعرف على التخصص تلقائياً من اسم الملف، ويمكنك تعديله يدوياً قبل الرفع.
+                        </p>
+
+                        <div class="form-group">
+                            <label>📅 السنة الجامعية:</label>
+                            <input type="text" id="gr-year" placeholder="مثال: 2025-2026" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; font-weight:700; font-size:0.95rem; direction:ltr; text-align:center;">
+                        </div>
+
+                        <div class="form-group">
+                            <label>👁️ حالة الزر عند الزوار:</label>
+                            <select id="gr-visible" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; font-weight:700; font-size:0.95rem;">
+                                <option value="1">إظهار الزر في الصفحة الرئيسية</option>
+                                <option value="0">إخفاء الزر (لا يظهر للزوار)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>🧩 طريقة النشر:</label>
+                            <select id="gr-mode" style="width:100%; padding:12px; border-radius:10px; border:1px solid #cbd5e1; font-weight:700; font-size:0.95rem;">
+                                <option value="merge">دمج: تحديث التخصصات المرفوعة فقط والحفاظ على الباقي</option>
+                                <option value="replace">استبدال كامل: حذف كل التخصصات القديمة</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>📂 ملفات الترتيب (Excel):</label>
+                            <input type="file" id="gr-files" accept=".xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" multiple onchange="prepareGradRankFiles()">
+                        </div>
+
+                        <div id="gr-files-preview" style="margin-top:8px;"></div>
+
+                        <button class="admin-btn" style="margin-top:16px; background:linear-gradient(135deg,#4338ca,#312e81); color:#fff;" onclick="publishGradRank()">🚀 رفع ونشر الكلاسمان</button>
+                        <button class="admin-btn" style="margin-top:10px; background:#0f766e; color:#fff;" onclick="saveGradRankSettingsOnly()">💾 حفظ السنة وحالة الزر فقط</button>
+                        <button class="admin-btn" style="margin-top:10px; background:#b91c1c; color:#fff;" onclick="deleteGradRank()">🗑️ حذف الكلاسمان المنشور</button>
+
+                        <div id="gr-status" style="margin-top:15px; font-weight:bold; font-size:0.9rem; text-align:center;"></div>
+                        <div id="gr-current" style="margin-top:14px; font-size:0.85rem; color:#334155; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:12px; line-height:1.8;"></div>
+                    </div>
+                </div>
+            </div>
             <script>
                 function openAdminSheet(id){
                     var el = document.getElementById(id);
@@ -1655,13 +1743,17 @@
             <div class="btn-group" style="margin-top:10px;">
                 <button type="button" class="btn-top20" style="background:linear-gradient(135deg,#059669,#047857); color:#fff; box-shadow:0 6px 16px rgba(5,150,105,0.35);" onclick="openPublicTop10Modal()">أعلى 20 معدلات في المعهد</button>
             </div>
+
+            <div class="btn-group" id="gr-btn-group" style="margin-top:10px; display:none;">
+                <button type="button" id="gr-public-btn" class="btn-top20" style="background:linear-gradient(135deg,#4338ca,#312e81); color:#fff; box-shadow:0 6px 16px rgba(49,46,129,0.35);" onclick="openGradRankModal()">🎓 Classement des Étudiants sortants</button>
+            </div>
         </form>
         <div id="loader" class="loader">⏳ جاري البحث...</div>
         <div id="error-msg" class="error"></div>
     </div>
 
     <!-- 🌐 Public Top 10 Modal (visible to all users) -->
-    <div id="public-top10-modal" class="modal-overlay" style="display:none;">
+    <div id="public-top10-modal" class="modal-overlay fullpage" style="display:none;">
         <div class="modal-content" style="max-width:680px; max-height:92vh; overflow-y:auto; padding:0; border-radius:20px; background:linear-gradient(180deg,#f0fdf4 0%,#ffffff 60%); border:1px solid #bbf7d0; box-shadow:0 24px 60px rgba(5,150,105,0.25);">
             <div style="position:sticky; top:0; z-index:5; background:linear-gradient(135deg,#059669 0%,#047857 100%); padding:18px 20px; border-radius:20px 20px 0 0; display:flex; align-items:center; justify-content:space-between; gap:10px; box-shadow:0 4px 14px rgba(5,150,105,0.25);">
                 <button type="button" onclick="closePublicTop10Modal()" style="cursor:pointer; background:rgba(255,255,255,0.18); color:#fff; border:1.5px solid rgba(255,255,255,0.35); padding:8px 14px; border-radius:12px; font-weight:800; font-size:0.9rem; font-family:inherit; display:inline-flex; align-items:center; gap:6px; backdrop-filter:blur(6px);">← رجوع</button>
@@ -1670,8 +1762,29 @@
             </div>
             <div style="padding:16px 18px 20px;">
                 <p style="text-align:center; color:#065f46; font-size:0.85rem; margin:0 0 14px; background:#ecfdf5; padding:8px 12px; border-radius:10px; border:1px solid #a7f3d0;">اضغط على رقم التسجيل للبحث المباشر عن الطالب.</p>
+                <div id="public-top10-year" style="text-align:center; margin:0 0 12px; display:none;"></div>
                 <div id="public-top10-status" style="text-align:center; color:#047857; padding:10px; font-weight:700;"></div>
                 <div id="public-top10-list"></div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- 🎓 Classement des Étudiants sortants — public modal -->
+    <div id="grad-rank-modal" class="modal-overlay fullpage" style="display:none;">
+        <div class="modal-content" style="max-width:720px; max-height:92vh; overflow-y:auto; padding:0; border-radius:20px; background:linear-gradient(180deg,#eef2ff 0%,#ffffff 60%); border:1px solid #c7d2fe; box-shadow:0 24px 60px rgba(49,46,129,0.25);">
+            <div style="position:sticky; top:0; z-index:5; background:linear-gradient(135deg,#4338ca 0%,#312e81 100%); padding:18px 20px; border-radius:20px 20px 0 0; display:flex; align-items:center; justify-content:space-between; gap:10px; box-shadow:0 4px 14px rgba(49,46,129,0.25);">
+                <button type="button" onclick="closeGradRankModal()" style="cursor:pointer; background:rgba(255,255,255,0.18); color:#fff; border:1.5px solid rgba(255,255,255,0.35); padding:8px 14px; border-radius:12px; font-weight:800; font-size:0.9rem; font-family:inherit; display:inline-flex; align-items:center; gap:6px; backdrop-filter:blur(6px);">← رجوع</button>
+                <h2 style="color:#fff; text-align:center; margin:0; font-size:1.1rem; font-weight:900; letter-spacing:0.3px; text-shadow:0 2px 6px rgba(0,0,0,0.15); flex:1;">🎓 Classement des Étudiants sortants<span id="gr-modal-year" style="display:block; font-size:0.78rem; font-weight:700; opacity:.9; margin-top:3px;"></span></h2>
+                <span style="width:70px;"></span>
+            </div>
+            <div style="padding:16px 18px 20px;">
+                <p style="text-align:center; color:#312e81; font-size:0.85rem; margin:0 0 12px; background:#eef2ff; padding:8px 12px; border-radius:10px; border:1px solid #c7d2fe;">اختر التخصص أو ابحث بالاسم / رقم التسجيل، ثم اضغط على الطالب لعرض كل المعدلات.</p>
+                <div id="gr-major-chips" style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-bottom:12px;"></div>
+                <input type="text" id="gr-search" oninput="renderGradRankList()" placeholder="🔍 الاسم أو رقم التسجيل..." style="width:100%; padding:12px; border-radius:12px; border:1.5px solid #c7d2fe; font-family:inherit; font-weight:700; font-size:0.95rem; margin-bottom:6px;">
+                <div id="gr-count" style="text-align:center; color:#4338ca; font-size:0.8rem; font-weight:800; margin-bottom:10px;"></div>
+                <div id="gr-status-public" style="text-align:center; color:#4338ca; padding:10px; font-weight:700;"></div>
+                <div id="gr-list"></div>
             </div>
         </div>
     </div>
@@ -2274,7 +2387,7 @@
         const total = pdf.numPages;
         const pages = new Array(total);
         const CONCURRENCY = Math.max(4, Math.min(
-            IS_MOBILE_DEVICE ? 6 : 12,
+            IS_MOBILE_DEVICE ? 2 : 12,
             (navigator.hardwareConcurrency || 4) * 2
         ));
         let cursor = 0;
@@ -2500,7 +2613,7 @@
         // browsers, so batching gives a large real-world speedup while
         // keeping the sequential PDF-embed step (pdf-lib is not thread-safe).
         const BATCH = Math.max(3, Math.min(
-            IS_MOBILE_DEVICE ? 5 : 10,
+            IS_MOBILE_DEVICE ? 2 : 10,
             (navigator.hardwareConcurrency || 4) * 2
         ));
 
@@ -4248,14 +4361,32 @@
                 const { PDFDocument } = PDFLib;
                 const mergedPdf = await PDFDocument.create();
                 const sorted    = files.slice().sort((a,b) => a.name.localeCompare(b.name));
-                // ⚡ Read + parse all source PDFs in parallel; add pages sequentially to keep order
-                const _docs = await Promise.all(sorted.map(async f => {
-                    const buf = await f.arrayBuffer();
-                    return await PDFDocument.load(buf);
-                }));
-                for (const doc of _docs) {
-                    const cp = await mergedPdf.copyPages(doc, doc.getPageIndices());
-                    cp.forEach(p => mergedPdf.addPage(p));
+                if (IS_MOBILE_DEVICE) {
+                    // 📱 [Mobile crash fix] Load + merge one source PDF at a time.
+                    // Loading them all in parallel kept every ArrayBuffer + parsed
+                    // document alive simultaneously, which made mobile browsers
+                    // run out of memory and close the tab.
+                    let _i = 0;
+                    for (const f of sorted) {
+                        _i++;
+                        onStatus && onStatus(`دمج الملفات... (${_i}/${sorted.length})`);
+                        let buf = await f.arrayBuffer();
+                        const doc = await PDFDocument.load(buf);
+                        buf = null;
+                        const cp = await mergedPdf.copyPages(doc, doc.getPageIndices());
+                        cp.forEach(p => mergedPdf.addPage(p));
+                        await new Promise(r => setTimeout(r, 0)); // yield to the UI / GC
+                    }
+                } else {
+                    // ⚡ Desktop: read + parse in parallel; add pages sequentially to keep order
+                    const _docs = await Promise.all(sorted.map(async f => {
+                        const buf = await f.arrayBuffer();
+                        return await PDFDocument.load(buf);
+                    }));
+                    for (const doc of _docs) {
+                        const cp = await mergedPdf.copyPages(doc, doc.getPageIndices());
+                        cp.forEach(p => mergedPdf.addPage(p));
+                    }
                 }
                 finalPdfBytes = await mergedPdf.save();
                 finalPdfBlob  = new Blob([finalPdfBytes], { type: 'application/pdf' });
@@ -4264,12 +4395,30 @@
             // 2) Extract text
             onStatus && onStatus('استخراج النص...');
             const pdf = await pdfjsLib.getDocument({ data: finalPdfBytes }).promise;
-            // ⚡ Extract text from all pages in parallel
-            const _pageTexts = await Promise.all(
-                Array.from({ length: pdf.numPages }, (_, k) =>
-                    pdf.getPage(k + 1).then(pg => pg.getTextContent())
-                       .then(tc => tc.items.map(it => it.str).join(' ')))
-            );
+            let _pageTexts;
+            if (IS_MOBILE_DEVICE) {
+                // 📱 [Mobile crash fix] Extract page text sequentially and free each
+                // page right away. Parallel extraction of a large merged PDF was a
+                // major source of out-of-memory tab crashes on phones.
+                _pageTexts = [];
+                for (let k = 1; k <= pdf.numPages; k++) {
+                    if (k % 10 === 0) onStatus && onStatus(`استخراج النص... (${k}/${pdf.numPages})`);
+                    const pg = await pdf.getPage(k);
+                    const tc = await pg.getTextContent();
+                    _pageTexts.push(tc.items.map(it => it.str).join(' '));
+                    try { pg.cleanup(); } catch (_) {}
+                    if (k % 15 === 0) await new Promise(r => setTimeout(r, 0));
+                }
+            } else {
+                // ⚡ Extract text from all pages in parallel
+                _pageTexts = await Promise.all(
+                    Array.from({ length: pdf.numPages }, (_, k) =>
+                        pdf.getPage(k + 1).then(pg => pg.getTextContent())
+                           .then(tc => tc.items.map(it => it.str).join(' ')))
+                );
+            }
+            try { await pdf.cleanup(); } catch (_) {}
+            try { await pdf.destroy(); } catch (_) {}
             let fullText = _pageTexts.join(' ');
             fullText = fullText.replace(/\s+/g, ' ');
 
@@ -4450,11 +4599,11 @@
         // Retry logic, per-row status and progress bar are preserved.
         const MAX_ATTEMPTS = 3;
         const GROUP_CONCURRENCY = Math.max(
-            2,
+            1,
             Math.min(
                 // Slightly higher on desktop; conservative on mobile to keep
                 // peak memory bounded during PDF rendering.
-                (typeof IS_MOBILE_DEVICE !== 'undefined' && IS_MOBILE_DEVICE) ? 3 : 30,
+                (typeof IS_MOBILE_DEVICE !== 'undefined' && IS_MOBILE_DEVICE) ? 1 : 30,
                 total
             )
         );
@@ -4575,21 +4724,441 @@
     // =========================================================
     // 🌐 Public Top 10 — accessible for ALL users (no admin)
     // =========================================================
+
+    /* ============================================================
+       🎓 CLASSEMENT DES ÉTUDIANTS SORTANTS (كلاسمان المتخرجين)
+       - Admin: رفع ملفات Excel + تحديد السنة + إظهار/إخفاء الزر
+       - Public: عرض احترافي بنفس أسلوب باقي النتائج
+       التخزين: ملف JSON واحد في Supabase Storage (لا يحتاج أي جدول جديد)
+       ============================================================ */
+    const GRAD_RANK_FILENAME = 'grad_rank_config.json';
+    const GRAD_RANK_URL = `${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_BUCKET}/${SUPABASE_FOLDER}/${GRAD_RANK_FILENAME}`;
+    const GRAD_MAJOR_LABELS = {
+        BA: 'Banque Assurance (BA)',
+        FC: 'Finance Comptabilité (FC)',
+        GRH: 'Gestion des RH (GRH)',
+        IG: 'Informatique de Gestion (IG)',
+        TCM: 'Techniques Commerciales (TCM)',
+        SAE: 'SAE', DI: 'DI', RT: 'RT', FCFP: 'FCFP', IGFP: 'IGFP'
+    };
+    const GRAD_MAJOR_CODES = ['FCFP','IGFP','GRH','TCM','SAE','BA','FC','IG','DI','RT'];
+
+    let gradRankConfig = { enabled: false, year: '', majors: {}, updatedAt: null };
+    let gradRankActiveMajor = 'ALL';
+    let __gradPendingFiles = [];
+
+    function grEsc(v) {
+        return String(v == null ? '' : v)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+    function grNum(v) {
+        const n = parseFloat(String(v == null ? '' : v).replace(',', '.'));
+        return isNaN(n) ? null : n;
+    }
+    function grFmt(v) { return (v === null || v === undefined) ? '—' : Number(v).toFixed(2); }
+
+    async function loadGradRankConfig() {
+        try {
+            const res = await fetch(`${GRAD_RANK_URL}?t=${Date.now()}`, { cache: 'no-store' });
+            if (!res.ok) throw new Error('not published');
+            const json = await res.json();
+            gradRankConfig = {
+                enabled: !!json.enabled,
+                year: json.year || '',
+                majors: json.majors || {},
+                updatedAt: json.updatedAt || null
+            };
+        } catch (_) {
+            gradRankConfig = { enabled: false, year: '', majors: {}, updatedAt: null };
+        }
+        applyGradRankVisibility();
+    }
+
+    function gradRankTotal() {
+        return Object.values(gradRankConfig.majors || {}).reduce((a, arr) => a + (Array.isArray(arr) ? arr.length : 0), 0);
+    }
+
+    function applyGradRankVisibility() {
+        const group = document.getElementById('gr-btn-group');
+        const btn = document.getElementById('gr-public-btn');
+        if (!group || !btn) return;
+        const has = gradRankTotal() > 0;
+        const show = has && gradRankConfig.enabled;
+        group.style.display = show ? 'flex' : 'none';
+        if (show) {
+            btn.innerHTML = `🎓 Classement des Étudiants sortants${gradRankConfig.year ? ` (${grEsc(gradRankConfig.year)})` : ''}`;
+        }
+    }
+
+    /* ───────────────────────── Public modal ───────────────────────── */
+    function openGradRankModal() {
+        const modal = document.getElementById('grad-rank-modal');
+        if (!modal) return;
+        modal.style.display = 'flex';
+        document.body.classList.add('fp-open');
+        modal.scrollTop = 0;
+        document.getElementById('gr-modal-year').innerText = gradRankConfig.year || '';
+        gradRankActiveMajor = 'ALL';
+        const s = document.getElementById('gr-search'); if (s) s.value = '';
+        renderGradRankChips();
+        renderGradRankList();
+        try { logAction && logAction('كلاسمان المتخرجين'); } catch (_) {}
+    }
+    function closeGradRankModal() {
+        const m = document.getElementById('grad-rank-modal');
+        if (m) m.style.display = 'none';
+        document.body.classList.remove('fp-open');
+    }
+
+    function renderGradRankChips() {
+        const wrap = document.getElementById('gr-major-chips');
+        if (!wrap) return;
+        const majors = Object.keys(gradRankConfig.majors || {}).sort();
+        const mk = (code, label, count) => {
+            const active = gradRankActiveMajor === code;
+            return `<button type="button" onclick="setGradRankMajor('${grEsc(code)}')" style="cursor:pointer; font-family:inherit; font-weight:800; font-size:0.8rem; padding:7px 13px; border-radius:999px; border:1.5px solid ${active ? '#312e81' : '#c7d2fe'}; background:${active ? 'linear-gradient(135deg,#4338ca,#312e81)' : '#fff'}; color:${active ? '#fff' : '#3730a3'}; box-shadow:${active ? '0 4px 12px rgba(49,46,129,0.28)' : 'none'};">${grEsc(label)} <span style="opacity:.75;">(${count})</span></button>`;
+        };
+        let html = mk('ALL', 'كل التخصصات', gradRankTotal());
+        majors.forEach(code => {
+            html += mk(code, code, (gradRankConfig.majors[code] || []).length);
+        });
+        wrap.innerHTML = html;
+    }
+
+    function setGradRankMajor(code) {
+        gradRankActiveMajor = code;
+        renderGradRankChips();
+        renderGradRankList();
+    }
+
+    function renderGradRankList() {
+        const listEl = document.getElementById('gr-list');
+        const countEl = document.getElementById('gr-count');
+        const statusEl = document.getElementById('gr-status-public');
+        if (!listEl) return;
+        statusEl.innerHTML = '';
+        const q = (document.getElementById('gr-search')?.value || '').trim().toUpperCase();
+
+        let rows = [];
+        Object.keys(gradRankConfig.majors || {}).sort().forEach(code => {
+            (gradRankConfig.majors[code] || []).forEach(st => {
+                if (gradRankActiveMajor !== 'ALL' && gradRankActiveMajor !== code) return;
+                rows.push({ major: code, ...st });
+            });
+        });
+        if (q) {
+            rows = rows.filter(r => String(r.name || '').toUpperCase().includes(q) || String(r.id || '').toUpperCase().includes(q));
+        }
+        rows.sort((a, b) => {
+            if (gradRankActiveMajor === 'ALL') return (grNum(b.mg) ?? -1) - (grNum(a.mg) ?? -1);
+            return (a.rank || 0) - (b.rank || 0);
+        });
+
+        countEl.innerText = rows.length ? `${rows.length} طالب` : '';
+        if (!rows.length) {
+            listEl.innerHTML = `<div style="text-align:center; color:#64748b; padding:26px 10px; font-weight:700;">لا توجد نتائج مطابقة.</div>`;
+            return;
+        }
+
+        const medals = ['🥇', '🥈', '🥉'];
+        listEl.innerHTML = rows.map((s, i) => {
+            const showMedal = !q && i < 3;
+            const rank = s.rank || (i + 1);
+            const mg = grNum(s.mg);
+            const badgeBg = i === 0 ? 'linear-gradient(135deg,#4338ca,#312e81)'
+                          : i === 1 ? 'linear-gradient(135deg,#6366f1,#4338ca)'
+                          : i === 2 ? 'linear-gradient(135deg,#818cf8,#6366f1)'
+                          : 'linear-gradient(135deg,#e0e7ff,#c7d2fe)';
+            const badgeColor = i < 3 && !q ? '#fff' : '#312e81';
+            const badge = showMedal
+                ? `<div style="display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border-radius:50%; background:${badgeBg}; color:#fff; font-weight:900; box-shadow:0 6px 14px rgba(49,46,129,0.35); border:2.5px solid #fff;"><span style="font-size:1.4rem; line-height:1;">${medals[i]}</span></div>`
+                : `<div style="display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,#e0e7ff,#c7d2fe); color:#312e81; font-weight:900; font-size:1rem; border:2px solid #a5b4fc; box-shadow:0 3px 8px rgba(49,46,129,0.15);">${rank}</div>`;
+            const rowBg = (!q && i === 0) ? 'linear-gradient(135deg,#e0e7ff 0%,#c7d2fe 100%)'
+                        : (!q && i === 1) ? 'linear-gradient(135deg,#eef2ff 0%,#e0e7ff 100%)'
+                        : (!q && i === 2) ? 'linear-gradient(135deg,#f5f7ff 0%,#e8ecff 100%)'
+                        : 'linear-gradient(135deg,#ffffff 0%,#f5f7ff 100%)';
+            const border = (!q && i === 0) ? '#4338ca' : (!q && i === 1) ? '#6366f1' : (!q && i === 2) ? '#818cf8' : '#e0e7ff';
+            const mgColor = mg === null ? 'linear-gradient(135deg,#94a3b8,#64748b)'
+                          : mg >= 16 ? 'linear-gradient(135deg,#312e81,#1e1b4b)'
+                          : mg >= 14 ? 'linear-gradient(135deg,#4338ca,#312e81)'
+                          : mg >= 12 ? 'linear-gradient(135deg,#6366f1,#4338ca)'
+                          : 'linear-gradient(135deg,#818cf8,#6366f1)';
+            const sems = [['S1', s.s1], ['S2', s.s2], ['S3', s.s3], ['S4', s.s4], ['S5', s.s5], ['S6', s.s6]];
+            const semCells = sems.map(([k, v]) => `
+                <div style="background:#fff; border:1px solid #c7d2fe; border-radius:10px; padding:7px 4px; text-align:center;">
+                    <div style="font-size:0.68rem; color:#6366f1; font-weight:800; letter-spacing:.5px;">${k}</div>
+                    <div style="font-size:0.95rem; color:#1e1b4b; font-weight:900; direction:ltr;">${grFmt(grNum(v))}</div>
+                </div>`).join('');
+            const extra = [['MoyC', s.moyc], ['M.RED', s.red], ['M.RAT', s.rat], ['Crédits', s.credit]].map(([k, v]) => `
+                <div style="background:#f8faff; border:1px dashed #a5b4fc; border-radius:10px; padding:7px 4px; text-align:center;">
+                    <div style="font-size:0.68rem; color:#4338ca; font-weight:800;">${k}</div>
+                    <div style="font-size:0.9rem; color:#1e1b4b; font-weight:900; direction:ltr;">${grFmt(grNum(v))}</div>
+                </div>`).join('');
+            const idSafe = grEsc(s.id).replace(/'/g, "\\'");
+
+            return `
+            <div style="border:2px solid ${border}; border-radius:16px; margin-bottom:12px; background:${rowBg}; box-shadow:0 4px 12px rgba(49,46,129,0.10); overflow:hidden;">
+                <div onclick="toggleGradRankDetails('gr-d-${i}')" style="cursor:pointer; display:flex; align-items:stretch; gap:14px; padding:14px;">
+                    <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; min-width:62px;">
+                        ${badge}
+                        <div style="background:${mgColor}; color:#fff; padding:6px 12px; border-radius:12px; font-weight:900; font-size:1.05rem; min-width:60px; text-align:center; box-shadow:0 4px 10px rgba(49,46,129,0.30); direction:ltr;">${grFmt(mg)}</div>
+                    </div>
+                    <div style="flex:1; min-width:0; display:flex; flex-direction:column; justify-content:center; gap:8px;">
+                        <div style="font-weight:900; color:#1e1b4b; font-size:1.02rem; line-height:1.35; word-break:break-word;">${grEsc(s.name)}</div>
+                        <div style="display:flex; flex-wrap:wrap; gap:6px; font-size:0.78rem;">
+                            <span style="background:#fff; color:#3730a3; padding:4px 9px; border-radius:8px; border:1px solid #c7d2fe; font-weight:700;">📚 ${grEsc(GRAD_MAJOR_LABELS[s.major] || s.major)}</span>
+                            <span style="background:#fff; color:#3730a3; padding:4px 9px; border-radius:8px; border:1px solid #c7d2fe; font-weight:700;">🏅 المرتبة ${rank}</span>
+                            ${gradRankConfig.year ? `<span style="background:#fff; color:#3730a3; padding:4px 9px; border-radius:8px; border:1px solid #c7d2fe; font-weight:700;">📅 ${grEsc(gradRankConfig.year)}</span>` : ''}
+                        </div>
+                        <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
+                            <span style="background:#fff; color:#4338ca; border:1.5px dashed #4338ca; padding:5px 12px; border-radius:9px; font-weight:800; font-size:0.82rem; letter-spacing:0.5px; direction:ltr; display:inline-flex; align-items:center;">${grEsc(s.id)}</span>
+                            <span style="font-size:0.75rem; color:#4338ca; font-weight:800;">▾ اضغط لعرض المعدلات</span>
+                        </div>
+                    </div>
+                </div>
+                <div id="gr-d-${i}" style="display:none; padding:0 14px 14px;">
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(72px,1fr)); gap:7px; margin-bottom:8px;">${semCells}</div>
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(78px,1fr)); gap:7px;">${extra}</div>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    function toggleGradRankDetails(id) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+    }
+
+    /* ───────────────────────── Admin side ───────────────────────── */
+    function populateGradRankForm() {
+        const y = document.getElementById('gr-year');
+        const v = document.getElementById('gr-visible');
+        if (y) y.value = gradRankConfig.year || '';
+        if (v) v.value = gradRankConfig.enabled ? '1' : '0';
+        renderGradRankCurrent();
+    }
+
+    function renderGradRankCurrent() {
+        const el = document.getElementById('gr-current');
+        if (!el) return;
+        const total = gradRankTotal();
+        if (!total) {
+            el.innerHTML = 'ℹ️ لا يوجد كلاسمان منشور حالياً.';
+            return;
+        }
+        const parts = Object.keys(gradRankConfig.majors).sort()
+            .map(c => `<b>${grEsc(c)}</b>: ${gradRankConfig.majors[c].length}`).join(' • ');
+        el.innerHTML = `✅ منشور حالياً: <b>${total}</b> طالب — السنة: <b>${grEsc(gradRankConfig.year || '—')}</b> — الزر: <b>${gradRankConfig.enabled ? 'ظاهر' : 'مخفي'}</b><br>${parts}`;
+    }
+
+    function grDetectMajor(filename) {
+        const up = String(filename || '').toUpperCase();
+        for (const code of GRAD_MAJOR_CODES) {
+            if (new RegExp(`(^|[^A-Z])${code}([^A-Z]|$)`).test(up)) return code;
+            if (up.includes('L32' + code) || up.includes('L3' + code)) return code;
+        }
+        return '';
+    }
+    function grDetectYear(filename) {
+        const m = String(filename || '').match(/(\d{4})[-_](\d{4})/);
+        return m ? `${m[1]}-${m[2]}` : '';
+    }
+
+    function prepareGradRankFiles() {
+        const input = document.getElementById('gr-files');
+        const wrap = document.getElementById('gr-files-preview');
+        __gradPendingFiles = Array.from(input?.files || []);
+        if (!wrap) return;
+        if (!__gradPendingFiles.length) { wrap.innerHTML = ''; return; }
+
+        const yearEl = document.getElementById('gr-year');
+        if (yearEl && !yearEl.value.trim()) {
+            const y = grDetectYear(__gradPendingFiles[0].name);
+            if (y) yearEl.value = y;
+        }
+
+        const options = GRAD_MAJOR_CODES.slice().sort();
+        wrap.innerHTML = `
+            <div style="overflow-x:auto;">
+            <table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+                <thead><tr style="background:#eef2ff; color:#312e81;">
+                    <th style="padding:8px; text-align:right;">الملف</th>
+                    <th style="padding:8px;">التخصص</th>
+                </tr></thead>
+                <tbody>
+                ${__gradPendingFiles.map((f, i) => `
+                    <tr style="border-bottom:1px solid #e2e8f0;">
+                        <td style="padding:8px; word-break:break-all; direction:ltr; text-align:left;">${grEsc(f.name)}</td>
+                        <td style="padding:8px; text-align:center;">
+                            <select id="gr-major-${i}" style="padding:7px; border-radius:8px; border:1px solid #c7d2fe; font-weight:700;">
+                                ${options.map(c => `<option value="${c}" ${grDetectMajor(f.name) === c ? 'selected' : ''}>${c}</option>`).join('')}
+                            </select>
+                        </td>
+                    </tr>`).join('')}
+                </tbody>
+            </table></div>`;
+    }
+
+    async function grParseWorkbook(file) {
+        if (typeof XLSX === 'undefined') throw new Error('مكتبة قراءة Excel غير محمّلة. تحقق من الاتصال بالإنترنت.');
+        const buf = await file.arrayBuffer();
+        const wb = XLSX.read(buf, { type: 'array' });
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: true, defval: '' });
+        const students = [];
+        let started = false;
+        for (const r of rows) {
+            const c0 = String(r[0] ?? '').trim();
+            const id = String(r[1] ?? '').trim();
+            const name = String(r[2] ?? '').trim();
+            if (!started) {
+                if (/^N/i.test(c0) && /NODOS/i.test(String(r[1] ?? ''))) { started = true; }
+                continue;
+            }
+            const rank = grNum(c0);
+            if (!id || !name || rank === null) continue;
+            students.push({
+                rank: Math.round(rank), id, name,
+                s1: grNum(r[3]), s2: grNum(r[4]), s3: grNum(r[5]),
+                s4: grNum(r[6]), s5: grNum(r[7]), s6: grNum(r[8]),
+                credit: grNum(r[9]), moyc: grNum(r[10]),
+                red: grNum(r[11]), rat: grNum(r[12]), mg: grNum(r[13])
+            });
+        }
+        if (!students.length) throw new Error(`لم يتم العثور على بيانات في الملف: ${file.name}`);
+        students.sort((a, b) => a.rank - b.rank);
+        return students;
+    }
+
+    async function grUploadConfig(payload) {
+        const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+        await uploadToSupabaseStorage(blob, 'grad_rank_config', 'json');
+    }
+
+    async function publishGradRank() {
+        const statusEl = document.getElementById('gr-status');
+        const year = (document.getElementById('gr-year')?.value || '').trim();
+        const enabled = (document.getElementById('gr-visible')?.value || '1') === '1';
+        try {
+            if (!year || !/^\d{4}-\d{4}$/.test(year)) { alert('⚠️ اكتب السنة الجامعية بصيغة صحيحة مثل 2025-2026'); return; }
+            if (!__gradPendingFiles.length) { alert('⚠️ اختر ملفات Excel أولاً.'); return; }
+
+            statusEl.innerHTML = '⏳ جاري قراءة الملفات...';
+            const mode = (document.getElementById('gr-mode')?.value || 'merge');
+            const majors = {};
+            const uploadedCodes = new Set();
+            for (let i = 0; i < __gradPendingFiles.length; i++) {
+                const f = __gradPendingFiles[i];
+                const code = (document.getElementById('gr-major-' + i)?.value || grDetectMajor(f.name) || 'AUTRE').toUpperCase();
+                statusEl.innerHTML = `⏳ قراءة (${i + 1}/${__gradPendingFiles.length}): ${grEsc(f.name)}`;
+                const students = await grParseWorkbook(f);
+                uploadedCodes.add(code);
+                majors[code] = (majors[code] || []).concat(students).sort((a, b) => a.rank - b.rank);
+            }
+
+            let finalMajors = majors;
+            if (mode === 'merge') {
+                finalMajors = Object.assign({}, gradRankConfig.majors || {});
+                uploadedCodes.forEach(c => { finalMajors[c] = majors[c]; });
+            }
+
+            statusEl.innerHTML = '⏳ جاري الرفع والنشر...';
+            const payload = { enabled, year, majors: finalMajors, updatedAt: new Date().toISOString() };
+            await grUploadConfig(payload);
+            gradRankConfig = payload;
+            applyGradRankVisibility();
+            renderGradRankCurrent();
+            const total = gradRankTotal();
+            statusEl.innerHTML = `<span style="color:green">✅ تم نشر الكلاسمان بنجاح (${total} طالب في ${Object.keys(finalMajors).length} تخصص) — الوضع: ${mode === 'merge' ? 'دمج' : 'استبدال كامل'}.</span>`;
+            __gradPendingFiles = [];
+            const inp = document.getElementById('gr-files'); if (inp) inp.value = '';
+            document.getElementById('gr-files-preview').innerHTML = '';
+        } catch (e) {
+            console.error(e);
+            statusEl.innerHTML = `<span style="color:red">⚠️ ${grEsc(e.message || e)}</span>`;
+        }
+    }
+
+    async function saveGradRankSettingsOnly() {
+        const statusEl = document.getElementById('gr-status');
+        const year = (document.getElementById('gr-year')?.value || '').trim();
+        const enabled = (document.getElementById('gr-visible')?.value || '1') === '1';
+        try {
+            if (year && !/^\d{4}-\d{4}$/.test(year)) { alert('⚠️ اكتب السنة الجامعية بصيغة صحيحة مثل 2025-2026'); return; }
+            if (!gradRankTotal()) { alert('⚠️ لا يوجد كلاسمان منشور. ارفع الملفات أولاً.'); return; }
+            statusEl.innerHTML = '⏳ جاري الحفظ...';
+            const payload = { enabled, year, majors: gradRankConfig.majors, updatedAt: new Date().toISOString() };
+            await grUploadConfig(payload);
+            gradRankConfig = payload;
+            applyGradRankVisibility();
+            renderGradRankCurrent();
+            statusEl.innerHTML = '<span style="color:green">✅ تم حفظ السنة وحالة الزر.</span>';
+        } catch (e) {
+            statusEl.innerHTML = `<span style="color:red">⚠️ ${grEsc(e.message || e)}</span>`;
+        }
+    }
+
+    async function deleteGradRank() {
+        const statusEl = document.getElementById('gr-status');
+        if (!confirm('هل تريد حذف الكلاسمان المنشور نهائياً؟')) return;
+        try {
+            statusEl.innerHTML = '⏳ جاري الحذف...';
+            try { await _supabase.auth.refreshSession(); } catch (_) {}
+            const { error } = await _supabase.storage.from(SUPABASE_BUCKET)
+                .remove([`${SUPABASE_FOLDER}/${GRAD_RANK_FILENAME}`]);
+            if (error) throw error;
+            gradRankConfig = { enabled: false, year: '', majors: {}, updatedAt: null };
+            applyGradRankVisibility();
+            renderGradRankCurrent();
+            statusEl.innerHTML = '<span style="color:green">✅ تم حذف الكلاسمان.</span>';
+        } catch (e) {
+            statusEl.innerHTML = `<span style="color:red">⚠️ ${grEsc(e.message || e)}</span>`;
+        }
+    }
+
+    window.openGradRankModal = openGradRankModal;
+    window.closeGradRankModal = closeGradRankModal;
+    window.renderGradRankList = renderGradRankList;
+    window.setGradRankMajor = setGradRankMajor;
+    window.toggleGradRankDetails = toggleGradRankDetails;
+    window.populateGradRankForm = populateGradRankForm;
+    window.prepareGradRankFiles = prepareGradRankFiles;
+    window.publishGradRank = publishGradRank;
+    window.saveGradRankSettingsOnly = saveGradRankSettingsOnly;
+    window.deleteGradRank = deleteGradRank;
+    loadGradRankConfig();
+
+
     let __publicTop10Cache = null;
+    let __publicTop10CacheYear = '';
     function closePublicTop10Modal() {
         const m = document.getElementById('public-top10-modal');
         if (m) m.style.display = 'none';
+        document.body.classList.remove('fp-open');
     }
     async function openPublicTop10Modal() {
         const modal = document.getElementById('public-top10-modal');
         const statusEl = document.getElementById('public-top10-status');
         const listEl = document.getElementById('public-top10-list');
         modal.style.display = 'flex';
+        document.body.classList.add('fp-open');
+        modal.scrollTop = 0;
+        const yearEl = document.getElementById('public-top10-year');
+        const setYearBanner = (txt) => {
+            if (!yearEl) return;
+            if (!txt) { yearEl.style.display = 'none'; yearEl.innerHTML = ''; return; }
+            yearEl.style.display = 'block';
+            yearEl.innerHTML = `<span style="display:inline-block; background:linear-gradient(135deg,#059669,#047857); color:#fff; padding:8px 18px; border-radius:12px; font-weight:900; font-size:1rem; letter-spacing:0.5px; box-shadow:0 4px 12px rgba(5,150,105,0.30); direction:ltr;">📅 ${txt}</span>`;
+        };
         if (__publicTop10Cache) {
             statusEl.innerHTML = '';
+            setYearBanner(__publicTop10CacheYear);
             listEl.innerHTML = __publicTop10Cache;
             return;
         }
+        setYearBanner('');
         statusEl.innerHTML = '<span style="display:inline-flex; align-items:center; gap:8px;"><span style="width:16px; height:16px; border:2.5px solid #a7f3d0; border-top-color:#059669; border-radius:50%; display:inline-block; animation: spin 0.8s linear infinite;"></span> جاري التحميل...</span>';
         listEl.innerHTML = '';
         try {
@@ -4637,6 +5206,10 @@
                 statusEl.innerHTML = 'لا توجد معدلات متاحة لعرضها.';
                 return;
             }
+
+            const yearsList = Array.from(new Set(top10.map(s => s.year).filter(Boolean))).sort();
+            __publicTop10CacheYear = yearsList.length ? ('السنة الجامعية: ' + yearsList.join(' / ')) : '';
+            setYearBanner(__publicTop10CacheYear);
 
             const medals = ['🥇','🥈','🥉'];
             const escHtml = (v) => String(v == null ? '' : v)
